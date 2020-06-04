@@ -4,21 +4,23 @@ import errno
 from datatorch.core import env
 
 
-def global_path():
+def global_path(mkdir=True):
     user_dir = os.path.join(os.path.expanduser("~"), ".datatorch")
     config_dir = os.getenv(env.CONFIG_DIR) or user_dir
-    mkdir(config_dir)
+    if mkdir:
+        mkdir_exists(config_dir)
     return config_dir
 
 
-def local_path():
+def local_path(mkdir=True):
     root_dir = os.getcwd()
     path = os.path.join(root_dir, '.datatorch')
-    mkdir(path)
+    if mkdir:
+        mkdir_exists(path)
     return path
 
 
-def mkdir(path: str):
+def mkdir_exists(path: str):
     try:
         os.makedirs(path)
     except OSError as e:

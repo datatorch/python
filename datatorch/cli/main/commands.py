@@ -1,19 +1,51 @@
 import click
+import time
+import os
 
-from datatorch.core import settings, BASE_URL
+from datatorch.agent import Agent
+from datatorch.core import env, settings, BASE_URL
+from datatorch.cli.spinner import Spinner
 
 
 @click.command()
 @click.argument('key', nargs=-1)
 @click.option('--host', default=BASE_URL, help='Login to a specific instance of DataTorch')
 @click.option('--no-web', is_flag=True, help='Disable opening webbrowser to access token link')
-@click.option('--globally', is_flag=True, help='Save settings globally')
-def login(key: str, host: str, no_web, globally):
+def login(key, host, no_web):
     global settings
 
-    if not no_web:
-        import webbrowser
-        webbrowser.open('{}/settings/access-tokens'.format(host))
+    key: str = next(iter(key), None)
 
-    settings.set('API_KEY', '123123', globally=globally)
-    settings.set('BASE_URL', host, globally=globally)
+    if key is None:
+        styled_url = click.style(host, fg='blue', bold=True)
+        click.echo('Retrieve your API key from: {}'.format(styled_url))
+
+        if not no_web:
+            import webbrowser
+            webbrowser.open(f'{host}/settings/access-tokens')
+
+        key = click.prompt(click.style('Paste your API Key',
+                                       bold=True)).strip()
+
+    try:
+        if len(key) != 36:
+            raise ValueError('Key must be 40 characters long.')
+
+        api_url = f'{host}/api'
+
+        settings.set('API_KEY', key, globally=True)
+        settings.set('API_URL', api_url, globally=True)
+    except Exception as ex:
+        click.echo(click.style(f'[ERROR] {ex}', fg='red'))
+
+
+@click.command()
+@click.argument('--host', default=BASE_URL, help='Specify a specific instance of DataTorch')
+def agent(host):
+    api_url = f'{host}/api'
+    agent_id = os.getenv(env.AGENT_ID)
+
+    click.echo(f'Agent ID: {agent_id}')
+    click.echo(f'Starting agent pointing at {api_url}')
+
+    agent = Agent(agent_id, host=host)
