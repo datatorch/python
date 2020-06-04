@@ -4,8 +4,11 @@ with open('README.md', 'r', encoding='utf-8') as fp:
     long_description = fp.read()
 
 requirements = [
-    'Click>=7.0.0'
+    'Click~=7.0'
+    'psutil~=5.0'
 ]
+
+requirements_agents = []
 
 setup(
     name='datatorch',
@@ -24,7 +27,23 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requirements=requirements,
+    extra_require={
+        'agents': requirements_agents
+    },
     python_requires='>=3.6',
     license='MIT license',
-    zip_safe=False
+    zip_safe=False,
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Environment :: Console',
+        'Framework :: Pytest',
+        'Intended Audience :: Developers',
+        'Natural Language :: English',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Topic :: Scientific/Engineering :: Artificial Intelligence',
+        'Topic :: Software Development :: Libraries :: Python Modules'
+    ]
 )

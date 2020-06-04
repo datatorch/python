@@ -1,5 +1,7 @@
 # from __future__ import annotations
 import re
+import json
+
 from typing import overload
 from datetime import datetime
 
@@ -35,6 +37,11 @@ class Entity(object):
     def __init__(self, client: object, obj: dict):
         self._client = client
         self.__dict__.update(camel_to_snake(obj))
+
+    def to_json(self, indent: int = 2) -> str:
+        dic = self.__dict__
+        del dic['_client']
+        return json.dumps(dic, indent=indent)
 
 
 class TimestampEntity(Entity):

@@ -1,5 +1,3 @@
-import json
-
 from gql import gql
 from typing import ClassVar, List
 
@@ -53,9 +51,8 @@ class Project(Entity):
         pass
 
     def datasets(self) -> List[Dataset]:
-        params = json.dumps({'projectId': self.id})
-        results = self._client.execute(
-            GET_PROJECT_DATASET, variable_values=params)
+        params = {'projectId': self.id}
+        results = self._client.execute(GET_PROJECT_DATASET, params=params)
         datasets = results.get('project').get('datasets').get('nodes')
         return list(map(lambda d: Dataset(self._client, d), datasets))
 

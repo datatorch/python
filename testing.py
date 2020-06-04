@@ -1,5 +1,7 @@
 from datatorch.api import ApiClient
 
-client = ApiClient()
-project = client.project('5797c4bb-a8f4-405d-b966-558fb6e26b89')
-print(project.datasets())
+client = ApiClient(api_key='fa2c325a-fd78-4bc6-827f-90242530bebd',
+                   api_url='http://localhost:4000')
+
+viewer = client.viewer()
+print(viewer.to_json())
