@@ -1,1 +1,3 @@
-from datatorch.cli.groups import main
+from .groups import main
+
+__all__ = ['main']

@@ -3,7 +3,7 @@ import logging
 import os
 
 from datatorch.agent import Agent
-from datatorch.core import env, BASE_URL
+from datatorch.core import env, settings, BASE_URL
 
 
 logger = logging.getLogger(__name__)
@@ -14,8 +14,6 @@ logger = logging.getLogger(__name__)
 @click.option('--host', default=BASE_URL, help='Login to a specific instance of DataTorch')
 @click.option('--no-web', is_flag=True, help='Disable opening webbrowser to access token link')
 def login(key, host, no_web):
-    global settings
-
     key: str = next(iter(key), None)
 
     if key is None:
