@@ -1,10 +1,12 @@
 import click
-import time
+import logging
 import os
 
 from datatorch.agent import Agent
-from datatorch.core import env, settings, BASE_URL
-from datatorch.cli.spinner import Spinner
+from datatorch.core import env, BASE_URL
+
+
+logger = logging.getLogger(__name__)
 
 
 @click.command()
@@ -40,12 +42,13 @@ def login(key, host, no_web):
 
 
 @click.command()
-@click.argument('--host', default=BASE_URL, help='Specify a specific instance of DataTorch')
+@click.option('--host', default=BASE_URL, help='Specify a specific instance of DataTorch')
 def agent(host):
-    api_url = f'{host}/api'
+    click.echo(click.style('Starting agent...', fg='green'))
+
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(threadName)-10s %(levelname)-8s %(message)s')
+
     agent_id = os.getenv(env.AGENT_ID)
 
-    click.echo(f'Agent ID: {agent_id}')
-    click.echo(f'Starting agent pointing at {api_url}')
-
-    agent = Agent(agent_id, host=host)
+    Agent(agent_id, host=host)

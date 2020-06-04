@@ -2,10 +2,6 @@ import threading
 import time
 
 
-class SystemStats(Exception):
-    pass
-
-
 class SystemStats(object):
 
     samples: int = 0
@@ -20,9 +16,7 @@ class SystemStats(object):
     def _monitor(self):
         while True:
             self.samples += 1
-            stats = self.stats()
             time.sleep(self.sample_rate)
 
     def stats(self):
-        stats = {}
-        return stats
+        return {}

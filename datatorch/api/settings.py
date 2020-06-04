@@ -1,4 +1,3 @@
-from gql import gql
 from typing import ClassVar
 from .base import Entity
 

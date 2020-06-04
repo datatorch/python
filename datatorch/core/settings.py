@@ -1,10 +1,8 @@
-from enum import Enum
-
 import logging
 import json
 import os
 
-from datatorch.core import env, folder
+from datatorch.core import folder
 
 logger = logging.getLogger(__name__)
 

@@ -1,8 +1,31 @@
+import json
+
 from gql import gql
 from typing import ClassVar, List
+
 from .dataset import Dataset
 from .label import Label
 from .base import Entity
+
+
+GET_PROJECT_DATASET = gql("""
+    query GetProjectDatasets($projectId: ID!) {
+      project: projectById(id: $projectId) {
+        datasets {
+          nodes {
+            id
+            name
+            description
+            projectId
+            kilobytes
+            formattedBytes
+            createdAt
+            updatedAt
+          }
+        }
+      }
+    }
+""")
 
 
 class Project(Entity):
@@ -30,10 +53,11 @@ class Project(Entity):
         pass
 
     def datasets(self) -> List[Dataset]:
-        pass
-
-    def dataset(self, id) -> Dataset:
-        pass
+        params = json.dumps({'projectId': self.id})
+        results = self._client.execute(
+            GET_PROJECT_DATASET, variable_values=params)
+        datasets = results.get('project').get('datasets').get('nodes')
+        return list(map(lambda d: Dataset(self._client, d), datasets))
 
     def labels(self) -> List[Label]:
         pass

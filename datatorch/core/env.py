@@ -1,5 +1,4 @@
 
-from enum import Enum
 
 AGENT_ID = 'DATATORCH_AGENT_ID'
 API_KEY = 'DATATORCH_API_KEY'

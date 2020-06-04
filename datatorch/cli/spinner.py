@@ -3,21 +3,25 @@ import time
 import threading
 
 done = False
+text = ''
 
 
 class Spinner(object):
-    def __init__(self, text: str = 'Loading'):
-        global done
+    """ Creates a spinning icon in CLI, useful for indicating progress """
+
+    def __init__(self, string: str = 'Loading'):
+        global done, text
         done = False
+        text = string
         self.text = text
         self._thread = threading.Thread(target=self._draw_spinner)
         self._thread.start()
 
     def _draw_spinner(self, speed=0.1):
-        global done
+        global done, text
         while True:
             for cursor in '|/-\\':
-                sys.stdout.write('{} {} '.format(cursor, self.text))
+                sys.stdout.write('{} {} '.format(cursor, text))
                 sys.stdout.flush()
                 time.sleep(speed)
                 sys.stdout.write('\r')
@@ -25,10 +29,14 @@ class Spinner(object):
                 if done:
                     return
 
+    def set_text(self, string: str):
+        global text
+        text = string
+
     def done(self, text: str = None):
         global done
         done = True
         self._thread.join()
 
         if text:
-            print('{}'.format(text, ' ' * (len(self.text) + 2)))
+            print(f'{text} {" " * (len(self.text) + 2)}')

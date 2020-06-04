@@ -10,6 +10,5 @@ class Dataset(Entity):
     project_id: ClassVar[str]
     kilobytes: ClassVar[int]
     formatted_bytes: ClassVar[int]
-    is_archived: ClassVar[bool]
     created_at: ClassVar[str]
     updated_at: ClassVar[str]

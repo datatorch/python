@@ -1,13 +1,11 @@
-import os
 import json
-import logging
 
 from typing import overload
 
 from gql import Client, gql
 from gql.transport.requests import RequestsHTTPTransport
 
-from datatorch.core import env, settings
+from datatorch.core import settings
 from datatorch.core.settings import Settings
 
 from .settings import Settings as ApiSettings
@@ -104,7 +102,7 @@ class ApiClient(object):
     def set_api_url(self, api_url=None):
         """ Update client API URL. If value not provided get from users settings. """
         self.api_url = api_url or self._settings().get('API_URL')
-        self.client.transport.url = api_key or self.api_url
+        self.client.transport.url = self.api_url
 
     def execute(self, *args, **kwargs):
         """ Wrapper around execute """
