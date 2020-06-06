@@ -1,8 +1,8 @@
 from typing import ClassVar
-from .base import Entity
+from .base import BaseEntity
 
 
-class User(Entity):
+class User(BaseEntity):
     """ Projects contain datasets, files and annotations. """
 
     id: ClassVar[str]

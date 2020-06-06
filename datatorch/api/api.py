@@ -1,163 +1,75 @@
-import json
-from typing import overload
-
-from gql import Client, gql
-from gql.transport.requests import RequestsHTTPTransport
+from typing import overload, List, Union
 
 from datatorch.core.settings import Settings
 
 from .settings import Settings as ApiSettings
 from .project import Project
+from .client import Client
 from .user import User
+from .file import File
 
 
-GET_API_SETTINGS = gql('''
+_SETTINGS = ApiSettings.add_fragment(
+    '''
     query GetSettings {
       settings {
-        apiVersion
-        api
-        frontend
+        ...SettingsFields
       }
     }
-''')
+    '''
+)
 
+_PROJECT_BY_NAME = Project.add_fragment(
+    '''
+    query GetProject($login: String!, $slug: String!) {
+      project: project(login: $login, slug: $slug) {
+        ...ProjectFields
+      }
+    }
+    '''
+)
 
-GET_PROJECT_ID = gql('''
+_PROJECT_BY_ID = Project.add_fragment(
+    '''
     query GetProjectId($id: ID!) {
       project: projectById(id: $id) {
-        id
-        slug
-        name
-        description
-        visibility
-        about
-        ownerId
-        namespace
-        path
-        pathWithSpaces
-        avatarUrl
-        isPrivate
-        kilobytes
-        formattedBytes
-        isArchived
-        createdAt
-        updatedAt
+        ...ProjectFields
       }
     }
-''')
+    '''
+)
 
-
-GET_PROJECT_SLUG = gql('''
-    query GetProjectId($login: String!, $slug: String!) {
-      project(login: $login, slug: $slug) {
-        id
-        slug
-        name
-        description
-        visibility
-        about
-        ownerId
-        namespace
-        path
-        pathWithSpaces
-        avatarUrl
-        isPrivate
-        kilobytes
-        formattedBytes
-        isArchived
-        createdAt
-        updatedAt
-      }
+_FILE = File.add_fragment(
+    '''
+  query GetFile($fileId: ID!) {
+    file(id: $fileId) {
+      ...FileFields
     }
-''')
+  }
+  '''
+)
 
-
-LOGIN = gql('''
-    mutation Login($login: String!, $password: String!) {
-      login(login: $login, password: $password) {
-        token
-        user {
-          id
-          login
-          email
-        }
-      }
-    }
-''')
-
-
-VIEWER = gql('''
-    query {
+_VIEWER = User.add_fragment(
+    '''
+    query GetViewer {
       viewer {
-        id
-        name
-        login
-        email
-        company
-        location
-        websiteUrl
-        role
+        ...UserFields
       }
     }
-''')
+    '''
+)
 
 
-class AuthenticationError(Exception):
-    pass
-
-
-class ApiClient(object):
-    """ Wrapper for the DataTorch API including GraphQL and uploading """
-
-    def __init__(self, api_key: str = None, api_url: str = None, settings: Settings = None):
-        self._settings = settings or Settings()
-
-        self.jwt: str = None
-        self.api_key: str = api_key or self._settings.get('API_KEY')
-        self.api_url: str = api_url or self._settings.get('API_URL')
-
-        self.client = Client(
-            transport=RequestsHTTPTransport(
-                headers={'datatorch-api-key': self.api_key},
-                use_json=True,
-                url=self.graphql_url,
-            ),
-            fetch_schema_from_transport=True
-        )
-
-    @property
-    def graphql_url(self):
-        return '{}/graphql'.format(self.api_url)
-
-    def login(self, login: str, password: str):
-        params = {'login': login, 'password': password}
-        results = self.execute(LOGIN, params=params)
-        logged_in = results.get('login')
-        token: str = logged_in.get('token')
-        self.client.transport.headers['Authorization'] = f'Bearer {token}'
-        return logged_in
-
-    def logout(self):
-        self.jwt = None
-
-    def set_api_key(self, api_key: str = None):
-        """ Update client API key. If value not provided get from users settings. """
-        self.api_key = api_key or self._settings().get('API_KEY')
-        self.client.transport.headers['datatorch-api-key'] = self.api_key
-
-    def set_api_url(self, api_url=None):
-        """ Update client API URL. If value not provided get from users settings. """
-        self.api_url = api_url or self._settings().get('API_URL')
-        self.client.transport.url = self.api_url
-
-    def execute(self, *args, params: dict = {}, **kwargs):
-        """ Wrapper around execute """
-        params_json = json.dumps(params)
-        return self.client.execute(*args, variable_values=params_json, **kwargs)
+class ApiClient(Client):
+    """ Adds simple queries to the client wrapper """
 
     def settings(self) -> ApiSettings:
-        results = self.execute(GET_API_SETTINGS)
-        return ApiSettings(self, results.get('settings'))
+        """ API instance settings """
+        return self.query_to_class(ApiSettings, _SETTINGS, path='settings')
+
+    def viewer(self) -> User:
+        """ Current logged in user """
+        return self.query_to_class(User, _VIEWER, path='viewer')
 
     @overload
     def project(self, id: str) -> Project:
@@ -169,19 +81,25 @@ class ApiClient(object):
         """ Retrieve a project by login and slug """
         pass
 
-    def viewer(self) -> User:
-        results = self.execute(VIEWER)
-        viewer = results.get('viewer')
-        if viewer is None:
-            raise AuthenticationError('API client is not logged in.')
-        return User(self, results.get('viewer'))
-
     def project(self, loginOrId: str, slug: str = None) -> Project:
         if slug:
             params = {'login': loginOrId, 'slug': slug}
-            results = self.execute(GET_PROJECT_SLUG, params=params)
+            query = _PROJECT_BY_NAME
         else:
             params = {'id': loginOrId}
-            results = self.execute(GET_PROJECT_ID, params=params)
+            query = _PROJECT_BY_ID
 
-        return Project(self, results.get('project'))
+        return self.query_to_class(
+            Project,
+            query,
+            path='project',
+            params=params
+        )
+
+    def file(self, id: str) -> File:
+        return self.query_to_class(
+            File,
+            _FILE,
+            path='file',
+            params={'fileId': id}
+        )

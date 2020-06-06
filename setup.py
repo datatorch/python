@@ -4,11 +4,13 @@ with open('README.md', 'r', encoding='utf-8') as fp:
     long_description = fp.read()
 
 requirements = [
-    'Click~=7.0'
-    'psutil~=5.0'
+    'Click~=7.0',
+    'numpy'
 ]
 
-requirements_agents = []
+requirements_agents = [
+    'psutil~=5.0'
+]
 
 setup(
     name='datatorch',
@@ -27,12 +29,11 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requirements=requirements,
-    extra_require={
-        'agents': requirements_agents
-    },
+    extra_require={'agents': requirements_agents},
     python_requires='>=3.6',
     license='MIT license',
     zip_safe=False,
+    include_package_data=True,
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',

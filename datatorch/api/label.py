@@ -1,5 +1,13 @@
-from .base import Entity
+from typing import ClassVar
+
+from .base import BaseEntity
 
 
-class Label(Entity):
-    pass
+class Label(BaseEntity):
+
+    id: ClassVar[str]
+    name: ClassVar[str]
+    color: ClassVar[str]
+    custom_id: ClassVar[str]
+    metadata: ClassVar[dict]
+    parentId: ClassVar[dict]

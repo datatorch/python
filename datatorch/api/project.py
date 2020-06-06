@@ -1,63 +1,110 @@
 from gql import gql
-from typing import ClassVar, List
+from typing import ClassVar, List, Union
 
 from .dataset import Dataset
 from .label import Label
-from .base import Entity
+from .base import BaseEntity
+from .storage_link import StorageLink
 
-
-GET_PROJECT_DATASET = gql("""
-    query GetProjectDatasets($projectId: ID!) {
+_DATASETS = Dataset.add_fragment(
+    """
+    query ProjectDatasets($projectId: ID!) {
       project: projectById(id: $projectId) {
         datasets {
           nodes {
-            id
-            name
-            description
-            projectId
-            kilobytes
-            formattedBytes
-            createdAt
-            updatedAt
+            ...DatasetFields
           }
         }
       }
     }
-""")
+    """
+)
+
+_LABELS = Label.add_fragment(
+    """
+    query GetProjectLabels($projectId: ID!) {
+      project: projectById(id: $projectId) {
+        labels {
+          ...LabelFields
+        }
+      }
+    }
+    """
+)
+
+_STORAGE_LINKS = StorageLink.add_fragment(
+    """
+    query GetStorageLinks($projectId: ID!) {
+      project: projectById(id: $projectId) {
+        storageLinks {
+          ...StorageLinkFields
+        }
+      }
+    }
+    """
+)
+
+AddableEntity = Union[Dataset, Label]
 
 
-class Project(Entity):
+class Project(BaseEntity):
     """ Projects contain datasets, files and annotations. """
 
-    id: ClassVar[str]
-    slug: ClassVar[str]
-    name: ClassVar[str]
-    description: ClassVar[str]
-    visibility: ClassVar[str]
-    about: ClassVar[str]
-    owner_id: ClassVar[str]
-    namespace: ClassVar[str]
-    path: ClassVar[str]
-    path_with_spaces: ClassVar[str]
-    avatar_url: ClassVar[str]
-    is_private: ClassVar[bool]
-    kilobytes: ClassVar[int]
-    formatted_bytes: ClassVar[str]
-    is_archived: ClassVar[bool]
-    created_at: ClassVar[str]
-    updated_at: ClassVar[str]
-
-    def create_dataset(self, name: str, description: str = None):
-        pass
+    id: str
+    slug: str
+    name: str
+    description: str
+    visibility: str
+    about: str
+    owner_id: str
+    namespace: str
+    path: str
+    path_with_spaces: str
+    avatar_url: str
+    is_private: bool
+    kilobytes: int
+    formatted_bytes: str
+    is_archived: bool
+    created_at: str
+    updated_at: str
 
     def datasets(self) -> List[Dataset]:
-        params = {'projectId': self.id}
-        results = self._client.execute(GET_PROJECT_DATASET, params=params)
-        datasets = results.get('project').get('datasets').get('nodes')
-        return list(map(lambda d: Dataset(self._client, d), datasets))
+        return self.client.query_to_class(
+            Dataset,
+            _DATASETS,
+            path='project.datasets.nodes',
+            params={'projectId': self.id}
+        )
 
     def labels(self) -> List[Label]:
-        pass
+        return self.client.query_to_class(
+            Label,
+            _LABELS,
+            path='project.labels',
+            params={'projectId': self.id}
+        )
 
-    def label(self, id) -> List[Label]:
-        pass
+    def storage_links(self) -> List[StorageLink]:
+        params = {'projectId': self.id}
+        return self.client.query_to_class(
+            StorageLink,
+            _STORAGE_LINKS,
+            path='project.storageLinks',
+            params=params
+        )
+
+    def add(self, entity: AddableEntity):
+        """ Add entity to project """
+
+        entity.client = self.client
+
+        if isinstance(entity, Dataset):
+
+            # results = self.client.execute(ADD_DATASET, params={
+            #     'projectId': self.id, 'name': entity.name, 'description': entity.description
+            # })
+            # entity.__dict__.update(results.get('createDataset'))
+            return
+
+        if isinstance(entity, Label):
+            self.create

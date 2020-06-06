@@ -1,8 +1,8 @@
 from typing import ClassVar
-from .base import Entity
+from .base import BaseEntity
 
 
-class Settings(Entity):
+class Settings(BaseEntity):
     """ Settings for the DataTorch API instance """
 
     api_version: ClassVar[str]
@@ -16,3 +16,8 @@ class Settings(Entity):
     def get(self, setting: str):
         """ Get a configuration property """
         raise Exception('Implementation required')
+
+    def open_in_web(self):
+        """ Open frontend in webbrowser """
+        import webbrowser
+        webbrowser.open(self.frontend)

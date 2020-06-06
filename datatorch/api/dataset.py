@@ -1,14 +1,14 @@
 from typing import ClassVar
-from .base import Entity
+from .base import BaseEntity
 
 
-class Dataset(Entity):
+class Dataset(BaseEntity):
 
-    id: ClassVar[str]
-    name: ClassVar[str]
-    description: ClassVar[str]
-    project_id: ClassVar[str]
-    kilobytes: ClassVar[int]
-    formatted_bytes: ClassVar[int]
-    created_at: ClassVar[str]
-    updated_at: ClassVar[str]
+    id: str
+    name: str
+    description: str
+    project_id: str
+    kilobytes: int
+    formatted_bytes: int
+    created_at: str
+    updated_at: str

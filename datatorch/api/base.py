@@ -1,53 +1,68 @@
-# from __future__ import annotations
 import re
 import json
+import functools
+from inspect import isclass
 
 from typing import overload
 from datetime import datetime
 
-
-@overload
-def camel_to_snake(name: str) -> str:
-    pass
+from .client import Client
+from .utils import camel_to_snake, snake_to_camel, get_annotations
 
 
-@overload
-def camel_to_snake(obj: dict) -> dict:
-    pass
+class BaseEntity(object):
 
+    @classmethod
+    def add_fragment(cls, query: str, name: str = None) -> str:
+        """ Appends GraphQL fragment to the query """
+        return query + cls.fragment(name)
 
-def camel_to_snake(value):
-    if type(value) == str:
-        value = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', value)
-        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', value).lower()
-    elif type(value) == dict:
-        return {camel_to_snake(k): _process_keys(v) for k, v in value.items()}
-    else:
-        return value
+    @classmethod
+    @functools.lru_cache()
+    def fragment(cls, name: str = None) -> str:
+        """ Creates fragment based on class annotations """
 
+        annotations = get_annotations(cls)
 
-def _process_keys(obj):
-    if type(obj) == dict:
-        return {camel_to_snake(k): _process_keys(v) for k, v in obj.items()}
-    else:
-        return obj
+        def remove_entities(kp):
+            k, v = kp
+            return not(isclass(v) and issubclass(v, BaseEntity))
+        keys = filter(remove_entities, annotations.items())
 
+        name = name or f'{cls.__name__}Fields'
+        fragment: str = f'\nfragment {name} on {cls.__name__} {{\n'
+        format_props = map(lambda p: '  ' + snake_to_camel(p[0]), keys)
+        fragment += '\n'.join(format_props)
+        fragment += '\n}\n'
 
-class Entity(object):
-    def __init__(self, client: object, obj: dict):
-        self._client = client
-        self.__dict__.update(camel_to_snake(obj))
+        return fragment
+
+    def __init__(self, obj: dict = {}, client: Client = None) -> None:
+
+        # Init all values to None
+        keys = get_annotations(self.__class__).keys()
+        for key in keys:
+            if key not in self.__dict__:
+                self[key] = None
+
+        # Assign correct values
+        self._update(camel_to_snake(obj))
+        try:
+            self.client: Client = client or Client()
+        except:
+            self.client = None
+
+    def __setitem__(self, k, v):
+        self.__dict__.update({k: v})
+
+    def _update(self, obj: dict) -> None:
+        self.__dict__.update(obj)
+
+    def dict(self) -> dict:
+        dic = self.__dict__.copy()
+        del dic['client']
+        return dic
 
     def to_json(self, indent: int = 2) -> str:
-        dic = self.__dict__
-        del dic['_client']
-        return json.dumps(dic, indent=indent)
-
-
-class TimestampEntity(Entity):
-
-    def created_at(self) -> datetime:
-        pass
-
-    def updated_at(self) -> datetime:
-        pass
+        """ Format entity as json """
+        return json.dumps(self.dict(), indent=indent)
