@@ -26,10 +26,10 @@ def snake_to_camel(value: Union[str, dict]) -> Union[str, dict]:
     When applied to a `dict` only keys will be effected
 
     Args:
-        value (Union[str, dict]): [description]
+        value: [description]
 
     Returns:
-        Union[str, dict]: [description]
+        input in converted format
     """
     if type(value) == str:
         components = value.split("_")

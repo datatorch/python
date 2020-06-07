@@ -1,0 +1,28 @@
+loaders:
+  - type: python
+processors:
+  - type: google
+  - type: filter
+renderer:
+  type: mkdocs
+  pages:
+    - title: datatorch.api
+      contents:
+        - "datatorch.api.*"
+        - "datatorch.utils.*"
+  clean_render: true
+  site_name: DataTorch
+  content_directory_name: ""
+  markdown:
+    insert_header_anchors: false
+    use_fixed_header_levels: true
+    signature_with_def: true
+    render_module_header: false
+    # signature_in_header: true
+
+    header_level_by_type:
+      Module: 2
+      Class: 3
+      Method: 4
+      Function: 4
+      Data: 3
