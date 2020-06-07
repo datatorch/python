@@ -1,6 +1,7 @@
 from .api import ApiClient
 
 from .client import Client
+from .utils import Bulk
 
 from .entity.annotation import Annotation
 from .entity.dataset import Dataset
@@ -14,7 +15,10 @@ from .entity.sources.image.segmentations import Segmentations
 from .entity.sources.image.bounding_box import BoundingBox
 
 __all__ = [
-    "Client" "ApiClient",
+    # Clients
+    "Client",
+    "ApiClient",
+    # Entities
     "Annotation",
     "Dataset",
     "Project",
@@ -25,4 +29,6 @@ __all__ = [
     "File",
     "StorageLink",
     "User",
+    # Utilities
+    "Bulk",
 ]

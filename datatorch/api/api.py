@@ -1,6 +1,4 @@
-from typing import overload, List, Union
-
-from datatorch.core.settings import Settings
+from typing import overload, List
 
 from .where import Where
 from .client import Client

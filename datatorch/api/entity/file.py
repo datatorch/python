@@ -1,9 +1,8 @@
 from typing import List
 
 import json
-import functools
 
-from datatorch.utils.string_style import camel_to_snake
+from ..utils import map_entities
 from .base import BaseEntity
 from .annotation import Annotation
 
@@ -69,33 +68,34 @@ class File(BaseEntity):
     annotation_count: int
     annotations: List[Annotation]
 
-    @property
-    @functools.lru_cache()
-    def annotations(self):
-        return list(map(lambda a: Annotation(a, self.client), self._annotations))
-
     def add(self, anno: Annotation) -> None:
-        """ Add annotation to file """
-        anno.client = self.client
-        anno.save()
-        self._annotations.append(anno.__dict__)
+        """Add annotation to file.
 
-    def remove(self, id: str) -> None:
-        pass
+        Args:
+            anno (:obj:`Annotation`): annotation to be added
+        """
+        self.annotations.append(anno)
 
-    def download(self, path: str = None, annotations: bool = True):
-        pass
+        if self.id is None:
+            anno.file_id = self.id
+            anno.save(client=self.client)
 
     def _update(self, obj):
-        self.annotations = list(
-            map(lambda a: Annotation(a, self.client), obj["annotations"])
+        self.annotations = map_entities(
+            obj.get("annotations", []), Annotation, client=self.client
         )
-        del obj["annotations"]
+        obj.pop("annotations", None)
         super()._update(obj)
+
+    def annotator(self):
+        """ Opens file in annotator """
+        import webbrowser
+
+        url = self.client.api_url.replace("/api", f"/annotate/{self.id}")
+        webbrowser.open(url)
 
     def to_json(self, indent: int = 2) -> str:
         dic = self.__dict__.copy()
-        del dic["client"]
-        dic["annotations"] = self._annotations
-        del dic["_annotations"]
+        dic.pop("client")
+        dic["annotations"] = [anno.__dict__ for anno in dic["annotations"]]
         return json.dumps(dic, indent=indent)

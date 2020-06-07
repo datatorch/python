@@ -1,6 +1,5 @@
 import re
-import inspect
-from typing import overload, Callable, Any, Union
+from typing import Callable, Any, Union
 
 
 def camel_to_snake(value: Union[str, dict]) -> Union[str, dict]:

@@ -1,6 +1,6 @@
 import json
 
-from typing import overload, List, Union
+from typing import List, Union
 
 from gql import Client as GqlClient, gql
 from gql.transport.requests import RequestsHTTPTransport

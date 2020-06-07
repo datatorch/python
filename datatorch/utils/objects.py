@@ -1,4 +1,8 @@
-from inspect import getmembers
+from inspect import getmembers, isclass
+
+
+def is_class_of(cls: object, class_or_tuple) -> bool:
+    return not (isclass(cls) and issubclass(cls, class_or_tuple))
 
 
 def get_annotations(obj: object):

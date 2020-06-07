@@ -1,6 +1,7 @@
 from typing import List
 
 from datatorch.utils.string_style import camel_to_snake
+from ..utils import map_entities
 from .base import BaseEntity
 from .label import Label
 from .sources.source import Source
@@ -36,21 +37,27 @@ class Annotation(BaseEntity):
     file_id: str
     label_id: str
     sources_json: List[dict]
+    sources = []
 
     def __init__(self, obj={}, client=None, label: Label = None, **kwargs):
+        print(obj)
         super().__init__(obj=obj, client=client, **kwargs)
         if label:
             self.label(label)
 
-    @property
-    def sources(self) -> List[Source]:
-        print(self.sources_json)
-        return list(map(lambda s: Source(s, self.client), self.sources_json or []))
+    def _update(self, obj: dict):
+        self.sources = map_entities(
+            obj.get("sources_json", []), Source, client=self.client
+        )
+        obj.pop("sources_json", None)
+        super()._update(obj)
 
     def add(self, source: Source) -> None:
-        if self.sources_json is None:
-            self.sources_json = []
-        self.sources_json.append(source.__dict__)
+        self.sources.append(source)
+
+        if self.id:
+            source.annotation_id = self.id
+            source.save(client=self.client)
 
     def label(self, label: Label) -> None:
         self.label_id = label.id
@@ -77,12 +84,3 @@ class Annotation(BaseEntity):
 
         for source in self.sources:
             source.save(client=self.client)
-            params = {
-                "id": source.id,
-                "annotationId": self.id,
-                "type": source.type,
-                "data": source.data(),
-            }
-            results = self.client.execute(_CREATE_SOURCE, params=params)
-            source.__dict__.update(camel_to_snake(results.get("source")))
-            source.client = self.client

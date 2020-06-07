@@ -1,6 +1,6 @@
 import numpy as np
 
-from typing import List, Tuple
+from typing import List
 
 from .typings import Segment
 from ..source import Source

@@ -1,5 +1,4 @@
 import os
-import errno
 
 from datatorch.utils.files import mkdir_exists
 from datatorch.core import env

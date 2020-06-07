@@ -1,18 +1,18 @@
-import re
 import json
 import functools
-from inspect import isclass
 
-from typing import overload
-from datetime import datetime
-
+from requests.exceptions import MissingSchema
 from ..client import Client
 
-from datatorch.utils.objects import get_annotations
+from datatorch.utils.objects import get_annotations, is_class_of
 from datatorch.utils.string_style import camel_to_snake, snake_to_camel
 
 
 class BaseEntity(object):
+
+    id: str
+    client: Client
+
     @classmethod
     def add_fragment(cls, query: str, name: str = None) -> str:
         """ Appends GraphQL fragment to the query """
@@ -27,7 +27,7 @@ class BaseEntity(object):
 
         def remove_entities(kp):
             k, v = kp
-            return not (isclass(v) and issubclass(v, BaseEntity))
+            return is_class_of(v, (BaseEntity, Client))
 
         keys = filter(remove_entities, annotations.items())
 
@@ -47,22 +47,24 @@ class BaseEntity(object):
             if key not in self.__dict__:
                 self[key] = None
 
-        # Assign values
-        self._update({**camel_to_snake(obj), **kwargs})
         try:
             self.client: Client = client or Client()
-        except:
+        except MissingSchema:
             self.client = None
+        # Assign values
+        self._update({**camel_to_snake(obj), **kwargs})
 
     def __setitem__(self, k, v):
         self.__dict__.update({k: v})
 
     def _update(self, obj: dict) -> None:
-        self.__dict__.update(obj)
+        # self.__dict__.update(obj)
+        for k, v in obj.items():
+            setattr(self, k, v)
 
     def dict(self) -> dict:
         dic = self.__dict__.copy()
-        del dic["client"]
+        dic.pop("client")
         return dic
 
     def to_json(self, indent: int = 2) -> str:
@@ -74,3 +76,5 @@ class BaseEntity(object):
             ValueError("Entity already has an ID.")
         if client:
             self.client = client
+        if self.client is None:
+            ValueError("Entity does not have a client.")

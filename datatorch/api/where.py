@@ -1,8 +1,27 @@
 from datatorch.utils.string_style import snake_to_camel
 
 
+class InvalidOperatorError(Exception):
+    pass
+
+
+operators = {
+    "equals",
+    "not_equals",
+    "in",
+    "gt",
+    "gte",
+    "lt",
+    "lte" "like",
+    "starts_with",
+    "ends_with",
+}
+
+
 class Where(object):
-    def __init__(self, *args, **kwargs):
+    __slot__ = ("input",)
+
+    def __init__(self, **kwargs):
         self.input: dict = {}
 
         for key, value in kwargs.items():
@@ -21,6 +40,9 @@ class Where(object):
     def _set(self, field, operation, value):
         field = snake_to_camel(field)
         operation = snake_to_camel(operation)
+
+        if operation not in operators:
+            raise InvalidOperatorError(f"{operation} is not a valid operator.")
 
         where = self.input
         for key in field.split("."):

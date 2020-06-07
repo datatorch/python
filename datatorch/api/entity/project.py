@@ -1,5 +1,4 @@
-from gql import gql
-from typing import ClassVar, List, Union
+from typing import List, Union
 
 from .dataset import Dataset
 from .label import Label
