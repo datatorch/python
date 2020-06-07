@@ -1,9 +1,7 @@
-
-from .utils import snake_to_camel
+from datatorch.utils.string_style import snake_to_camel
 
 
 class Where(object):
-
     def __init__(self, *args, **kwargs):
         self.input: dict = {}
 
@@ -11,9 +9,9 @@ class Where(object):
             if isinstance(value, Where):
                 self.input[key] = value.input
                 continue
-            split = key.split('__')
+            split = key.split("__")
             if len(split) == 1:
-                split.append('equals')
+                split.append("equals")
             field, operation = split
             self._set(field, operation, value)
 
@@ -25,7 +23,7 @@ class Where(object):
         operation = snake_to_camel(operation)
 
         where = self.input
-        for key in field.split('.'):
+        for key in field.split("."):
             if key not in self.input:
                 where[field] = {}
             where = where[field]

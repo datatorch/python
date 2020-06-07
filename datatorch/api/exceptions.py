@@ -1,7 +1,5 @@
 
 class AuthenticationError(Exception):
-    pass
+    """ Rased when user does not has permission to access resource. """
 
-
-class ParametersError(Exception):
     pass

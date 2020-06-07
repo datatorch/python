@@ -11,13 +11,14 @@ class Settings(BaseEntity):
 
     def set(self, setting: str, value):
         """ Update an instance configuration property """
-        raise Exception('Implementation required')
+        raise Exception("Implementation required")
 
     def get(self, setting: str):
         """ Get a configuration property """
-        raise Exception('Implementation required')
+        raise Exception("Implementation required")
 
     def open_in_web(self):
         """ Open frontend in webbrowser """
         import webbrowser
+
         webbrowser.open(self.frontend)

@@ -1,4 +1,3 @@
-
 from typing import Tuple, ClassVar
 from ..source import Source
 
@@ -9,7 +8,7 @@ class BoundingBox(Source):
     """ Bounding Box an enclosing retangular box for a image marking """
 
     id: str
-    type: str = 'PaperBox'
+    type: str = "PaperBox"
     x: float
     y: float
     width: float

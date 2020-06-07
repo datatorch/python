@@ -6,12 +6,13 @@ from inspect import isclass
 from typing import overload
 from datetime import datetime
 
-from .client import Client
-from .utils import camel_to_snake, snake_to_camel, get_annotations
+from ..client import Client
+
+from datatorch.utils.objects import get_annotations
+from datatorch.utils.string_style import camel_to_snake, snake_to_camel
 
 
 class BaseEntity(object):
-
     @classmethod
     def add_fragment(cls, query: str, name: str = None) -> str:
         """ Appends GraphQL fragment to the query """
@@ -26,18 +27,19 @@ class BaseEntity(object):
 
         def remove_entities(kp):
             k, v = kp
-            return not(isclass(v) and issubclass(v, BaseEntity))
+            return not (isclass(v) and issubclass(v, BaseEntity))
+
         keys = filter(remove_entities, annotations.items())
 
-        name = name or f'{cls.__name__}Fields'
-        fragment: str = f'\nfragment {name} on {cls.__name__} {{\n'
-        format_props = map(lambda p: '  ' + snake_to_camel(p[0]), keys)
-        fragment += '\n'.join(format_props)
-        fragment += '\n}\n'
+        name = name or f"{cls.__name__}Fields"
+        fragment: str = f"\nfragment {name} on {cls.__name__} {{\n"
+        format_props = map(lambda p: "  " + snake_to_camel(p[0]), keys)
+        fragment += "\n".join(format_props)
+        fragment += "\n}\n"
 
         return fragment
 
-    def __init__(self, obj: dict = {}, client: Client = None) -> None:
+    def __init__(self, obj: dict = {}, client: Client = None, **kwargs) -> None:
 
         # Init all values to None
         keys = get_annotations(self.__class__).keys()
@@ -45,8 +47,8 @@ class BaseEntity(object):
             if key not in self.__dict__:
                 self[key] = None
 
-        # Assign correct values
-        self._update(camel_to_snake(obj))
+        # Assign values
+        self._update({**camel_to_snake(obj), **kwargs})
         try:
             self.client: Client = client or Client()
         except:
@@ -60,9 +62,15 @@ class BaseEntity(object):
 
     def dict(self) -> dict:
         dic = self.__dict__.copy()
-        del dic['client']
+        del dic["client"]
         return dic
 
     def to_json(self, indent: int = 2) -> str:
         """ Format entity as json """
         return json.dumps(self.dict(), indent=indent)
+
+    def save(self, client=None):
+        if self.id is not None:
+            ValueError("Entity already has an ID.")
+        if client:
+            self.client = client

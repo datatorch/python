@@ -10,4 +10,4 @@ class PrefixLogger(LoggerAdapter):
         self.prefix = prefix
 
     def process(self, msg: str, kwargs: dict) -> (str, dict):
-        return (f'[{self.prefix}] ' + msg, kwargs)
+        return (f"[{self.prefix}] " + msg, kwargs)

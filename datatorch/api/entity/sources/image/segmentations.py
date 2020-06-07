@@ -1,4 +1,3 @@
-
 import numpy as np
 
 from typing import List, Tuple
@@ -10,7 +9,7 @@ from ..source import Source
 class Segmentations(Source):
 
     id: str
-    type: str = 'PaperSegmentations'
+    type: str = "PaperSegmentations"
     path_data: List[Segment]
 
     def from_mask(self, mask: np.array):

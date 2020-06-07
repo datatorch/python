@@ -1,6 +1,7 @@
 import os
 import errno
 
+from datatorch.utils.files import mkdir_exists
 from datatorch.core import env
 
 
@@ -14,17 +15,7 @@ def global_path(mkdir=True):
 
 def local_path(mkdir=True):
     root_dir = os.getcwd()
-    path = os.path.join(root_dir, '.datatorch')
+    path = os.path.join(root_dir, ".datatorch")
     if mkdir:
         mkdir_exists(path)
     return path
-
-
-def mkdir_exists(path: str):
-    try:
-        os.makedirs(path)
-    except OSError as e:
-        if e.errno == errno.EEXIST and os.path.isdir(path):
-            return False
-        else:
-            raise

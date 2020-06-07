@@ -72,25 +72,19 @@ class Project(BaseEntity):
         return self.client.query_to_class(
             Dataset,
             _DATASETS,
-            path='project.datasets.nodes',
-            params={'projectId': self.id}
+            path="project.datasets.nodes",
+            params={"projectId": self.id},
         )
 
     def labels(self) -> List[Label]:
         return self.client.query_to_class(
-            Label,
-            _LABELS,
-            path='project.labels',
-            params={'projectId': self.id}
+            Label, _LABELS, path="project.labels", params={"projectId": self.id}
         )
 
     def storage_links(self) -> List[StorageLink]:
-        params = {'projectId': self.id}
+        params = {"projectId": self.id}
         return self.client.query_to_class(
-            StorageLink,
-            _STORAGE_LINKS,
-            path='project.storageLinks',
-            params=params
+            StorageLink, _STORAGE_LINKS, path="project.storageLinks", params=params
         )
 
     def add(self, entity: AddableEntity):

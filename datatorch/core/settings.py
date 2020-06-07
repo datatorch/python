@@ -6,7 +6,7 @@ from datatorch.core import folder
 
 logger = logging.getLogger(__name__)
 
-SETTINGS_FILE = 'settings.json'
+SETTINGS_FILE = "settings.json"
 
 
 class Settings(object):
@@ -21,7 +21,7 @@ class Settings(object):
         self._global = load_json(self.global_path)
 
     def get(self, key: str, default=None):
-        env_value = os.getenv('DATATORCH_{}'.format(key.upper()))
+        env_value = os.getenv("DATATORCH_{}".format(key.upper()))
         local_value = self._local.get(key)
         global_value = self._global.get(key)
 
@@ -46,11 +46,11 @@ def load_json(path: str) -> dict:
 
     with open(path) as fr:
         output = fr.read()
-        data = json.loads(output or '{}')
+        data = json.loads(output or "{}")
 
     return data
 
 
 def save_json(path: str, settings: dict):
-    with open(path, 'w') as f:
+    with open(path, "w") as f:
         json.dump(settings, f, indent=2, sort_keys=True)

@@ -9,7 +9,7 @@ labels = project.labels()
 
 f = client.file('7b1e2d05-89ed-40fe-b2aa-9368633b8748')
 
-anno = Annotation(dict(label_id=labels[0].id))
+anno = Annotation(label=labels[0])
 anno.add(BoundingBox.create(0, 0, 100, 100))
 
 print(anno.to_json())
