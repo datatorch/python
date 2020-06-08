@@ -1,5 +1,5 @@
 import unittest
-from datatorch.utils.string_style import camel_to_snake, snake_to_camel
+from datatorch.utils import camel_to_snake, snake_to_camel
 
 
 class TestCamelToSnake(unittest.TestCase):

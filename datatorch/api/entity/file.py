@@ -2,28 +2,29 @@ from typing import List
 
 import json
 
+from datatorch.utils import camel_to_snake
+
 from ..utils import map_entities
 from .base import BaseEntity
 from .annotation import Annotation
 
-_CREATE_ANNOTATION = """
-  mutation AddAnnotation(
-    $id: ID
-    $fileId: ID!
-    $name: String
-    $labelId: ID!
-    $color: String
+
+_CREATE_FILE = """
+  mutation ImportFile(
+    $linkId: ID!
+    $datasetId: ID
+    $importFile: ImportFile!
   ) {
-    annotation: createAnnotation(
-      id: $id
-      fileId: $fileId
-      name: $name
-      labelId: $labelId
-      color: $color
+    file: importFiles(
+      linkId: $linkId
+      files: [$importFile]
+      datasetId: $datasetId
     ) {
       id
-      fileId
-      color
+      name
+      path
+      mimetype
+      linkId
     }
   }
 """
@@ -31,27 +32,51 @@ _CREATE_ANNOTATION = """
 
 class File(BaseEntity):
     @classmethod
-    def fragment(cls, name=None):
+    def add_fragment(cls, query, name=None, data_file=False):
+        return query + cls.fragment(name, data_file)
+
+    @classmethod
+    def fragment(cls, name=None, data_file=False):
         # Custom fragment to pull annotations with file.
         name = name or f"{cls.__name__}Fields"
+
+        all_file_props = """
+          id
+          linkId
+          name
+          path
+          mimetype
+          encoding
+          kilobytes
+          url
+        """
+
+        data_file_props = """
+          status
+          datasetId
+          annotationsCount
+          annotations {
+            ...AnnotationFields
+          }
+        """
+
+        if data_file:
+            return Annotation.add_fragment(
+                f"""
+                \nfragment {name} on DatasetFile {{
+                  {all_file_props}
+                  {data_file_props}
+                }}
+                """
+            )
+
         return Annotation.add_fragment(
             f"""
             \nfragment {name} on {cls.__name__} {{
-              id
-              name
-              path
-              mimetype
-              encoding
-              kilobytes
-              url
-              ... on DatasetFile {{
-                status
-                datasetId
-                annotationsCount
-                annotations {{
-                  ...AnnotationFields
+                {all_file_props}
+                ... on DatasetFile {{
+                    {data_file_props}
                 }}
-              }}
             }}\n
             """
         )
@@ -59,6 +84,7 @@ class File(BaseEntity):
     id: str
     name: str
     path: str
+    link_id: str
     mimetype: str
     encoding: str
     kilobytes: str
@@ -67,6 +93,29 @@ class File(BaseEntity):
     dataset_id: str
     annotation_count: int
     annotations: List[Annotation]
+
+    def create(self, client=None) -> None:
+        """ Imports file """
+        super().create(client=client)
+
+        assert self.link_id is not None
+        assert self.path is not None
+
+        results = self.client.execute(
+            _CREATE_FILE,
+            params={
+                "linkId": self.link_id,
+                "datasetId": self.dataset_id,
+                "importFile": {
+                    "path": self.path,
+                    "name": self.name,
+                    "size": self.kilobytes * 1024,
+                },
+            },
+        )
+
+        r_file = results.get("file")
+        self.__dict__.update(camel_to_snake(r_file))
 
     def add(self, anno: Annotation) -> None:
         """Add annotation to file.
@@ -78,7 +127,7 @@ class File(BaseEntity):
 
         if self.id is None:
             anno.file_id = self.id
-            anno.save(client=self.client)
+            anno.create(client=self.client)
 
     def _update(self, obj):
         self.annotations = map_entities(

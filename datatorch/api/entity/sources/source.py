@@ -1,5 +1,5 @@
 from ..base import BaseEntity
-from datatorch.utils.string_style import snake_to_camel
+from datatorch.utils import snake_to_camel
 
 
 _CREATE_SOURCE = """
@@ -40,4 +40,4 @@ class Source(BaseEntity):
         return dict([(snake_to_camel(k), v) for k, v in obj.items()])
 
     def save(self, client=None):
-        super().save(client=client)
+        super().create(client=client)

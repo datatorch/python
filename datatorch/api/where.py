@@ -1,4 +1,4 @@
-from datatorch.utils.string_style import snake_to_camel
+from datatorch.utils import snake_to_camel
 
 
 class InvalidOperatorError(Exception):
@@ -38,11 +38,11 @@ class Where(object):
         self.input[field] = where.input
 
     def _set(self, field, operation, value):
-        field = snake_to_camel(field)
-        operation = snake_to_camel(operation)
-
         if operation not in operators:
             raise InvalidOperatorError(f"{operation} is not a valid operator.")
+
+        field = snake_to_camel(field)
+        operation = snake_to_camel(operation)
 
         where = self.input
         for key in field.split("."):

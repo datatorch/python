@@ -1,6 +1,6 @@
 from typing import List
 
-from datatorch.utils.string_style import camel_to_snake
+from datatorch.utils import camel_to_snake
 from ..utils import map_entities
 from .base import BaseEntity
 from .label import Label
@@ -40,7 +40,6 @@ class Annotation(BaseEntity):
     sources = []
 
     def __init__(self, obj={}, client=None, label: Label = None, **kwargs):
-        print(obj)
         super().__init__(obj=obj, client=client, **kwargs)
         if label:
             self.label(label)
@@ -62,13 +61,11 @@ class Annotation(BaseEntity):
     def label(self, label: Label) -> None:
         self.label_id = label.id
 
-    def save(self, client=None):
+    def create(self, client=None):
         super().save(client=client)
 
-        if self.label_id is None:
-            raise ValueError("Annotation does not have a label ID.")
-        if self.file_id is None:
-            raise ValueError("Annotation does not have a file ID.")
+        assert self.label_id is not None
+        assert self.file_id is not None
 
         params = {
             "id": self.id,
@@ -83,4 +80,4 @@ class Annotation(BaseEntity):
         self.__dict__.update(camel_to_snake(r_anno))
 
         for source in self.sources:
-            source.save(client=self.client)
+            source.create(client=self.client)

@@ -13,10 +13,7 @@ class Settings(object):
     """ Manager for storaging user settings such as API KEY and API URL """
 
     def __init__(self):
-        # self.local_path = os.path.join(folder.local_path(), SETTINGS_FILE)
         self.global_path = os.path.join(folder.global_path(), SETTINGS_FILE)
-
-        # self._local = load_json(self.local_path)
         self._local = dict({})
         self._global = load_json(self.global_path)
 
@@ -36,10 +33,6 @@ class Settings(object):
         if globally:
             self._global[key] = value
             save_json(self.global_path, self._global)
-        else:
-            # self._local[key] = value
-            # save_json(self.local_path, self._local)
-            pass
 
 
 def load_json(path: str) -> dict:

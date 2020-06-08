@@ -2,6 +2,7 @@ from .api import ApiClient
 
 from .client import Client
 from .utils import Bulk
+from .where import Where
 
 from .entity.annotation import Annotation
 from .entity.dataset import Dataset
@@ -31,4 +32,5 @@ __all__ = [
     "User",
     # Utilities
     "Bulk",
+    "Where",
 ]

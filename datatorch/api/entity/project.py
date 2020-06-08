@@ -1,9 +1,12 @@
 from typing import List, Union
 
+from ..where import Where
 from .dataset import Dataset
 from .label import Label
 from .base import BaseEntity
+from .file import File
 from .storage_link import StorageLink
+
 
 _DATASETS = Dataset.add_fragment(
     """
@@ -43,6 +46,26 @@ _STORAGE_LINKS = StorageLink.add_fragment(
     """
 )
 
+_DATASET_FILES = File.add_fragment(
+    """
+    query GetProjectFiles(
+      $projectId: ID!
+      $where: DatasetFileWhereInput
+      $page: Int
+      $perPage: Int
+    ) {
+      project: projectById(id: $projectId) {
+        files(input: { where: $where, perPage: $perPage, page: $page }) {
+          nodes {
+            ...FileFields
+          }
+        }
+      }
+    }
+    """,
+    data_file=True,
+)
+
 AddableEntity = Union[Dataset, Label]
 
 
@@ -75,15 +98,32 @@ class Project(BaseEntity):
             params={"projectId": self.id},
         )
 
+    def files(self, where: Where = None, limit=500, page=1):
+        if where is None:
+            where = Where()
+        return self.client.query_to_class(
+            File,
+            _DATASET_FILES,
+            path="project.files.nodes",
+            params={
+                "projectId": self.id,
+                "perPage": limit,
+                "page": page,
+                "where": where.input,
+            },
+        )
+
     def labels(self) -> List[Label]:
         return self.client.query_to_class(
             Label, _LABELS, path="project.labels", params={"projectId": self.id}
         )
 
     def storage_links(self) -> List[StorageLink]:
-        params = {"projectId": self.id}
         return self.client.query_to_class(
-            StorageLink, _STORAGE_LINKS, path="project.storageLinks", params=params
+            StorageLink,
+            _STORAGE_LINKS,
+            path="project.storageLinks",
+            params={"projectId": self.id},
         )
 
     def add(self, entity: AddableEntity):
