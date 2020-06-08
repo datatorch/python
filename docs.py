@@ -1,5 +1,6 @@
 import yaml
 import os
+import yaml
 
 from pydoc_markdown import PydocMarkdown
 
@@ -14,4 +15,4 @@ if __name__ == "__main__":
     pydoc.process()
     pydoc.render()
 
-    os.remove(f"build/docs/mkdocs.yml")
+    os.remove("build/docs/mkdocs.yml")
