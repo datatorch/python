@@ -7,6 +7,15 @@
 </h1>
 <h4 align="center">DataTorch CLI and Python API libary for programmatic access.</h4>
 
+<p align="center">
+  <img alt="Package Version" src="https://img.shields.io/pypi/v/datatorch">
+  <img alt="Python Versions" src="https://img.shields.io/pypi/pyversions/datatorch">
+  <img alt="Build Status" src="https://img.shields.io/github/workflow/status/datatorch/python/Python%20package">
+</p>
+
+```bash
+pip install datatorch
+```
 
 ## Development
 
