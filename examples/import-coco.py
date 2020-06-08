@@ -37,7 +37,7 @@ if __name__ == "__main__":
                 return cat
         return None
 
-    # Load coco
+    # Load coco categories
     coco = COCO(anno_file)
     cats = coco.loadCats(coco.getCatIds())
     names = [cat["name"] for cat in cats]
