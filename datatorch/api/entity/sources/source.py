@@ -16,7 +16,6 @@ _CREATE_SOURCE = """
       data: $data
     ) {
       id
-      annotationId
     }
   }
 """
@@ -39,5 +38,18 @@ class Source(BaseEntity):
         del obj["annotation_id"]
         return dict([(snake_to_camel(k), v) for k, v in obj.items()])
 
-    def save(self, client=None):
+    def create(self, client=None):
         super().create(client=client)
+
+        assert self.type is not None, "Source must have a type"
+        results = self.client.execute(
+            _CREATE_SOURCE,
+            params={
+                "id": self.id,
+                "annotationId": self.annotation_id,
+                "type": self.type,
+                "data": self.data(),
+            },
+        )
+        r_source = results.get("source")
+        self.id = r_source.get("id")

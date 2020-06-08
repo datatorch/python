@@ -62,10 +62,10 @@ class Annotation(BaseEntity):
         self.label_id = label.id
 
     def create(self, client=None):
-        super().save(client=client)
+        super().create(client=client)
 
-        assert self.label_id is not None
-        assert self.file_id is not None
+        assert self.label_id is not None, "Annotation must have a file ID"
+        assert self.file_id is not None, "Annotation must have label ID"
 
         params = {
             "id": self.id,
@@ -75,9 +75,9 @@ class Annotation(BaseEntity):
             "color": self.color,
         }
         results = self.client.execute(_CREATE_ANNOTATION, params=params)
-
         r_anno = results.get("annotation")
         self.__dict__.update(camel_to_snake(r_anno))
 
         for source in self.sources:
+            source.annotation_id = self.id
             source.create(client=self.client)

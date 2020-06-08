@@ -72,12 +72,10 @@ class BaseEntity(object):
         return json.dumps(self.dict(), indent=indent)
 
     def create(self, client=None):
-        if self.id is not None:
-            ValueError("Entity already has an ID.")
+        assert self.id is None
         if client:
             self.client = client
-        if self.client is None:
-            ValueError("Entity does not have a client.")
+        assert self.client is not None
 
     def save(self, client=None):
         assert self.id is not None

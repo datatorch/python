@@ -124,8 +124,7 @@ class File(BaseEntity):
             anno (:obj:`Annotation`): annotation to be added
         """
         self.annotations.append(anno)
-
-        if self.id is None:
+        if self.id is not None:
             anno.file_id = self.id
             anno.create(client=self.client)
 
@@ -146,5 +145,5 @@ class File(BaseEntity):
     def to_json(self, indent: int = 2) -> str:
         dic = self.__dict__.copy()
         dic.pop("client")
-        dic["annotations"] = [anno.__dict__ for anno in dic["annotations"]]
+        dic["annotations"] = [anno.to_json() for anno in dic["annotations"]]
         return json.dumps(dic, indent=indent)

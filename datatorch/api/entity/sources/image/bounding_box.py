@@ -14,7 +14,7 @@ class BoundingBox(Source):
     height: float
 
     @classmethod
-    def create(cls, x, y, width, height):
+    def xywh(cls, x, y, width, height):
         return cls(dict(x=x, y=y, width=width, height=height))
 
     @property
