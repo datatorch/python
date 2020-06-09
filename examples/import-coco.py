@@ -86,8 +86,8 @@ if __name__ == "__main__":
             if anno.get("datatorch_id") is not None:
                 print(f'Annotation {anno["id"]} already exists in DataTorch, skipping')
 
-            score = anno.get("score")
-            if anno.get("score") is not None and score < min_score:
+            score = anno.get("score", 1)
+            if score < min_score:
                 continue
 
             label = label_maping[anno["category_id"]]
