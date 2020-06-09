@@ -10,6 +10,14 @@ from datatorch.api import (
 from pycocotools.coco import COCO
 
 
+def print_project(project):
+    print("=" * 50)
+    print(f"Project: {project.name}")
+    names = [label.name for label in labels]
+    print(f'Labels: {" ".join(names)}')
+    print("=" * 50)
+
+
 if __name__ == "__main__":
 
     # DataTorch project ID
@@ -17,18 +25,14 @@ if __name__ == "__main__":
     # Path to annotation file
     anno_file = "path/to/coco"
     # Only add annotations above this score
-    min_source = 0.8
+    min_score = 0.8
 
     # Connect to DataTorch
     api = ApiClient()
     project = api.project(project_id)
     labels = project.labels()
 
-    print("=" * 50)
-    print(f"Project: {project.name}")
-    names = [label.name for label in labels]
-    print(f'Labels: {" ".join(names)}')
-    print("=" * 50)
+    print_project(project)
 
     def category_in_project(name: str) -> Label:
         """ Returns category in project """
@@ -82,8 +86,8 @@ if __name__ == "__main__":
             if anno.get("datatorch_id") is not None:
                 print(f'Annotation {anno["id"]} already exists in DataTorch, skipping')
 
-            source = anno.get("source")
-            if anno.get("source") is not None and source < min_source:
+            score = anno.get("score")
+            if anno.get("score") is not None and score < min_score:
                 continue
 
             label = label_maping[anno["category_id"]]
