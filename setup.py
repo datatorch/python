@@ -12,7 +12,7 @@ requirements_agents = ["psutil~=5.0"]
 
 setup(
     name="datatorch",
-    version="0.1.3",
+    version="0.1.4",
     description="A CLI and library for interacting with DataTorch",
     author="DataTorch",
     author_email="support@datatorch.io",
@@ -23,7 +23,7 @@ setup(
     packages=find_packages(),
     long_description=long_description,
     long_description_content_type="text/markdown",
-    install_requirements=requirements,
+    install_requires=requirements,
     extra_require={"agents": requirements_agents},
     python_requires=">=3.6",
     license="MIT license",
