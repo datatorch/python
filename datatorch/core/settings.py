@@ -37,11 +37,15 @@ class Settings(object):
 
 def load_json(path: str) -> dict:
 
-    with open(path) as fr:
-        output = fr.read()
-        data = json.loads(output or "{}")
+    try:
+        with open(path) as fr:
+            output = fr.read()
+            data = json.loads(output or "{}")
+        return data
+    except FileNotFoundError:
+        pass
 
-    return data
+    return {}
 
 
 def save_json(path: str, settings: dict):

@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 @click.command()
 @click.argument("key", nargs=-1)
 @click.option(
-    "--host", default=BASE_URL, help="Login to a specific instance of DataTorch"
+    "--host", default=BASE_URL, help="Url to to a specific API instance of DataTorch"
 )
 @click.option(
     "--no-web", is_flag=True, help="Disable opening webbrowser to access token link"

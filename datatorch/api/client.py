@@ -30,8 +30,8 @@ class Client(object):
         self.api_url = api_url
 
     @property
-    def api_key(self) -> str:
-        return self._api_key or self._settings.get("API_KEY")
+    def api_key(self) -> Union[str, None]:
+        return self._api_key or self._settings.get("API_KEY", None)
 
     @api_key.setter
     def api_key(self, api_key):
@@ -39,8 +39,8 @@ class Client(object):
         self.client.transport.headers["datatorch-api-key"] = self.api_key
 
     @property
-    def api_url(self) -> str:
-        return self._api_url or self._settings.get("API_URL")
+    def api_url(self) -> Union[str, None]:
+        return self._api_url or self._settings.get("API_URL", None)
 
     @api_url.setter
     def api_url(self, value):
