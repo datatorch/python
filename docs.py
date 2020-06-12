@@ -1,6 +1,5 @@
 import yaml
 import os
-import yaml
 
 from pydoc_markdown import PydocMarkdown
 

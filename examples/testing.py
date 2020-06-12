@@ -1,4 +1,4 @@
-from typing import ClassVar, get_type_hints
+from typing import get_type_hints
 from datatorch.api import ApiClient, Annotation, BoundingBox, Where
 
 client = ApiClient(
