@@ -9,6 +9,9 @@ from .base import BaseEntity
 from .annotation import Annotation
 
 
+__all__ = "File"
+
+
 _CREATE_FILE = """
   mutation ImportFile(
     $linkId: ID!

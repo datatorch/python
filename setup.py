@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 import sys
 
 assert sys.version_info >= (3, 6, 0), "DataTorch requires Python 3.6+"
@@ -20,7 +20,7 @@ setup(
         "console_scripts": ["datatorch=datatorch.cli:main", "dt=datatorch.cli:main"]
     },
     url="https://github.com/datatorch/python",
-    packages=["datatorch"],
+    packages=find_packages(),
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requirements=requirements,

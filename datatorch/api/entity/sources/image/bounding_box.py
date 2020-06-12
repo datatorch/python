@@ -3,6 +3,9 @@ from ..source import Source
 from .typings import Point2D
 
 
+__all__ = "BoundingBox"
+
+
 class BoundingBox(Source):
     """ Bounding Box an enclosing retangular box for a image marking """
 

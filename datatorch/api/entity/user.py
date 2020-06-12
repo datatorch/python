@@ -2,6 +2,9 @@ from typing import ClassVar
 from .base import BaseEntity
 
 
+__all__ = "User"
+
+
 class User(BaseEntity):
     """ Projects contain datasets, files and annotations. """
 

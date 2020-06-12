@@ -2,6 +2,9 @@ from typing import ClassVar
 from .base import BaseEntity
 
 
+__all__ = "Settings"
+
+
 class Settings(BaseEntity):
     """ Settings for the DataTorch API instance """
 

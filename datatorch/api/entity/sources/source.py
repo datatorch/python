@@ -2,6 +2,9 @@ from ..base import BaseEntity
 from datatorch.utils import snake_to_camel
 
 
+__all__ = "Source"
+
+
 _CREATE_SOURCE = """
   mutation AddSource(
     $id: ID

@@ -1,6 +1,9 @@
 from .base import BaseEntity
 
 
+__all__ = "Dataset"
+
+
 _CREATE_DATASET = """
     mutation CreateDataset(
       $projectId: ID!

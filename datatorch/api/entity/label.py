@@ -3,6 +3,9 @@ from typing import ClassVar
 from .base import BaseEntity
 
 
+__all__ = "Label"
+
+
 class Label(BaseEntity):
 
     id: ClassVar[str]

@@ -6,6 +6,9 @@ from .typings import Segment
 from ..source import Source
 
 
+__all__ = "Segmentations"
+
+
 class Segmentations(Source):
 
     id: str

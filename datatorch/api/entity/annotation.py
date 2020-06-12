@@ -6,6 +6,10 @@ from .base import BaseEntity
 from .label import Label
 from .sources.source import Source
 
+
+__all__ = "Annotation"
+
+
 _CREATE_ANNOTATION = """
   mutation AddAnnotation(
     $id: ID

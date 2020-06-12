@@ -8,6 +8,9 @@ from gql.transport.requests import RequestsHTTPTransport
 from datatorch.core.settings import Settings
 
 
+__all__ = "Client"
+
+
 class Client(object):
     """ Wrapper for the DataTorch API including GraphQL and uploading """
 

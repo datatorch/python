@@ -8,6 +8,9 @@ from .file import File
 from .storage_link import StorageLink
 
 
+__all__ = "Project"
+
+
 _DATASETS = Dataset.add_fragment(
     """
     query ProjectDatasets($projectId: ID!) {

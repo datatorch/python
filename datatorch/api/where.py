@@ -1,6 +1,9 @@
 from datatorch.utils import snake_to_camel
 
 
+__all__ = "Where", "InvalidOperatorError"
+
+
 class InvalidOperatorError(Exception):
     pass
 

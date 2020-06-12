@@ -8,6 +8,9 @@ from .entity.project import Project
 from .entity.settings import Settings as ApiSettings
 
 
+__all__ = "ApiClient"
+
+
 _SETTINGS = ApiSettings.add_fragment(
     """
     query GetSettings {
