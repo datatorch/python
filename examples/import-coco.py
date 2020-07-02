@@ -1,6 +1,6 @@
-'''
+"""
 This script imports COCO formated annotations into DataTorch
-'''
+"""
 import numpy as np
 
 from pycocotools.coco import COCO
@@ -12,7 +12,6 @@ from datatorch.api import (
     Segmentations,
     BoundingBox,
 )
-
 
 
 def print_project(project):
@@ -30,7 +29,7 @@ if __name__ == "__main__":
     # DataTorch project ID
     # You can obtain this by going into the settings view of the project
     project_id = "DATATORCH_PROJECT_ID"
-    
+
     # Path to annotation file
     anno_file = "path/to/coco"
 
@@ -121,11 +120,11 @@ if __name__ == "__main__":
             if import_bbox:
                 bbox = BoundingBox.xywh(*anno["bbox"])
                 dt_anno.add(bbox)
-            
+
             if import_segmentation:
                 polygons = anno["segmentation"]
                 # Format segmentation to the correct DataTorch format which is:
-                # [ 
+                # [
                 #   [ [x1,y1], [x2,y2], ... ],
                 #   [ [x1,y1], [x2,y2], ... ]
                 # ]
