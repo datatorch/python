@@ -1,3 +1,9 @@
+'''
+This script imports COCO formated annotations into DataTorch
+'''
+import numpy as np
+
+from pycocotools.coco import COCO
 from datatorch.api import (
     ApiClient,
     Where,
@@ -7,7 +13,6 @@ from datatorch.api import (
     BoundingBox,
 )
 
-from pycocotools.coco import COCO
 
 
 def print_project(project):
@@ -20,12 +25,30 @@ def print_project(project):
 
 if __name__ == "__main__":
 
+    # ----- Settings -----
+
     # DataTorch project ID
+    # You can obtain this by going into the settings view of the project
     project_id = "DATATORCH_PROJECT_ID"
+    
     # Path to annotation file
     anno_file = "path/to/coco"
-    # Only add annotations above this score
+
+    # Only add annotations above this score will be imported. This is done by
+    # check for the property 'score' on each annotation to determine if it
+    # should be imported
     min_score = 0.8
+
+    # If both import options are enabled the script will create two sources per
+    # annotations, one as a segmentation the other as a bounding box.
+
+    # Import bounding boxes from the coco format
+    import_bbox = False
+
+    # Import segmentations from the coco format
+    import_segmentation = True
+
+    # ----- Script -----
 
     # Connect to DataTorch
     api = ApiClient()
@@ -95,7 +118,19 @@ if __name__ == "__main__":
                 continue
 
             dt_anno = Annotation(label=label)
-            bbox = BoundingBox.xywh(*anno["bbox"])
-            dt_anno.add(bbox)
-            print(bbox.__dict__)
+            if import_bbox:
+                bbox = BoundingBox.xywh(*anno["bbox"])
+                dt_anno.add(bbox)
+            
+            if import_segmentation:
+                polygons = anno["segmentation"]
+                # Format segmentation to the correct DataTorch format which is:
+                # [ 
+                #   [ [x1,y1], [x2,y2], ... ],
+                #   [ [x1,y1], [x2,y2], ... ]
+                # ]
+                path_data = [np.reshape(polygon, (-1, 2)) for polygon in polygons]
+                segmentation = Segmentations(path_data=path_data)
+                dt_anno.add(segmentation)
+
             dt_file.add(dt_anno)
