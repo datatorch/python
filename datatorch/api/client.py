@@ -3,6 +3,8 @@ import json
 from typing import List, Union
 
 from gql import Client as GqlClient, gql
+from gql.transport import Transport
+from gql.transport.websockets import WebsocketsTransport
 from gql.transport.requests import RequestsHTTPTransport
 
 from datatorch.core.settings import Settings
@@ -11,20 +13,31 @@ from datatorch.core.settings import Settings
 __all__ = "Client"
 
 
+def _create_transport(url: str, use_sockets: bool = False) -> Transport:
+
+    if use_sockets:
+        url = url.replace("http", "ws", 1)
+        return WebsocketsTransport(headers={}, url="ws://localhost:4000/graphql")
+    return RequestsHTTPTransport(headers={}, use_json=True, url=f"{url}/graphql")
+
+
 class Client(object):
     """ Wrapper for the DataTorch API including GraphQL and uploading """
 
     def __init__(
-        self, api_key: str = None, api_url: str = None, settings: Settings = None
+        self,
+        api_key: str = None,
+        api_url: str = None,
+        settings: Settings = None,
+        use_sockets: bool = False,
     ):
         self._settings = settings or Settings()
+        self._use_sockets = use_sockets
 
-        self.client = GqlClient(
-            transport=RequestsHTTPTransport(
-                headers={}, use_json=True, url=f"{api_url}/graphql" or self.api_url
-            ),
-            fetch_schema_from_transport=True,
-        )
+        transport_url = f"{api_url}/graphql" or self.api_url
+        transport = _create_transport(transport_url, use_sockets=use_sockets)
+
+        self.client = GqlClient(transport=transport, fetch_schema_from_transport=True,)
 
         self.api_key = api_key
         self.api_url = api_url
@@ -49,7 +62,10 @@ class Client(object):
 
     @property
     def graphql_url(self) -> str:
-        return "{}/graphql".format(self.api_url)
+        url = "{}/graphql".format(self.api_url)
+        if self._use_sockets:
+            url = url.replace("http", "ws")
+        return url
 
     def execute_files(
         self, paths: List[str], *args, params: dict = {}, **kwargs

@@ -1,3 +1,5 @@
+import logging
+
 from typing import overload, List
 
 from .where import Where
@@ -9,6 +11,9 @@ from .entity.settings import Settings as ApiSettings
 
 
 __all__ = "ApiClient"
+
+
+logger = logging.getLogger(__name__)
 
 
 _SETTINGS = ApiSettings.add_fragment(
@@ -98,3 +103,12 @@ class ApiClient(Client):
 
     def files(self, where: Where = None, limit: int = 400) -> List[File]:
         pass
+
+    def validate_endpoint(self) -> bool:
+        """ Returns true if provided endpoint is correct. """
+        try:
+            version = self.settings().api_version
+            logger.info("Endpoint API version: {}".format(version))
+            return True
+        except:
+            return False
