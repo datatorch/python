@@ -1,14 +1,10 @@
-import os
 import sys
-import time
 import docker
 import signal
 import logging
 import asyncio
 
 from gql import gql
-from typing import Union
-from datatorch.utils.files import mkdir_exists
 from concurrent.futures import ThreadPoolExecutor
 from .client import AgentApiClient
 from .log_handler import AgentAPIHandler
@@ -84,7 +80,7 @@ class Agent(object):
         sub = gql("""
             subscription {
                 createJob {
-		            id
+                    id
                 }
             }
         """)

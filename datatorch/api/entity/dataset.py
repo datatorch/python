@@ -11,7 +11,7 @@ _CREATE_DATASET = """
       description: String
     ) {
       dataset: createDataset(
-        input: { 
+        input: {
           projectId: $projectId
           name: $name
           description: $description

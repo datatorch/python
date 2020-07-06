@@ -2,7 +2,6 @@ import os
 import yaml
 import logging
 
-from typing import List
 from .runner import RunnerFactory
 from .....directory import AgentDirectory
 

@@ -1,5 +1,4 @@
 import platform
-import psutil
 
 from jinja2 import Template
 

@@ -27,6 +27,7 @@ jobs:
           pip install flake8 pytest black wheel
           pip install -r requirements.txt
           pip install -e .
+          pip install -e .[agent]
       - name: Lint with Black
         run: black . --check
       - name: Lint with flake8

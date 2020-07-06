@@ -2,7 +2,6 @@ from .action import Action
 
 import os
 import logging
-from .action import Action
 
 from datatorch.api import ApiClient
 from datatorch.agent.directory import AgentDirectory

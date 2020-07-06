@@ -1,11 +1,6 @@
-import subprocess
-import logging
 import os
 
 from .runner import Runner
-
-
-logger = logging.getLogger(__name__)
 
 
 class ShellRunner(Runner):

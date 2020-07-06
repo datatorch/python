@@ -110,5 +110,5 @@ class ApiClient(Client):
             version = self.settings().api_version
             logger.info("Endpoint API version: {}".format(version))
             return True
-        except:
+        except ConnectionRefusedError:
             return False

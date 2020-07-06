@@ -1,5 +1,4 @@
 import os
-import time
 import click
 import logging
 
@@ -68,16 +67,15 @@ def agent(host):
     agent_logger.setLevel(logging.DEBUG)
 
     click.echo(click.style("Connecting to DataTorch API...", fg="blue"))
-    click.echo(click.style("Success!", fg="green"))
 
     api = AgentApiClient(api_url=host)
-    api.settings().api_version
 
     if not api.validate_endpoint():
         click.echo(click.style("Could not connect to API!", fg="red"))
         click.echo(click.style("Did you enter the correct endpoint?"))
         return
 
+    click.echo(click.style("Success!", fg="green"))
     agent_id = os.getenv(env.AGENT_ID)
 
     click.echo(click.style("Starting agent...", fg="blue"))

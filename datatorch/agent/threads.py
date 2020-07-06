@@ -5,8 +5,6 @@ import logging
 import platform
 import threading
 
-from .utils.threads import StoppableThread
-
 
 logger = logging.getLogger(__name__)
 
