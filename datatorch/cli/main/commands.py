@@ -51,13 +51,11 @@ def login(key, host, no_web):
 )
 def agent(host):
 
-    import asyncio
-
     logs_dir = os.path.join(AgentDirectory.path(), "logs")
     mkdir_exists(logs_dir)
     logging.basicConfig(
         format="%(asctime)s %(name)-30s %(levelname)-8s %(message)s",
-        level=logging.INFO,
+        level=logging.WARN,
         handlers=[
             RotatingFileHandler(
                 os.path.join(logs_dir, "agent.log"), maxBytes=100000, backupCount=10
@@ -69,7 +67,8 @@ def agent(host):
     agent_logger = logging.getLogger("datatorch.agent")
     agent_logger.setLevel(logging.DEBUG)
 
-    click.echo(click.style("Connecting to DataTorch API...", fg="green"))
+    click.echo(click.style("Connecting to DataTorch API...", fg="blue"))
+    click.echo(click.style("Success!", fg="green"))
 
     api = AgentApiClient(api_url=host)
     api.settings().api_version
@@ -81,7 +80,6 @@ def agent(host):
 
     agent_id = os.getenv(env.AGENT_ID)
 
-    click.echo(click.style("Starting agent...", fg="green"))
+    click.echo(click.style("Starting agent...", fg="blue"))
     agent = Agent(agent_id, api)
-    asyncio.run(agent.process_tasks())
-    agent.exit()
+    agent.run_forever()

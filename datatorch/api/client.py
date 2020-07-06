@@ -17,8 +17,8 @@ def _create_transport(url: str, use_sockets: bool = False) -> Transport:
 
     if use_sockets:
         url = url.replace("http", "ws", 1)
-        return WebsocketsTransport(headers={}, url="ws://localhost:4000/graphql")
-    return RequestsHTTPTransport(headers={}, use_json=True, url=f"{url}/graphql")
+        return WebsocketsTransport(headers={}, url=url)
+    return RequestsHTTPTransport(headers={}, use_json=True, url=url)
 
 
 class Client(object):
@@ -37,7 +37,7 @@ class Client(object):
         transport_url = f"{api_url}/graphql" or self.api_url
         transport = _create_transport(transport_url, use_sockets=use_sockets)
 
-        self.client = GqlClient(transport=transport, fetch_schema_from_transport=True,)
+        self.client = GqlClient(transport=transport, fetch_schema_from_transport=True)
 
         self.api_key = api_key
         self.api_url = api_url

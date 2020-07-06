@@ -15,7 +15,7 @@ class ShellRunner(Runner):
             raise ValueError("A script was not provided.")
 
     def execute(self):
-        script = self.get('script').strip('/')
+        script = self.get("script").strip("/")
         script_command = os.path.join(self.action.dir, script)
 
         self.run_cmd("chmod +x {}".format(script_command))

@@ -18,7 +18,7 @@ def _download_action(api: ApiClient, name, version):
     pass
 
 
-def get_action(action: str) -> Action:
+def get_action(action: str, agent=None) -> Action:
     name, version = action.split("@", 1)
 
     # Get actions directory
@@ -31,4 +31,4 @@ def get_action(action: str) -> Action:
     else:
         logger.debug("Downloading action {}@{}.".format(name, version))
 
-    return Action(action, action_dir)
+    return Action(action, action_dir, agent=agent)

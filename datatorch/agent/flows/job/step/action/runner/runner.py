@@ -1,6 +1,7 @@
 import os
 import logging
 import subprocess
+import asyncio
 
 from .....template import render
 
@@ -13,12 +14,10 @@ class Runner(object):
         self.config = config
         self.action = action
         self.inputs = {}
-        self.agent = None
         self.original_wd = os.getcwd()
-    
-    def run(self, agent, inputs = {}):
+
+    def run(self, agent, inputs={}):
         """ Setups and excutes runner. """
-        logger.debug("Running '{}' v{}".format(self.action.name, self.action.version))
         self.agent = None
         self.inputs = inputs
         self.execute()
@@ -36,6 +35,9 @@ class Runner(object):
         os.chdir(self.original_wd)
 
     def run_cmd(self, command: str):
+        return subprocess.run(command, shell=True, stdout=subprocess.PIPE)
+
+    def run_cmd_async(self, command: str):
         return subprocess.run(command, shell=True, stdout=subprocess.PIPE)
 
     def get(self, key, default=None):

@@ -14,6 +14,6 @@ class CommandRunner(Runner):
             raise ValueError("A command was not provided to run.")
 
     def execute(self):
-        command = self.get('command')
+        command = self.get("command")
         completed = self.run_cmd(command)
         print(completed.stdout.decode("utf-8"))

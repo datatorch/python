@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class Action(object):
-    def __init__(self, action: str, directory: str):
+    def __init__(self, action: str, directory: str, agent=None):
         name, version = action.split("@", 1)
 
         self.dir = directory
@@ -19,6 +19,7 @@ class Action(object):
         self.config = self._load_config()
 
         self.version = version
+        self.agent = agent
         self.name = self.config.get("name", name)
         self.description = self.config.get("description", "")
         self.inputs = self.config.get("inputs", [])
@@ -34,5 +35,7 @@ class Action(object):
         with open(self.config_path, "r") as config_file:
             return yaml.load(config_file, Loader=yaml.FullLoader)
 
-    def run(self, agent, inputs):
-        self.runner.run(agent, inputs)
+    async def run(self, agent, inputs):
+        logger.debug("Running '{}' v{}".format(self.name, self.version))
+        await self.runner.run(agent, inputs)
+        logger.debug("Finished running '{}' v{}".format(self.name, self.version))

@@ -7,23 +7,23 @@ from .step import Step
 logger = logging.getLogger(__name__)
 
 
-def _dict_to_job(name: str, config: dict):
+def _dict_to_job(name: str, config: dict, agent=None):
     assert "steps" in config, "A job must have steps."
     assert len(config["steps"]) != 0, "A job must have steps."
-    steps = Step.from_dict_list(config["steps"])
-    return Job(name, steps)
+    steps = Step.from_dict_list(config["steps"], agent)
+    return Job(name, steps, agent)
 
 
 class Job(object):
     @classmethod
-    def from_dict(cls, config: dict):
-        return [_dict_to_job(k, v) for k, v in config.items()]
+    def from_dict(cls, config: dict, agent=None):
+        return [_dict_to_job(k, v, agent) for k, v in config.items()]
 
-    def __init__(self, name, steps: List[Step]):
+    def __init__(self, name, steps: List[Step], agent=None):
         self.current_step = 0
         self.name = name
-
         self.steps = steps
+        self.agent = agent
 
     def __iter__(self) -> Step:
         return self.steps[self.current_step]
@@ -35,11 +35,11 @@ class Job(object):
         else:
             raise StopIteration
 
-    def run(self):
+    async def run(self):
         inputs = []
         for step in self.steps:
             try:
-                inputs = step.run(inputs)
+                inputs = await step.run(inputs)
             except (ValueError, SyntaxError) as e:
                 logger.error(e)
                 break

@@ -3,17 +3,16 @@ import psutil
 
 from jinja2 import Template
 
-psutil.cpu_count
 
 global_variables = {
-    'machine': {
-        'name': platform.machine(),
-        'system': platform.system(),
-        'version': platform.version()
+    "machine": {
+        "name": platform.machine(),
+        "system": platform.system(),
+        "version": platform.version(),
     },
-    'python': {
-        'version': platform.python_version(),
-        'implementation': platform.python_implementation()
+    "python": {
+        "version": platform.python_version(),
+        "implementation": platform.python_implementation(),
     },
 }
 
@@ -21,7 +20,7 @@ global_variables = {
 def render(string: str, variables):
     """ Renders a templated string. """
     tp = Template(string)
-    return tp.render({ **global_variables, **variables })
+    return tp.render({**global_variables, **variables})
 
 
 def add_variables(dic: dict):

@@ -8,29 +8,28 @@ def _dict_to_step(self, config: dict):
 
 class Step(object):
     @classmethod
-    def from_dict_list(cls, steps: List[dict]):
-        return [cls.from_dict(s) for s in steps]
+    def from_dict_list(cls, steps: List[dict], agent=None):
+        return [cls.from_dict(s, agent) for s in steps]
 
     @classmethod
-    def from_dict(cls, step: dict):
+    def from_dict(cls, step: dict, agent=None):
         return cls(
             action_string=step.get("action"),
             name=step.get("name"),
             inputs=step.get("inputs", []),
+            agent=agent,
         )
 
-    def __init__(self, action_string: str = None, name: str = "", inputs=[]):
+    def __init__(
+        self, action_string: str = None, name: str = "", inputs=[], agent=None
+    ):
         self._action_string = action_string
         self.name = name
         self.inputs = inputs
+        self.agent = agent
 
     def action(self):
-        return get_action(self._action_string)
+        return get_action(self._action_string, agent=self.agent)
 
-    def run(self, inputs=[]):
-        if self.run:
-            action = None
-            # cmd action
-        else:
-            action = get_action(self.action)
-        return self.action().run(None, inputs)
+    async def run(self, inputs=[]):
+        return await self.action().run(None, inputs)
