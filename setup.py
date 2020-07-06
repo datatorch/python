@@ -8,7 +8,7 @@ with open("README.md", "r", encoding="utf-8") as fp:
 
 requirements = ["Click~=7.0", "numpy", "gql==3.0.0a0"]
 
-requirements_agents = ["psutil~=5.7", "docker~=3.3.0", "Jinja2~=2.10"]
+requirements_agents = ["psutil~=5.7", "docker~=3.3.0", "Jinja2~=2.10", "PyYAML~=5.0"]
 
 setup(
     name="datatorch",
