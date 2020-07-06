@@ -24,7 +24,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=requirements,
-    extra_require={"agents": requirements_agents},
+    extra_require={"agent": requirements_agents},
     python_requires=">=3.6",
     license="MIT license",
     zip_safe=False,

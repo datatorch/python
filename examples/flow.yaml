@@ -1,0 +1,11 @@
+name: Test Flow Name
+
+jobs:
+  examples:
+    steps:
+      - name: Run example command
+        action: datatorch/example-command@1
+      - name: Run multiple commands
+        action: datatorch/example-commands@1
+      - name: Run shell script
+        action: datatorch/example-shell@1
