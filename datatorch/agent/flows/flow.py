@@ -29,5 +29,4 @@ class Flow(object):
         if isinstance(job, int):
             job = self.jobs[job]
 
-        if isinstance(job, Job):
-            job.run()
+        job.run()

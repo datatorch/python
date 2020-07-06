@@ -44,4 +44,4 @@ class Job(object):
                 logger.error(e)
                 break
         else:
-            logger.success("Successfully completed job.")
+            logger.info("Successfully completed job.")

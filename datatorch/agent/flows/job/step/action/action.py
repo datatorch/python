@@ -10,10 +10,6 @@ from .....directory import AgentDirectory
 logger = logging.getLogger(__name__)
 
 
-class ActionValidator(Exception):
-    pass
-
-
 class Action(object):
     def __init__(self, action: str, directory: str):
         name, version = action.split("@", 1)
@@ -30,7 +26,7 @@ class Action(object):
 
         runs = self.config.get("runs", None)
         if runs is None:
-            raise ActionValidator("Action must have a run section.")
+            raise ValueError("Action must have a run section.")
 
         self.runner = RunnerFactory.create(self, runs)
 
@@ -39,4 +35,4 @@ class Action(object):
             return yaml.load(config_file, Loader=yaml.FullLoader)
 
     def run(self, agent, inputs):
-        self.runner.execute()
+        self.runner.run(agent, inputs)

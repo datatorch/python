@@ -9,16 +9,15 @@ logger = logging.getLogger(__name__)
 
 
 class ShellRunner(Runner):
-    def __init__(self, config: dict, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.script = config.get("script")
-        if self.script is None:
+        if self.config.get("script") is None:
             raise ValueError("A script was not provided.")
 
     def execute(self):
-        script_command = os.path.join(self.action.dir, self.script.strip("/"))
+        script = self.get('script').strip('/')
+        script_command = os.path.join(self.action.dir, script)
 
-        logger.info("Running shell script '{}'".format(script_command))
         self.run_cmd("chmod +x {}".format(script_command))
         completed = self.run_cmd(script_command)
 

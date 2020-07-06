@@ -33,4 +33,4 @@ class Step(object):
             # cmd action
         else:
             action = get_action(self.action)
-        return self.action.run(inputs)
+        return self.action().run(None, inputs)

@@ -1,11 +1,28 @@
 import os
+import logging
 import subprocess
+
+from .....template import render
+
+
+logger = logging.getLogger(__name__)
 
 
 class Runner(object):
-    def __init__(self, action):
+    def __init__(self, config, action):
+        self.config = config
         self.action = action
+        self.inputs = {}
+        self.agent = None
         self.original_wd = os.getcwd()
+    
+    def run(self, agent, inputs = {}):
+        """ Setups and excutes runner. """
+        logger.debug("Running '{}' v{}".format(self.action.name, self.action.version))
+        self.agent = None
+        self.inputs = inputs
+        self.execute()
+        self.inputs = {}
 
     def execute(self):
         raise NotImplementedError("This method must be implemented.")
@@ -20,3 +37,10 @@ class Runner(object):
 
     def run_cmd(self, command: str):
         return subprocess.run(command, shell=True, stdout=subprocess.PIPE)
+
+    def get(self, key, default=None):
+        """ Gets a string from config and renders templating. """
+        return self.template(self.config.get(key, default), self.inputs)
+
+    def template(self, string, variables={}) -> str:
+        return render(string, variables or {})

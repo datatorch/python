@@ -8,14 +8,12 @@ logger = logging.getLogger(__name__)
 
 
 class CommandRunner(Runner):
-    def __init__(self, config: dict, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        self.command = config.get("command")
-        if self.command is None:
+        if self.config.get("command") is None:
             raise ValueError("A command was not provided to run.")
 
     def execute(self):
-        logger.info("Running command '{}'".format(self.command))
-        completed = self.run_cmd(self.command)
+        command = self.get('command')
+        completed = self.run_cmd(command)
         print(completed.stdout.decode("utf-8"))

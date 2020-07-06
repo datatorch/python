@@ -2,4 +2,5 @@ from .runner import Runner
 
 
 class DockerRunner(Runner):
-    pass
+    def execute(self):
+        pass
