@@ -6,6 +6,7 @@ import asyncio
 
 from gql import gql
 from concurrent.futures import ThreadPoolExecutor
+from .loop import Loop
 from .client import AgentApiClient
 from .log_handler import AgentAPIHandler
 from .threads import AgentSystemStats
@@ -64,15 +65,13 @@ class Agent(object):
         sys.exit(code)
 
     def run_forever(self):
-        """ Runs agent in loop waiting for jobs. """
-        loop = asyncio.get_event_loop()
-        loop.create_task(self._process_loop())
-        loop.run_forever()
+        """ Runs agent in loop, waiting for jobs. """
+        Loop.add_task(self._process_loop())
+        Loop.run_forever()
 
     def stop_running(self):
         """ Exits async loop. """
-        loop = asyncio.get_event_loop()
-        loop.stop()
+        Loop.stop()
 
     async def _process_loop(self):
         """ Waits for jobs from server. """
@@ -85,10 +84,8 @@ class Agent(object):
             }
         """)
         # fmt: on
-
         async for job in self.api.client.subscribe_async(sub):
-            loop = asyncio.get_event_loop()
-            loop.create_task(self._run_job(job))
+            Loop.add_task(self._run_job(job))
 
     async def _run_job(self, job):
         """ Runs a job """
