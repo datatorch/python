@@ -1,10 +1,14 @@
 import logging
+import asyncio
 
 from typing import List
 from ..step import Step
 
 
 logger = logging.getLogger("datatorch.agent.job")
+
+
+STEP_TIMEOUT = 60 * 60 * 24 * 5  # 5 days
 
 
 def _dict_to_job(name: str, config: dict, agent=None):
@@ -25,21 +29,11 @@ class Job(object):
         self.steps = steps
         self.agent = agent
 
-    def __iter__(self) -> Step:
-        return self.steps[self.current_step]
-
-    def __next__(self) -> Step:
-        if self.current_step < len(self.steps):
-            self.current_step += 1
-            return self.__iter__()
-        else:
-            raise StopIteration
-
     async def run(self):
         inputs = []
         for step in self.steps:
             try:
-                inputs = await step.run(inputs)
+                inputs = await asyncio.wait_for(step.run(inputs), timeout=STEP_TIMEOUT)
             except (ValueError, SyntaxError) as e:
                 logger.error(e)
                 break

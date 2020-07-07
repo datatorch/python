@@ -3,7 +3,6 @@ import signal
 import logging
 import asyncio
 
-from gql import gql
 from concurrent.futures import ThreadPoolExecutor
 from .flows import Flow
 from .loop import Loop
@@ -17,6 +16,10 @@ logger = logging.getLogger(__name__)
 
 
 class Agent(object):
+    @staticmethod
+    def install_dependencies(self):
+        pass
+
     def __init__(self, id: str, api: AgentApiClient):
         self.id = id
         self.api = api
@@ -42,7 +45,7 @@ class Agent(object):
         self.logger.debug("Agent logger has been initalized.")
 
     def _init_threads(self):
-        self.threads = AgentThread(self, start=True)
+        self.threads = AgentThread(self)
 
     def _init_directory(self):
         self.directory = AgentDirectory()
@@ -70,16 +73,8 @@ class Agent(object):
 
     async def _process_loop(self):
         """ Waits for jobs from server. """
-        # fmt: off
-        sub = gql("""
-            subscription {
-                createJob {
-                    id
-                }
-            }
-        """)
-        # fmt: on
-        async for job in self.api.client.subscribe_async(sub):
+        logger.info("Waiting for jobs.")
+        async for job in self.api.agent_jobs():
             Loop.add_task(self._run_job(job))
 
     async def _run_job(self, job):
@@ -91,7 +86,7 @@ class Agent(object):
 
 
 class AgentThread(object):
-    def __init__(self, agent: Agent, start=False):
+    def __init__(self, agent: Agent, start=True):
         self.agent = agent
         self.system_stats = AgentSystemStats(agent)
         self.pool = ThreadPoolExecutor()

@@ -1,5 +1,5 @@
 from typing import List
-from asyncio import get_event_loop, Task, all_tasks
+from asyncio import get_event_loop, Task
 
 
 class Loop(object):
@@ -13,7 +13,7 @@ class Loop(object):
 
     @staticmethod
     def active_tasks() -> List[Task]:
-        return [task for task in all_tasks() if not task.done()]
+        return [task for task in Task.all_tasks() if not task.done()]
 
     @staticmethod
     def run_forever():
