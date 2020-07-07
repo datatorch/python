@@ -2,11 +2,11 @@ import os
 import yaml
 import logging
 
-from .runner import RunnerFactory
-from .....directory import AgentDirectory
+from ..runner import RunnerFactory
+from ...directory import AgentDirectory
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("datatorch.agent.action")
 
 
 class Action(object):
@@ -14,6 +14,7 @@ class Action(object):
         name, version = action.split("@", 1)
 
         self.dir = directory
+        self.identifier = action
         self.config_path = os.path.join(self.dir, "config.yaml")
         self.config = self._load_config()
 
@@ -29,12 +30,19 @@ class Action(object):
             raise ValueError("Action must have a run section.")
 
         self.runner = RunnerFactory.create(self, runs)
+        self.logger = logging.getLogger(
+            "datatorch.agent.action.{}".format(self.identifier)
+        )
 
     def _load_config(self):
         with open(self.config_path, "r") as config_file:
             return yaml.load(config_file, Loader=yaml.FullLoader)
 
     async def run(self, agent, inputs):
-        logger.debug("Running '{}' v{}".format(self.name, self.version))
+        logger.info("Running action {}".format(self.identifier))
         await self.runner.run(agent, inputs)
         logger.debug("Finished running '{}' v{}".format(self.name, self.version))
+
+    @property
+    def full_name(self):
+        return "{}@{}".format(self.name, self.version)

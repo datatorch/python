@@ -10,7 +10,7 @@ from datatorch.agent.directory import AgentDirectory
 __all__ = ["Action", "get_action"]
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("datatorch.agent.action")
 
 
 def _download_action(api: ApiClient, name, version):

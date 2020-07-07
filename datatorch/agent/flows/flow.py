@@ -6,7 +6,7 @@ from typing import List, Union
 from .job import Job
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("datatorch.agent.flow")
 
 
 class Flow(object):
@@ -22,7 +22,7 @@ class Flow(object):
         self.name = name
         self.jobs = jobs
 
-    def run(self, job: Union[str, int, Job], inputs: dict = {}):
+    async def run(self, job: Union[str, int, Job], inputs: dict = {}):
         """ Runs a job. """
         if isinstance(job, str):
             job = [x for x in self.jobs if x.name == job]
@@ -30,4 +30,4 @@ class Flow(object):
         if isinstance(job, int):
             job = self.jobs[job]
 
-        job.run()
+        await job.run()

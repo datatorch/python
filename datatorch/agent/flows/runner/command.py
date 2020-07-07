@@ -13,7 +13,7 @@ class CommandRunner(Runner):
         if self.config.get("command") is None:
             raise ValueError("A command was not provided to run.")
 
-    def execute(self):
+    async def execute(self):
         command = self.get("command")
-        completed = self.run_cmd(command)
-        print(completed.stdout.decode("utf-8"))
+        completed = await self.run_cmd(command)
+        # print(completed.stdout.decode("utf-8"))

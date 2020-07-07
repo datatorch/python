@@ -1,5 +1,5 @@
 from typing import List
-from .action import get_action
+from ..action import get_action
 
 
 def _dict_to_step(self, config: dict):
@@ -32,4 +32,14 @@ class Step(object):
         return get_action(self._action_string, agent=self.agent)
 
     async def run(self, inputs=[]):
+        """Runs a step with given imports.
+
+        First downloads the action and then excutes it.
+
+        Args:
+            inputs (list, optional): actions input. Defaults to [].
+
+        Returns:
+            list: actions output
+        """
         return await self.action().run(None, inputs)

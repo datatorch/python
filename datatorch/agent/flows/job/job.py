@@ -1,10 +1,10 @@
 import logging
 
 from typing import List
-from .step import Step
+from ..step import Step
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("datatorch.agent.job")
 
 
 def _dict_to_job(name: str, config: dict, agent=None):

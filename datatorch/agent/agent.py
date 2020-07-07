@@ -1,11 +1,11 @@
 import sys
-import docker
 import signal
 import logging
 import asyncio
 
 from gql import gql
 from concurrent.futures import ThreadPoolExecutor
+from .flows import Flow
 from .loop import Loop
 from .client import AgentApiClient
 from .log_handler import AgentAPIHandler
@@ -25,7 +25,6 @@ class Agent(object):
         self._register_signals()
 
         self._init_logger()
-        self._init_docker()
         self._init_threads()
         self._init_directory()
 
@@ -35,10 +34,6 @@ class Agent(object):
             self.exit(0)
 
         signal.signal(signal.SIGINT, signal_handler)
-
-    def _init_docker(self):
-        self.logger.debug("Initalizing docker")
-        self.docker = docker.from_env()
 
     def _init_logger(self):
         self.logger = logging.getLogger("datatorch.agent")
@@ -89,9 +84,10 @@ class Agent(object):
 
     async def _run_job(self, job):
         """ Runs a job """
-        print(f"Starting {job.get('createJob').get('id')}")
-        await asyncio.sleep(2)
-        print(f"Finishing {job.get('createJob').get('id')}")
+        logger.info(f"Starting {job.get('createJob').get('id')}")
+        flow = Flow.from_yaml("./examples/flow.yaml")
+        await flow.run(0)
+        logger.info(f"Finishing {job.get('createJob').get('id')}")
 
 
 class AgentThread(object):

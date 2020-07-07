@@ -9,11 +9,11 @@ class ShellRunner(Runner):
         if self.config.get("script") is None:
             raise ValueError("A script was not provided.")
 
-    def execute(self):
+    async def execute(self):
         script = self.get("script").strip("/")
         script_command = os.path.join(self.action.dir, script)
 
-        self.run_cmd("chmod +x {}".format(script_command))
-        completed = self.run_cmd(script_command)
+        await self.run_cmd("chmod +x {}".format(script_command.split(" ", 1)[0]))
+        completed = await self.run_cmd(script_command)
 
-        print(completed.stdout.decode("utf-8"))
+        # print(completed.stdout.decode("utf-8"))

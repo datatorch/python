@@ -1,11 +1,8 @@
 import os
+import asyncio
 import logging
 import subprocess
-
-from .....template import render
-
-
-logger = logging.getLogger(__name__)
+from ..template import render
 
 
 class Runner(object):
@@ -15,14 +12,14 @@ class Runner(object):
         self.inputs = {}
         self.original_wd = os.getcwd()
 
-    def run(self, agent, inputs={}):
+    async def run(self, agent, inputs={}):
         """ Setups and excutes runner. """
         self.agent = None
         self.inputs = inputs
-        self.execute()
+        await self.execute()
         self.inputs = {}
 
-    def execute(self):
+    async def execute(self):
         raise NotImplementedError("This method must be implemented.")
 
     def action_dir(self):
@@ -33,11 +30,13 @@ class Runner(object):
         """ Changes the current work directory back to the original. """
         os.chdir(self.original_wd)
 
-    def run_cmd(self, command: str):
-        return subprocess.run(command, shell=True, stdout=subprocess.PIPE)
-
-    def run_cmd_async(self, command: str):
-        return subprocess.run(command, shell=True, stdout=subprocess.PIPE)
+    async def run_cmd(self, command: str, wait=True):
+        process = await asyncio.create_subprocess_shell(
+            command, shell=True, stdout=asyncio.subprocess.PIPE
+        )
+        if wait:
+            await process.wait()
+        return process
 
     def get(self, key, default=None):
         """ Gets a string from config and renders templating. """
