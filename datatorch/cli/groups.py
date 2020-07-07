@@ -10,3 +10,4 @@ def main():
 
 main.add_command(main_commands.login)
 main.add_command(main_commands.agent)
+main.add_command(main_commands.upgrade)

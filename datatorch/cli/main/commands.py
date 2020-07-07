@@ -1,17 +1,21 @@
 import os
+import sys
 import click
 import logging
+import subprocess
 
 from logging.handlers import RotatingFileHandler
 from datatorch.agent import Agent, AgentDirectory
 from datatorch.core import env, settings, BASE_URL_API
 from datatorch.agent.client import AgentApiClient
+from datatorch.utils.package import get_latest, get_version, upgrade
 from datatorch.utils.files import mkdir_exists
+from ..spinner import Spinner
 
 logger = logging.getLogger(__name__)
 
 
-@click.command()
+@click.command(help="Login to DataTorch and stores credentials locally")
 @click.argument("key", nargs=-1)
 @click.option(
     "--host",
@@ -44,7 +48,28 @@ def login(key, host, no_web):
         click.echo(click.style(f"[ERROR] {ex}", fg="red"))
 
 
-@click.command()
+@click.command(help="Upgrade to latests version of python package")
+def upgrade():
+    spinner = Spinner("Check if newer version is available.")
+
+    latest = get_latest()
+    current = get_version()
+
+    if latest == current:
+        spinner.done("You are using the most recent version.")
+    else:
+        spinner.done("New version found: " + click.style(latest, fg="blue", bold=True))
+        spinner = Spinner("Upgrading from {} to {}".format(current, latest))
+        upgrade()
+        spinner.done("Done upgrading from {} to {}".format(current, latest))
+    click.echo(
+        click.style("Success!", fg="green")
+        + " Active version: "
+        + click.style(latest, fg="green")
+    )
+
+
+@click.command(help="Run an agent")
 @click.option(
     "--host", default=BASE_URL_API, help="Specify a specific instance of DataTorch"
 )
