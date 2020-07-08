@@ -1,20 +1,15 @@
 import os
 
-from datatorch.utils.files import mkdir_exists
+from click import get_app_dir as get_default_app_directory
 from datatorch.core import env
+from datatorch.utils.files import mkdir_exists
 
 
-def global_path(mkdir=True):
-    user_dir = os.path.join(os.path.expanduser("~"), ".datatorch")
-    config_dir = os.getenv(env.CONFIG_DIR) or user_dir
-    if mkdir:
-        mkdir_exists(config_dir)
-    return config_dir
-
-
-def local_path(mkdir=True):
-    root_dir = os.getcwd()
-    path = os.path.join(root_dir, ".datatorch")
-    if mkdir:
-        mkdir_exists(path)
+def get_app_dir():
+    """Gets the DataTorch app directory for storing settings.
+    
+    If defined, the environment variable `DATATORCH_DIR` will take precedent.
+    """
+    path = os.getenv(env.CONFIG_DIR) or get_default_app_directory("DataTorch")
+    mkdir_exists(path)
     return path

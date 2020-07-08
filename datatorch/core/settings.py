@@ -2,40 +2,57 @@ import logging
 import json
 import os
 
-from datatorch.core import folder
+from typing import Union
+from datatorch.utils.files import mkdir_exists
+from datatorch.core import folder, env
 
 logger = logging.getLogger(__name__)
 
-SETTINGS_FILE = "settings.json"
-
 
 class Settings(object):
-    """ Manager for storaging user settings such as API KEY and API URL """
+    """ Manager for storing settings in a JSON file. """
 
+    def __init__(self, path: str, file_name="settings.json"):
+        self.path = path
+        mkdir_exists(path)
+        self.file = os.path.join(path, file_name)
+        self.settings = _load_json(self.file)
+
+    def get(self, key: str, default=None, env: str = None):
+        """ Gets the settings value from a given string. """
+        env_value = os.getenv(f"DATATORCH_{env}") if env is not None else None
+        value = self.settings.get(key)
+
+        return env_value or value or default
+
+    def set(self, key: str, value: str):
+        """ Saves a value to the settings file. """
+        self.settings[key] = value
+        _save_json(self.file, self.settings)
+
+
+class UserSettings(Settings):
     def __init__(self):
-        self.global_path = os.path.join(folder.global_path(), SETTINGS_FILE)
-        self._local = dict({})
-        self._global = load_json(self.global_path)
+        super().__init__(folder.get_app_dir(), "settings.json")
 
-    def get(self, key: str, default=None):
-        env_value = os.getenv("DATATORCH_{}".format(key.upper()))
-        local_value = self._local.get(key)
-        global_value = self._global.get(key)
+    @property
+    def api_key(self):
+        return self.get("apiKey", env=env.API_KEY)
 
-        return env_value or local_value or global_value or default
+    @api_key.setter
+    def api_key(self, value: str):
+        self.set("apiKey", value.strip())
 
-    def set(self, key: str, value: str, globally=False, persist=True):
-        os.environ[key] = value
+    @property
+    def api_url(self):
+        return self.get("apiUrl", env=env.API_URL)
 
-        if not persist:
-            return
-
-        if globally:
-            self._global[key] = value
-            save_json(self.global_path, self._global)
+    @api_url.setter
+    def api_url(self, value: str):
+        self.set("apiUrl", value.strip())
 
 
-def load_json(path: str) -> dict:
+def _load_json(path: str) -> dict:
 
     try:
         with open(path) as fr:
@@ -48,6 +65,6 @@ def load_json(path: str) -> dict:
     return {}
 
 
-def save_json(path: str, settings: dict):
+def _save_json(path: str, settings: dict):
     with open(path, "w") as f:
         json.dump(settings, f, indent=2, sort_keys=True)

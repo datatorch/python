@@ -15,5 +15,3 @@ class ShellRunner(Runner):
 
         await self.run_cmd("chmod +x {}".format(script_command.split(" ", 1)[0]))
         completed = await self.run_cmd(script_command)
-
-        # print(completed.stdout.decode("utf-8"))

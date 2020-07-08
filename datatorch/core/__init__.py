@@ -1,9 +1,13 @@
 import click
 
-from datatorch.core.settings import Settings
+from datatorch.core.settings import Settings, UserSettings
 
-__all__ = ["Settings", "LOG_STRING", "BASE_URL"]
 
-LOG_STRING = click.style("DataTorch", fg="red", bold=True)
+user_settings = UserSettings()
+
+
 BASE_URL = "https://datatorch.io"
 BASE_URL_API = "https://datatorch.io/api"
+
+
+__all__ = ["BASE_URL", "BASE_URL_API", "user_settings"]

@@ -7,7 +7,7 @@ from gql.transport import Transport
 from gql.transport.websockets import WebsocketsTransport
 from gql.transport.requests import RequestsHTTPTransport
 
-from datatorch.core.settings import Settings
+from datatorch.core import user_settings
 
 
 __all__ = "Client"
@@ -28,37 +28,34 @@ class Client(object):
         self,
         api_key: str = None,
         api_url: str = None,
-        settings: Settings = None,
         use_sockets: bool = False,
     ):
-        self._settings = settings or Settings()
+        self.client = None
         self._use_sockets = use_sockets
-
-        transport_url = f"{api_url}/graphql" or self.api_url
-        transport = _create_transport(transport_url, use_sockets=use_sockets)
-
+        self.api_url = api_url or user_settings.api_url
+        transport = _create_transport(self.graphql_url, use_sockets=use_sockets)
         self.client = GqlClient(transport=transport, fetch_schema_from_transport=True)
-
-        self.api_key = api_key
-        self.api_url = api_url
+        self.api_key = api_key or user_settings.api_key
 
     @property
     def api_key(self) -> Union[str, None]:
-        return self._api_key or self._settings.get("API_KEY", None)
+        return self._api_key
 
     @api_key.setter
     def api_key(self, api_key):
         self._api_key = api_key
-        self.client.transport.headers["datatorch-api-key"] = self.api_key
+        if self.client:
+            self.client.transport.headers["datatorch-api-key"] = self.api_key
 
     @property
     def api_url(self) -> Union[str, None]:
-        return self._api_url or self._settings.get("API_URL", None)
+        return self._api_url
 
     @api_url.setter
     def api_url(self, value):
         self._api_url = value
-        self.client.transport.url = self.graphql_url
+        if self.client:
+            self.client.transport.url = self.graphql_url
 
     @property
     def graphql_url(self) -> str:

@@ -18,4 +18,3 @@ class CommandRunner(Runner):
         completed = await self.run_cmd(command)
         async for log in completed.stdout:
             print(log)
-        # print(completed.stdout.decode("utf-8"))
