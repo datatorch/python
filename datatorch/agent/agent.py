@@ -4,6 +4,7 @@ import signal
 import logging
 import asyncio
 
+
 from signal import SIGINT, SIGTERM
 
 from concurrent.futures import ThreadPoolExecutor
@@ -11,7 +12,7 @@ from .flows import Flow
 from .loop import Loop
 from .client import AgentApiClient
 from .log_handler import AgentAPIHandler
-from .threads import AgentSystemStats
+from .monitoring import AgentSystemStats
 from .directory import agent_directory
 
 from gql.transport.websockets import WebsocketsTransport
@@ -23,38 +24,19 @@ logger = logging.getLogger(__name__)
 
 class Agent(object):
     @classmethod
-    async def run(cls):
-
-        url = agent_directory.settings.api_url.strip("/")
-        url = url.replace("http", "ws", 1)
-        url = f"{url}/graphql"
-
-        tansport = WebsocketsTransport(url=url, headers={})
-
-        async with Client(
-            transport=tansport, fetch_schema_from_transport=True,
-        ) as session:
-            loop = asyncio.get_event_loop()
-            agent = cls(session)
-            return await agent.process_loop()
+    async def run(cls, session):
+        agent = cls(session)
+        await agent.process_loop()
 
     def __init__(self, session: AsyncClientSession):
         self.api = AgentApiClient(session)
         self.directory = agent_directory
+        self.tasks: List[asyncio.Task] = []
 
         os.chdir(self.directory.dir)
 
-        # self._register_signals()
-
         self._init_logger()
         self._init_threads()
-
-    def _register_signals(self):
-        def signal_handler(sig, frame):
-            print("")
-            self.exit(0)
-
-        signal.signal(signal.SIGINT, signal_handler)
 
     def _init_logger(self):
         self.logger = logging.getLogger("datatorch.agent")
@@ -78,14 +60,22 @@ class Agent(object):
 
     async def process_loop(self):
         """ Waits for jobs from server. """
-        logger.info("Waiting for jobs.")
 
+        logger.info("Waiting for jobs.")
         async for job in self.api.agent_jobs():
-            Loop.add_task(self._run_job(job))
+            loop = asyncio.get_event_loop()
+            job = job.get('createJob')
+            task = loop.create_task(self._run_job(job))
+            task.set_name(f"job-{job.get('id')}")
 
     async def _run_job(self, job):
         """ Runs a job """
-        logger.info(f"Starting {job.get('createJob').get('id')}")
-        flow = Flow.from_yaml("./examples/flow.yaml")
-        await flow.run(0)
-        logger.info(f"Finishing {job.get('createJob').get('id')}")
+        job_id = job.get('id')
+        try:
+            logger.info(f"Starting {job_id}")
+            await asyncio.sleep(120)
+            # flow = Flow.from_yaml("./examples/flow.yaml")
+            # await flow.run(0)
+            logger.info(f"Finishing {job_id}")
+        except asyncio.CancelledError:
+            logger.info(f"Canceling job {job_id}")

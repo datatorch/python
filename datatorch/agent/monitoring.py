@@ -12,6 +12,15 @@ from .loop import Loop
 logger = logging.getLogger(__name__)
 
 
+def print_stats(metrics):
+    cpuUsage = metrics.get("cpuUsage")
+    memUsage = metrics.get("memoryUsage")
+    diskUsage = metrics.get("diskUsage")
+    logger.debug(
+        f"System stats: CPU: {cpuUsage}, Memory: {memUsage}, Disk: {diskUsage}"
+    )
+
+
 class AgentSystemStats(object):
     @staticmethod
     def initial_stats():
@@ -38,33 +47,41 @@ class AgentSystemStats(object):
     def stats():
         mem = psutil.virtual_memory()
         la_1, la_5, la_15 = [(x / psutil.cpu_count()) for x in psutil.getloadavg()]
-        return {
+        stats = {
             "sampledAt": datetime.now(timezone.utc).isoformat()[:-9] + "Z",
-            "cpuUsage": psutil.cpu_percent(),
             "avgLoad1": la_1,
             "avgLoad5": la_5,
             "avgLoad15": la_15,
+            "cpuUsage": psutil.cpu_percent(),
             "memoryUsage": mem.percent,
             "diskUsage": psutil.disk_usage("/").percent,
         }
+        print_stats(stats)
+        return stats
 
     def __init__(self, agent, sample_rate=60):
         self.agent = agent
         self.sample_rate = sample_rate
+        self.sample = 0
 
     async def start(self):
-        logger.info("Sending initial metrics")
-        await self.agent.api.initial_metrics(self.initial_stats())
+        try:
+            logger.info("Sending initial system metrics.")
+            await self.agent.api.initial_metrics(self.initial_stats())
 
-        logger.info("Starting system monitoring thread.")
-        await self._task_monitoring()
+            logger.info("Starting system monitoring task.")
+            await self._task_monitoring()
+        except asyncio.CancelledError:
+            logger.info('Exiting system monitoring task.')
 
     async def _task_monitoring(self):
         logger.debug(f"Sampling system stats every {self.sample_rate} seconds.")
         psutil.cpu_percent()
-
+        
         while True:
+            self.sample += 1
             stats = self.stats()
             loop = asyncio.get_event_loop()
-            loop.create_task(self.agent.api.metrics(stats))
+            if self.sample != 1:
+                loop.create_task(await self.agent.api.metrics(stats))
             await asyncio.sleep(self.sample_rate)
