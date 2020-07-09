@@ -35,36 +35,19 @@ def _setup_logging():
     agent_logger.setLevel(logging.DEBUG)
 
 
-def _setup_api() -> AgentApiClient:
-    host = user_settings.api_url
+async def start():
 
-    spinner = Spinner(f"Connecting to DataTorch API ({host})")
-    api = AgentApiClient()
-
-    try:
-        success = api.validate_endpoint()
-    except TransportServerError as ex:
-        spinner.done(
-            click.style(
-                "An error occurred while attempting to connect. Are you using the latest version?",
-                fg="red",
-            )
-        )
-        click.echo(ex)
-        sys.exit()
-        return
-
-    spinner.done(f"Successfully connected to {host}.")
-    return api
-
-
-def start():
     _setup_logging()
-    api = _setup_api()
 
     click.echo(
         click.style(f"Starting DataTorch Agent v{get_version()}", fg="blue", bold=True)
     )
 
-    agent = Agent(api)
-    agent.run_forever()
+    await Agent.run()
+
+def stop(agent_task):
+    print('')
+    agent_logger = logging.getLogger("datatorch.agent")
+    agent_logger.debug('Gracefully exiting agent.')
+    agent_task.cancel()
+    agent_logger.debug('Closing websocket')

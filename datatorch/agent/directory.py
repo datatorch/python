@@ -92,7 +92,7 @@ class AgentSettings(Settings):
 
     @property
     def api_url(self):
-        self.get("apiUrl", user_settings.api_url)
+        return self.get("apiUrl", user_settings.api_url)
 
     @api_url.setter
     def api_url(self, value):

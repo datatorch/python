@@ -4,6 +4,8 @@ import signal
 import logging
 import asyncio
 
+from signal import SIGINT, SIGTERM
+
 from concurrent.futures import ThreadPoolExecutor
 from .flows import Flow
 from .loop import Loop
@@ -12,18 +14,37 @@ from .log_handler import AgentAPIHandler
 from .threads import AgentSystemStats
 from .directory import agent_directory
 
+from gql.transport.websockets import WebsocketsTransport
+from gql.client import AsyncClientSession, Client
+
 
 logger = logging.getLogger(__name__)
 
 
 class Agent(object):
-    def __init__(self, api: AgentApiClient):
-        self.api = api
+    @classmethod
+    async def run(cls):
+
+        url = agent_directory.settings.api_url.strip("/")
+        url = url.replace("http", "ws", 1)
+        url = f"{url}/graphql"
+
+        tansport = WebsocketsTransport(url=url, headers={})
+
+        async with Client(
+            transport=tansport, fetch_schema_from_transport=True,
+        ) as session:
+            loop = asyncio.get_event_loop()
+            agent = cls(session)
+            return await agent.process_loop()
+
+    def __init__(self, session: AsyncClientSession):
+        self.api = AgentApiClient(session)
         self.directory = agent_directory
 
         os.chdir(self.directory.dir)
 
-        self._register_signals()
+        # self._register_signals()
 
         self._init_logger()
         self._init_threads()
@@ -42,32 +63,23 @@ class Agent(object):
         self.logger.debug("Agent logger has been initalized.")
 
     def _init_threads(self):
-        self.threads = AgentThread(self)
+        self.system_stats = AgentSystemStats(self)
+        Loop.add_task(self.system_stats.start())
 
     def exit(self, code: int = 0):
         """ Safely exits agent. """
         self.logger.info("Attempting to safely exit process.")
-        self.logger.debug("Closing threads.")
-        self.threads.shutdown()
         self.logger.debug("Closing event loop.")
-        self.stop_running()
+        Loop.stop()
+        # self.stop_running()
         self.logger.info("Uploading file logs and exiting process.")
         self.logger_api_handler.upload()
         self.logger.debug("Exiting process.")
-        sys.exit(code)
 
-    def run_forever(self):
-        """ Runs agent in loop, waiting for jobs. """
-        Loop.add_task(self._process_loop())
-        Loop.run_forever()
-
-    def stop_running(self):
-        """ Exits async loop. """
-        Loop.stop()
-
-    async def _process_loop(self):
+    async def process_loop(self):
         """ Waits for jobs from server. """
         logger.info("Waiting for jobs.")
+
         async for job in self.api.agent_jobs():
             Loop.add_task(self._run_job(job))
 
@@ -77,20 +89,3 @@ class Agent(object):
         flow = Flow.from_yaml("./examples/flow.yaml")
         await flow.run(0)
         logger.info(f"Finishing {job.get('createJob').get('id')}")
-
-
-class AgentThread(object):
-    def __init__(self, agent: Agent, start=True):
-        self.agent = agent
-        self.system_stats = AgentSystemStats(agent)
-        self.pool = ThreadPoolExecutor()
-
-        if start:
-            self.start()
-
-    def start(self):
-        self.system_stats.start()
-
-    def shutdown(self):
-        self.system_stats.shutdown()
-        self.pool.shutdown(wait=True)

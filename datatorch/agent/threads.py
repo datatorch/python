@@ -4,7 +4,10 @@ import psutil
 import logging
 import platform
 import threading
+import asyncio
 
+from datetime import datetime, timezone
+from .loop import Loop
 
 logger = logging.getLogger(__name__)
 
@@ -33,59 +36,35 @@ class AgentSystemStats(object):
 
     @staticmethod
     def stats():
-
-        cpu_usage = [x / psutil.cpu_count() * 100 for x in psutil.getloadavg()]
+        mem = psutil.virtual_memory()
+        la_1, la_5, la_15 = [(x / psutil.cpu_count()) for x in psutil.getloadavg()]
         return {
-            "cpu": {"usage": cpu_usage},
-            "disk": {"usage": psutil.disk_usage("/")},
+            "sampledAt": datetime.now(timezone.utc).isoformat()[:-9] + "Z",
+            "cpuUsage": psutil.cpu_percent(),
+            "avgLoad1": la_1,
+            "avgLoad5": la_5,
+            "avgLoad15": la_15,
+            "memoryUsage": mem.percent,
+            "diskUsage": psutil.disk_usage("/").percent,
         }
 
-    def __init__(self, agent, sample_rate=2, start_monitoring=False):
+    def __init__(self, agent, sample_rate=60):
         self.agent = agent
-        self.samples = 0
         self.sample_rate = sample_rate
 
-        self._stop_monitoring = False
-        self._thread = threading.Thread(target=self._thread_monitoring)
-
-        if start_monitoring:
-            self.start()
-
-    def start(self):
+    async def start(self):
         logger.info("Sending initial metrics")
-        self.agent.api.initial_metrics(self.initial_stats())
+        await self.agent.api.initial_metrics(self.initial_stats())
+
         logger.info("Starting system monitoring thread.")
-        self._thread.start()
+        await self._task_monitoring()
 
-    def stop(self):
-        self._stop_monitoring = True
-
-    def join(self):
-        try:
-            self._thread.join()
-        # Incase we never started the thread
-        except RuntimeError:
-            pass
-
-    def shutdown(self):
-        self.stop()
-        self.join()
-
-    def _thread_monitoring(self):
-        logger.debug("Sampling system stats every {} seconds.".format(self.sample_rate))
-
+    async def _task_monitoring(self):
+        logger.debug(f"Sampling system stats every {self.sample_rate} seconds.")
         psutil.cpu_percent()
 
         while True:
-            self.samples += 1
-
             stats = self.stats()
-            stats_json = json.dumps(stats)
-
-            time_count = 0
-            while time_count < self.sample_rate:
-                time_count += 0.1
-                time.sleep(0.1)
-                if self._stop_monitoring:
-                    logger.debug("Exiting system stats monitoring thread.")
-                    return
+            loop = asyncio.get_event_loop()
+            loop.create_task(self.agent.api.metrics(stats))
+            await asyncio.sleep(self.sample_rate)
