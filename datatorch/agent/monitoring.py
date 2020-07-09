@@ -7,7 +7,7 @@ import threading
 import asyncio
 
 from datetime import datetime, timezone
-from .loop import Loop
+
 
 logger = logging.getLogger(__name__)
 
@@ -72,16 +72,16 @@ class AgentSystemStats(object):
             logger.info("Starting system monitoring task.")
             await self._task_monitoring()
         except asyncio.CancelledError:
-            logger.info('Exiting system monitoring task.')
+            logger.info("Exiting system monitoring task.")
 
     async def _task_monitoring(self):
         logger.debug(f"Sampling system stats every {self.sample_rate} seconds.")
         psutil.cpu_percent()
-        
+
         while True:
             self.sample += 1
             stats = self.stats()
             loop = asyncio.get_event_loop()
             if self.sample != 1:
-                loop.create_task(await self.agent.api.metrics(stats))
+                loop.create_task(self.agent.api.metrics(stats))
             await asyncio.sleep(self.sample_rate)

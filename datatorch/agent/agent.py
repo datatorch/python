@@ -9,7 +9,6 @@ from signal import SIGINT, SIGTERM
 
 from concurrent.futures import ThreadPoolExecutor
 from .flows import Flow
-from .loop import Loop
 from .client import AgentApiClient
 from .log_handler import AgentAPIHandler
 from .monitoring import AgentSystemStats
@@ -46,17 +45,9 @@ class Agent(object):
 
     def _init_threads(self):
         self.system_stats = AgentSystemStats(self)
-        Loop.add_task(self.system_stats.start())
-
-    def exit(self, code: int = 0):
-        """ Safely exits agent. """
-        self.logger.info("Attempting to safely exit process.")
-        self.logger.debug("Closing event loop.")
-        Loop.stop()
-        # self.stop_running()
-        self.logger.info("Uploading file logs and exiting process.")
-        self.logger_api_handler.upload()
-        self.logger.debug("Exiting process.")
+        loop = asyncio.get_event_loop()
+        task = loop.create_task(self.system_stats.start())
+        task.set_name("agent-monitoring")
 
     async def process_loop(self):
         """ Waits for jobs from server. """
@@ -64,13 +55,13 @@ class Agent(object):
         logger.info("Waiting for jobs.")
         async for job in self.api.agent_jobs():
             loop = asyncio.get_event_loop()
-            job = job.get('createJob')
+            job = job.get("createJob")
             task = loop.create_task(self._run_job(job))
             task.set_name(f"job-{job.get('id')}")
 
     async def _run_job(self, job):
         """ Runs a job """
-        job_id = job.get('id')
+        job_id = job.get("id")
         try:
             logger.info(f"Starting {job_id}")
             await asyncio.sleep(120)

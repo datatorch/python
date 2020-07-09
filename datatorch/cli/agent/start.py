@@ -5,7 +5,6 @@ import functools
 from signal import SIGINT, SIGTERM
 from datatorch.agent import start as start_agent
 from datatorch.agent import stop as stop_agent
-from datatorch.agent.loop import Loop
 
 
 @click.command(help="Run an agent")
@@ -17,4 +16,3 @@ def start():
     loop.add_signal_handler(SIGINT, exit_func)
     loop.add_signal_handler(SIGTERM, exit_func)
     loop.run_forever()
-
