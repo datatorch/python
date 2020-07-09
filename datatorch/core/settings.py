@@ -2,7 +2,6 @@ import logging
 import json
 import os
 
-from typing import Union
 from datatorch.utils.files import mkdir_exists
 from datatorch.core import folder, env
 
@@ -18,14 +17,14 @@ class Settings(object):
         self.file = os.path.join(path, file_name)
         self.settings = _load_json(self.file)
 
-    def get(self, key: str, default=None, env: str = None):
+    def get(self, key: str, default=None, env: str = None) -> str:
         """ Gets the settings value from a given string. """
         env_value = os.getenv(f"DATATORCH_{env}") if env is not None else None
         value = self.settings.get(key)
 
         return env_value or value or default
 
-    def set(self, key: str, value: str):
+    def set(self, key: str, value: str) -> None:
         """ Saves a value to the settings file. """
         self.settings[key] = value
         _save_json(self.file, self.settings)

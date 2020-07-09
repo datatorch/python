@@ -1,4 +1,3 @@
-import subprocess
 import logging
 
 from .runner import Runner

@@ -1,8 +1,6 @@
 import click
 
-from datatorch.core import user_settings, BASE_URL_API
-from datatorch.api import ApiClient
-from ..spinner import Spinner
+from datatorch.core import user_settings
 
 
 @click.command(help="Removes stored user credentials")

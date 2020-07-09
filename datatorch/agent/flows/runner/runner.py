@@ -1,7 +1,5 @@
 import os
 import asyncio
-import logging
-import subprocess
 from ..template import render
 
 

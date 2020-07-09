@@ -1,25 +1,21 @@
+import asyncio
 import logging
 import click
-import sys
 import os
 
-from gql.transport.exceptions import TransportServerError
 from logging.handlers import RotatingFileHandler
 
-from datatorch.cli.spinner import Spinner
-from datatorch.core import user_settings
 from datatorch.utils.package import get_version
 
 from .directory import agent_directory
-from .client import AgentApiClient
 from .agent import Agent
-from websockets import ConnectionClosedError
-import asyncio
+
 from gql.transport.websockets import WebsocketsTransport
+from websockets import ConnectionClosedError
 from gql import Client
 
 
-__all__ = ["Agent", "start"]
+__all__ = ["Agent", "start", "stop"]
 
 
 logger = logging.getLogger(__name__)
@@ -35,7 +31,7 @@ _transport = WebsocketsTransport(
 _client = Client(transport=_transport, fetch_schema_from_transport=True)
 
 
-def _setup_logging():
+def _setup_logging() -> None:
     logs_dir = agent_directory.logs_dir
     logging.basicConfig(
         format="%(asctime)s %(name)-30s %(levelname)-8s %(message)s",
@@ -51,14 +47,8 @@ def _setup_logging():
     logger.setLevel(logging.DEBUG)
 
 
-async def _exit_jobs():
+async def _exit_jobs() -> None:
     """ Exits active running agent jobs """
-
-    # ? If transport is not explicitly closed tasks will hang when cancelled
-    if _transport.websocket and _transport.close_task is None:
-        logger.info("Closing websocket connection.")
-        await _transport.close()
-
     jobs = [
         task for task in asyncio.Task.all_tasks() if task.get_name().startswith("job-")
     ]
@@ -68,8 +58,13 @@ async def _exit_jobs():
     await asyncio.gather(*jobs, return_exceptions=True)
 
 
-async def _exit_tasks():
+async def _exit_tasks() -> None:
     """ Exits all active asyncio tasks """
+    # ? If transport is not explicitly closed tasks will hang when cancelled
+    if _transport.websocket and _transport.close_task is None:
+        logger.info("Closing websocket connection.")
+        await _transport.close()
+
     tasks = [
         task
         for task in asyncio.Task.all_tasks()
@@ -82,7 +77,7 @@ async def _exit_tasks():
     await asyncio.gather(*tasks, return_exceptions=True)
 
 
-async def start():
+async def start() -> None:
     """ Creates and runs an agent. """
 
     _setup_logging()
@@ -119,7 +114,7 @@ async def start():
             return
 
 
-async def stop():
+async def stop() -> None:
     """ Stop all run tasks. """
 
     print(" ")

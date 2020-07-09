@@ -26,7 +26,6 @@ def login(key, host, web):
         if web:
             import webbrowser
 
-            webclient_url = host.strip("/").strip("api").strip("/")
             webbrowser.open(web_url)
 
         key = click.prompt(click.style("Paste your API key")).strip()

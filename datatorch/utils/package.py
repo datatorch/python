@@ -8,7 +8,6 @@ import pkg_resources
 def get_latest() -> str:
     contents = urllib.request.urlopen("https://pypi.org/pypi/datatorch/json").read()
     data = json.loads(contents)
-    latest_version = data["info"]["version"]
     return data["info"]["version"]
 
 

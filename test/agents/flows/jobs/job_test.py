@@ -8,7 +8,7 @@ class JobParsingTest(unittest.TestCase):
     def test_empty_job(self):
         config = {"test": {}}
         with pytest.raises(AssertionError):
-            jobs = Job.from_dict(config)
+            Job.from_dict(config)
 
     def test_no_jobs(self):
         config = {}
@@ -18,7 +18,7 @@ class JobParsingTest(unittest.TestCase):
     def test_job_zero_steps(self):
         config = {"test": {"steps": []}}
         with pytest.raises(AssertionError):
-            jobs = Job.from_dict(config)
+            Job.from_dict(config)
 
     def test_reads_jobs(self):
         config = {"test": {"steps": [{"name": "test", "action": "example/test@1"}]}}

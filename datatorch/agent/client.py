@@ -1,5 +1,4 @@
 from gql import gql
-from datatorch.api import ApiClient
 from .directory import agent_directory
 
 

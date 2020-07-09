@@ -1,21 +1,15 @@
 import os
-import sys
-import signal
 import logging
 import asyncio
 
-
-from signal import SIGINT, SIGTERM
-
-from concurrent.futures import ThreadPoolExecutor
+from typing import List
 from .flows import Flow
 from .client import AgentApiClient
 from .log_handler import AgentAPIHandler
 from .monitoring import AgentSystemStats
 from .directory import agent_directory
 
-from gql.transport.websockets import WebsocketsTransport
-from gql.client import AsyncClientSession, Client
+from gql.client import AsyncClientSession
 
 
 logger = logging.getLogger(__name__)

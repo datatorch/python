@@ -1,5 +1,3 @@
-import json
-
 from typing import List, Union
 
 from gql import Client as GqlClient, gql
