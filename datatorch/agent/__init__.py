@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import click
+import sys
 import os
 
 from logging.handlers import RotatingFileHandler
@@ -21,7 +22,7 @@ __all__ = ["Agent", "start", "stop"]
 logger = logging.getLogger(__name__)
 
 
-_url = agent_directory.settings.api_url.strip("/")
+_url = (agent_directory.settings.api_url or "").strip("/")
 _url = _url.replace("http", "ws", 1)
 _url = f"{_url}/graphql"
 
@@ -79,7 +80,6 @@ async def _exit_tasks() -> None:
 
 async def start() -> None:
     """ Creates and runs an agent. """
-
     _setup_logging()
 
     click.echo(
