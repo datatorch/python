@@ -3,7 +3,6 @@ import yaml
 import logging
 
 from ..runner import RunnerFactory
-from ...directory import AgentDirectory
 
 
 logger = logging.getLogger("datatorch.agent.action")

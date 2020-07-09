@@ -1,3 +1,4 @@
+import os
 import sys
 import signal
 import logging
@@ -9,27 +10,23 @@ from .loop import Loop
 from .client import AgentApiClient
 from .log_handler import AgentAPIHandler
 from .threads import AgentSystemStats
-from .directory import AgentDirectory
+from .directory import agent_directory
 
 
 logger = logging.getLogger(__name__)
 
 
 class Agent(object):
-    @staticmethod
-    def install_dependencies(self):
-        pass
-
-    def __init__(self, id: str, api: AgentApiClient):
-        self.id = id
+    def __init__(self, api: AgentApiClient):
         self.api = api
-        self._loop = True
+        self.directory = agent_directory
+
+        os.chdir(self.directory.dir)
 
         self._register_signals()
 
         self._init_logger()
         self._init_threads()
-        self._init_directory()
 
     def _register_signals(self):
         def signal_handler(sig, frame):
@@ -46,9 +43,6 @@ class Agent(object):
 
     def _init_threads(self):
         self.threads = AgentThread(self)
-
-    def _init_directory(self):
-        self.directory = AgentDirectory()
 
     def exit(self, code: int = 0):
         """ Safely exits agent. """

@@ -4,7 +4,7 @@ import os
 import logging
 
 from datatorch.api import ApiClient
-from datatorch.agent.directory import AgentDirectory
+from datatorch.agent.directory import agent_directory
 
 
 __all__ = ["Action", "get_action"]
@@ -21,8 +21,7 @@ def get_action(action: str, agent=None) -> Action:
     name, version = action.split("@", 1)
 
     # Get actions directory
-    ad = AgentDirectory()
-    action_dir = ad.action_dir(name, version)
+    action_dir = agent_directory.action_dir(name, version)
     folder_exists = os.path.exists(action_dir)
 
     if folder_exists:

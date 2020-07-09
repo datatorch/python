@@ -15,20 +15,25 @@ class AgentSystemStats(object):
         """ Returns stats that do not change over time. """
         # initialize averaging
         psutil.cpu_percent()
+        cpu_freq = psutil.cpu_freq()
+        mem = psutil.virtual_memory()
+
         return {
-            "os": platform.platform(),
-            "python": {"version": platform.python_version()},
-            "cpu": {
-                "name": platform.processor(),
-                "cores": {
-                    "physical": psutil.cpu_count(logical=False),
-                    "logical": psutil.cpu_count(logical=False),
-                },
-            },
+            "os": platform.system(),
+            "osRelease": platform.release(),
+            "osVersion": platform.version(),
+            "pythonVersion": platform.python_version(),
+            "totalMemory": round(mem.total / 1024),
+            "cpuName": platform.processor(),
+            "cpuFreqMin": cpu_freq.min,
+            "cpuFreqMax": cpu_freq.max,
+            "cpuCoresPhysical": psutil.cpu_count(logical=False),
+            "cpuCoresLogical": psutil.cpu_count(logical=True),
         }
 
     @staticmethod
     def stats():
+
         cpu_usage = [x / psutil.cpu_count() * 100 for x in psutil.getloadavg()]
         return {
             "cpu": {"usage": cpu_usage},
@@ -47,7 +52,9 @@ class AgentSystemStats(object):
             self.start()
 
     def start(self):
-        logger.debug("Starting system monitoring thread.")
+        logger.info("Sending initial metrics")
+        self.agent.api.initial_metrics(self.initial_stats())
+        logger.info("Starting system monitoring thread.")
         self._thread.start()
 
     def stop(self):

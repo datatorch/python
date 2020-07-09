@@ -9,26 +9,27 @@ from ..spinner import Spinner
 @click.argument("key", nargs=-1)
 @click.option(
     "--host",
-    default=BASE_URL_API,
+    default=user_settings.api_url or BASE_URL_API,
     help="Url to to a specific API instance of DataTorch",
 )
-@click.option(
-    "--web", is_flag=True, help="Opens webbrowser to access token link"
-)
+@click.option("--web", is_flag=True, help="Opens webbrowser to access token link")
 def login(key, host, web):
     key: str = next(iter(key), None)
+    host = host.strip("/")
 
     if key is None:
-        styled_url = click.style(host, fg="blue", bold=True)
-        click.echo("Retrieve your API key from: {}".format(styled_url))
+        base_url = host.strip("api").strip("/")
+        web_url = f"{base_url}/settings/access-tokens"
+        styled_url = click.style(web_url, fg="blue", bold=True)
+        click.echo("Retrieve your API key from {}".format(styled_url))
 
         if web:
             import webbrowser
 
             webclient_url = host.strip("/").strip("api").strip("/")
-            webbrowser.open(f"{webclient_url}/settings/access-tokens")
+            webbrowser.open(web_url)
 
-        key = click.prompt(click.style("Paste your API Key", bold=True)).strip()
+        key = click.prompt(click.style("Paste your API key")).strip()
 
     try:
         if len(key) != 36:
@@ -38,12 +39,12 @@ def login(key, host, web):
     except Exception as ex:
         click.echo(click.style(f"[ERROR] {ex}", fg="red"))
         return
-    
-    spinner = Spinner('Validating API key')
+
+    spinner = Spinner("Validating API key")
     api = ApiClient()
     user = api.viewer()
-    user_settings.set('userLogin', user.login)
-    user_settings.set('userName', user.name)
-    spinner.done('Successfully logged in.')
+    user_settings.set("userLogin", user.login)
+    user_settings.set("userName", user.name)
+    spinner.done("Successfully logged in.")
     hello = click.style(user.name or user.login, fg="blue", bold=True)
-    click.echo(f'Hello, {hello}!')
+    click.echo(f"Hello, {hello}!")

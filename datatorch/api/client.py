@@ -25,10 +25,7 @@ class Client(object):
     """ Wrapper for the DataTorch API including GraphQL and uploading """
 
     def __init__(
-        self,
-        api_key: str = None,
-        api_url: str = None,
-        use_sockets: bool = False,
+        self, api_key: str = None, api_url: str = None, use_sockets: bool = False,
     ):
         self.client = None
         self._use_sockets = use_sockets
@@ -84,10 +81,9 @@ class Client(object):
     ) -> dict:
         """ Wrapper around execute """
         removed_none = dict((k, v) for k, v in params.items() if v is not None)
-        params_json = json.dumps(removed_none)
         if type(query) == str:
             query = gql(query)
-        return self.client.execute(query, *args, variable_values=params_json, **kwargs)
+        return self.client.execute(query, *args, variable_values=removed_none, **kwargs)
 
     def query_to_class(self, Entity, query: str, path: str = "", params: dict = {}):
         results = self.execute(query, params=params)
