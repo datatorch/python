@@ -2,6 +2,7 @@ import click
 import yaml
 import json as jsonlib
 
+
 @click.command(help="Creates a basic hello world action.")
 @click.option(
     "-n",
@@ -25,7 +26,7 @@ import json as jsonlib
 )
 def create(name, description, json):
     config = {
-        '$schema': 'http://datatorch.io/schema/action.v1.json',
+        "$schema": "http://datatorch.io/schema/action.v1.json",
         "name": name,
         "description": description,
         "inputs": {
