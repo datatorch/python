@@ -5,14 +5,14 @@ from datatorch.api import ApiClient
 from ..spinner import Spinner
 
 
-@click.command(help="Login to DataTorch and stores credentials locally")
+@click.command(help="Login to DataTorch and stores credentials locally.")
 @click.argument("key", nargs=-1)
 @click.option(
     "--host",
     default=user_settings.api_url or BASE_URL_API,
-    help="Url to to a specific API instance of DataTorch",
+    help="Url to to a specific API instance of DataTorch.",
 )
-@click.option("--web", is_flag=True, help="Opens webbrowser to access token link")
+@click.option("--web", is_flag=True, help="Opens webbrowser to access token link.")
 def login(key, host, web):
     key: str = next(iter(key), None)
     host = host.strip("/")

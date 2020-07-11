@@ -3,6 +3,7 @@ from .action import Action
 import os
 import logging
 
+from typing import Awaitable
 from datatorch.api import ApiClient
 from datatorch.agent.directory import agent_directory
 
@@ -17,7 +18,7 @@ def _download_action(api: ApiClient, name, version):
     pass
 
 
-def get_action(action: str, agent=None) -> Action:
+async def get_action(action: str, agent=None) -> Awaitable[Action]:
     name, version = action.split("@", 1)
 
     # Get actions directory

@@ -8,6 +8,7 @@ from .client import AgentApiClient
 from .log_handler import AgentAPIHandler
 from .monitoring import AgentSystemStats
 from .directory import agent_directory
+from .job import AgentJob
 
 from gql.client import AsyncClientSession
 

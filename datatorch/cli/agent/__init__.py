@@ -4,7 +4,7 @@ from .start import start
 from .create import create
 
 
-@click.group()
+@click.group(help="Commands for managing agents.")
 def agent():
     pass
 

@@ -1,0 +1,157 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://datatorch.io/schema/action.v1.json",
+  "title": "DataTorch Action Schema",
+  "description": "Schema for creating DataTorch actions",
+  "additionalProperties": false,
+  "required": ["name", "author", "description", "runs"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name of your action. DataTorch displays the name when the action is ran.",
+      "maxLength": 40
+    },
+    "author": {
+      "type": "string",
+      "description": "The name of the action's author."
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 120
+    },
+    "inputs": {
+      "description": "Input parameters allow you to specify data that the action expects to use during runtime.",
+      "type": "object",
+      "patternProperties": {
+        "^[_a-zA-Z][a-zA-Z0-9_-]*$": {
+          "description": "A string identifier to associate with the input.",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Expected type of the input to be.",
+              "enum": ["string", "number", "boolean"],
+              "default": "string"
+            },
+            "description": {
+              "description": "A string description of the input parameter.",
+              "type": "string"
+            },
+            "deprecationMessage": {
+              "description": "A string shown to users using deprecated inputs.",
+              "type": "string"
+            },
+            "required": {
+              "type": "boolean",
+              "description": "A boolean to indicate whether the action requires the input parameter. Set to true when the parameter is required."
+            },
+            "default": {
+              "type": ["string", "boolean", "number", "null", "integer"],
+              "description": "The default value is used when an input parameter isn't specified in a workflow file."
+            }
+          },
+          "required": ["type", "description"],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "outputs": {
+      "description": "Output parameters allow you to specify the data that subsequent actions can use later in the workflow after the action that defines these outputs has run.",
+      "type": "object",
+      "patternProperties": {
+        "^[_a-zA-Z][a-zA-Z0-9_-]*$": {
+          "description": "A string identifier to associate with the output.",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Expected type of the input to be.",
+              "enum": ["string", "number", "boolean"],
+              "default": "string"
+            },
+            "description": {
+              "description": "A string description of the input parameter.",
+              "type": "string"
+            }
+          },
+          "required": ["type", "description"],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "runs": {
+      "description": "Describes how to execute the action.",
+      "type": "object",
+      "properties": {
+        "using": {
+          "description": "The application to use to execute the code specified in main.",
+          "type": "string",
+          "enum": ["cmd", "script", "node", "python", "docker"]
+        },
+        "command": {
+          "type": "string",
+          "description": "Required for 'cmd': Command to execute."
+        },
+        "main": {
+          "type": "string",
+          "description": "Required for 'python' and 'node': The code file that contains your action code."
+        },
+        "image": {
+          "type": "string",
+          "description": "Required for 'docker': The Docker image to use as the container to run the action."
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "using": { "const": "node" },
+            "image": { "not": {} },
+            "command": { "not": {} }
+          },
+          "required": ["main"]
+        },
+        {
+          "properties": {
+            "using": { "const": "python" },
+            "image": { "not": {} },
+            "command": { "not": {} }
+          },
+          "required": ["main"]
+        },
+        {
+          "properties": {
+            "using": { "const": "script" },
+            "image": { "not": {} },
+            "command": { "not": {} }
+          },
+          "required": ["main"]
+        },
+        {
+          "properties": {
+            "using": { "const": "cmd" },
+            "image": { "not": {} },
+            "main": { "not": {} }
+          },
+          "required": ["command"]
+        }
+      ]
+    }
+  },
+  "examples": [
+    {
+      "name": "Echo Input",
+      "author": "DataTorch Developers",
+      "description": "Prints input from the command line.",
+      "inputs": {
+        "string": {
+          "type": "string",
+          "default": "Hello world"
+        }
+      },
+      "runs": {
+        "using": "cmd",
+        "command": "echo {{ input.string }}"
+      }
+    }
+  ]
+}

@@ -8,7 +8,7 @@ from ..spinner import Spinner
 logger = logging.getLogger(__name__)
 
 
-@click.command("upgrade", help="Upgrade to latests version of python package")
+@click.command("upgrade", help="Upgrade to latests version of python package.")
 def package_upgrade():
     spinner = Spinner("Check if newer version is available.")
 

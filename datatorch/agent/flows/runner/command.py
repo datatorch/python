@@ -16,4 +16,5 @@ class CommandRunner(Runner):
         command = self.get("command")
         completed = await self.run_cmd(command)
         async for log in completed.stdout:
+            log = log.decode("utf-8")
             print(log)

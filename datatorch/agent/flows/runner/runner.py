@@ -1,5 +1,7 @@
 import os
 import asyncio
+
+from typing import Awaitable
 from ..template import render
 
 
@@ -7,17 +9,13 @@ class Runner(object):
     def __init__(self, config, action):
         self.config = config
         self.action = action
-        self.inputs = {}
         self.original_wd = os.getcwd()
 
-    async def run(self, agent, inputs={}):
-        """ Setups and excutes runner. """
-        self.agent = None
+    async def run(self, inputs: dict = {}):
         self.inputs = inputs
-        await self.execute()
-        self.inputs = {}
+        return await self.execute()
 
-    async def execute(self):
+    async def execute(self) -> Awaitable[dict]:
         raise NotImplementedError("This method must be implemented.")
 
     def action_dir(self):
@@ -38,7 +36,7 @@ class Runner(object):
 
     def get(self, key, default=None):
         """ Gets a string from config and renders templating. """
-        return self.template(self.config.get(key, default), self.inputs)
+        return self.template(self.config.get(key, default), {"input": self.inputs})
 
     def template(self, string, variables={}) -> str:
         return render(string, variables or {})

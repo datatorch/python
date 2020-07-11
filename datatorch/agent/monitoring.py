@@ -43,7 +43,7 @@ class AgentSystemStats(object):
     @staticmethod
     def stats():
         mem = psutil.virtual_memory()
-        la_1, la_5, la_15 = [(x / psutil.cpu_count()) for x in psutil.getloadavg()]
+        la_1, la_5, la_15 = psutil.getloadavg()
         stats = {
             "sampledAt": datetime.now(timezone.utc).isoformat()[:-9] + "Z",
             "avgLoad1": la_1,

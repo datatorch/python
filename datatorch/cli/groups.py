@@ -9,6 +9,8 @@ from .main.upgrade import package_upgrade
 from .main.version import version
 
 from .agent import agent
+from .flow import flow
+from .action import action
 
 
 @click.group()
@@ -19,8 +21,9 @@ def main():
 
 main.add_command(login)
 main.add_command(logout)
-# main.add_command(agent)
 main.add_command(version)
 main.add_command(package_upgrade)
 
+main.add_command(flow)
 main.add_command(agent)
+main.add_command(action)

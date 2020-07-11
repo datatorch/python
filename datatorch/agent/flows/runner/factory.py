@@ -23,7 +23,7 @@ class RunnerFactory(object):
     @staticmethod
     def create(action, config: dict) -> Runner:
         """ Makes runners to 'use' strings found in config.yaml files. """
-        use = config.get("use")
+        use = config.get("using")
         if use is None:
             raise RunnerCreateError("Action 'use' property not specified.")
         if use not in _use_map:
