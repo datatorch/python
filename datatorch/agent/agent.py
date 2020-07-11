@@ -8,9 +8,10 @@ from .client import AgentApiClient
 from .log_handler import AgentAPIHandler
 from .monitoring import AgentSystemStats
 from .directory import agent_directory
-from .job import AgentJob
+
 
 from gql.client import AsyncClientSession
+from datatorch.agent.flows import Job
 
 
 logger = logging.getLogger(__name__)
@@ -50,18 +51,29 @@ class Agent(object):
         logger.info("Waiting for jobs.")
         async for job in self.api.agent_jobs():
             loop = asyncio.get_event_loop()
-            job = job.get("createJob")
+            job = job.get("job")
             task = loop.create_task(self._run_job(job))
             task.set_name(f"job-{job.get('id')}")
 
     async def _run_job(self, job):
         """ Runs a job """
         job_id = job.get("id")
+        job_name = job.get("name")
+        flow_config = job.get("run").get("config")
+
+        job_config = flow_config.get("jobs").get(job_name)
+        job_config["id"] = job_id
+        job_config["name"] = job_name
+
+        job = Job(job_config)
+
         try:
-            logger.info(f"Starting {job_id}")
-            await asyncio.sleep(120)
-            # flow = Flow.from_yaml("./examples/flow.yaml")
-            # await flow.run(0)
+            logger.info(f"Starting {job_name} {job_id}")
+            await Job(job_config, agent=self).run()
             logger.info(f"Finishing {job_id}")
+
         except asyncio.CancelledError:
             logger.info(f"Canceling job {job_id}")
+
+        except Exception as e:
+            logger.error(f"Job {job_name} {job_id} failed: {e}")

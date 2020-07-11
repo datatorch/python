@@ -29,7 +29,7 @@
             "type": {
               "type": "string",
               "description": "Expected type of the input to be.",
-              "enum": ["string", "number", "boolean"],
+              "enum": ["string", "float", "integer", "boolean"],
               "default": "string"
             },
             "description": {

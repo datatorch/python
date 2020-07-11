@@ -7,6 +7,8 @@ from gql.transport.requests import RequestsHTTPTransport
 
 from datatorch.core import user_settings
 
+import json
+
 
 __all__ = "Client"
 

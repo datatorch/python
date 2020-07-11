@@ -1,5 +1,6 @@
 from typing import List, Awaitable
 from ..action import get_action, Action
+from ..template import render
 
 
 def _dict_to_step(self, config: dict):
@@ -16,7 +17,7 @@ class Step(object):
         return cls(
             action_string=step.get("action"),
             name=step.get("name"),
-            inputs=step.get("inputs", []),
+            inputs=step.get("inputs", {}),
             agent=agent,
         )
 
@@ -28,18 +29,19 @@ class Step(object):
         self.inputs = inputs
         self.agent = agent
 
-    def action(self) -> Awaitable[Action]:
-        return get_action(self._action_string, agent=self.agent)
+    async def action(self) -> Action:
+        return await get_action(self._action_string, agent=self.agent)
 
-    async def run(self, inputs=[]):
-        """Runs a step with given imports.
+    async def run(self, inputs: dict = {}) -> dict:
 
-        First downloads the action and then excutes it.
+        # Add specified inputs
+        for k, v in self.inputs.items():
+            if isinstance(v, str):
+                inputs[k] = render(v, {"variable": inputs})
+            else:
+                inputs[k] = v
 
-        Args:
-            inputs (list, optional): actions input. Defaults to [].
+        action = await self.action()
+        output = await action.run(inputs)
 
-        Returns:
-            list: actions output
-        """
-        return (await self.action()).run(None, inputs)
+        return output

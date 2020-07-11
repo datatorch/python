@@ -1,10 +1,9 @@
 import click
 import yaml
 import asyncio
-import logging
 
-from datatorch.agent.flows import Flow
-from datatorch.agent import logger
+from datatorch.agent.flows import Flow, Job
+from datatorch.agent import setup_logging
 
 
 class FlowRun(object):
@@ -14,13 +13,15 @@ class FlowRun(object):
 @click.command(help="Runs a flow yaml file on local machine.")
 @click.argument("path", type=click.Path(exists=True))
 def run(path):
-    logger.setLevel(logging.DEBUG)
+    setup_logging()
 
     async def run_jobs(flow: Flow):
         """ Run tasks in parallel """
+
         tasks = []
-        for job in flow.jobs:
-            tasks.append(job.run())
+        for k, v in flow.config.get("jobs").items():
+            v["name"] = k
+            tasks.append(Job(v).run())
 
         await asyncio.wait(tasks)
 

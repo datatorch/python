@@ -6,6 +6,10 @@ from .runner import Runner
 logger = logging.getLogger(__name__)
 
 
+class CommandFailedError(Exception):
+    pass
+
+
 class CommandRunner(Runner):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -13,8 +17,5 @@ class CommandRunner(Runner):
             raise ValueError("A command was not provided to run.")
 
     async def execute(self):
-        command = self.get("command")
-        completed = await self.run_cmd(command)
-        async for log in completed.stdout:
-            log = log.decode("utf-8")
-            print(log)
+        command = self.config.get("command")
+        await self.monitor_cmd(command)

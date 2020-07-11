@@ -47,7 +47,10 @@ def run(folder):
         click.echo(click.style("\nAction Log:", bold=True))
         output = await action.run(inputs)
         click.echo(click.style("Action Output:", bold=True))
-        click.echo(json.dumps(output, indent=2))
+        if output:
+            click.echo(yaml.dump(output))
+        else:
+            click.echo("No output found.")
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(run_action())

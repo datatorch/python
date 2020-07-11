@@ -1,8 +1,13 @@
 import os
+import json
 import asyncio
 
 from typing import Awaitable
 from ..template import render
+
+
+class ProcessCodeError(Exception):
+    pass
 
 
 class Runner(object):
@@ -13,7 +18,9 @@ class Runner(object):
 
     async def run(self, inputs: dict = {}):
         self.inputs = inputs
-        return await self.execute()
+        self.outputs = {}
+        await self.execute()
+        return self.outputs
 
     async def execute(self) -> Awaitable[dict]:
         raise NotImplementedError("This method must be implemented.")
@@ -34,9 +41,32 @@ class Runner(object):
             await process.wait()
         return process
 
+    async def monitor_cmd(self, command: str):
+        """ Excutes a command and monitors stdout for variables and logging. """
+        process = await self.run_cmd(command)
+
+        async for log in process.stdout:
+            log = log.decode("utf-8")
+            self.check_for_output(log)
+            print(log, end="")
+
+        if process.returncode != 0:
+            raise ProcessCodeError(
+                f"Process failed with exit code {process.returncode}"
+            )
+
     def get(self, key, default=None):
-        """ Gets a string from config and renders templating. """
-        return self.template(self.config.get(key, default), {"input": self.inputs})
+        """ Gets a string from config and renders template. """
+        return self.template(self.config.get(key, default), {"variable": self.inputs})
 
     def template(self, string, variables={}) -> str:
         return render(string, variables or {})
+
+    def check_for_output(self, string: str) -> bool:
+        """ Parse output variable from string if valid. """
+        result = string.split("::", 2)
+        if len(result) != 3:
+            return False
+        _, var, value = result
+        self.outputs[var] = json.loads(value)
+        return True

@@ -15,7 +15,7 @@ import json as jsonlib
     "-d",
     "--description",
     type=str,
-    default="Action created using CI templating.",
+    default="Action created using CI template.",
     help="Description of action to be created.",
 )
 @click.option(

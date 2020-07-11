@@ -11,8 +11,15 @@ class AgentApiClient(object):
         # fmt: off
         sub = gql("""
             subscription {
-                createJob {
+                job: agentJobs {
                     id
+                    name
+                    run {
+                        id
+                        name
+                        text
+                        config
+                    }
                 }
             }
         """)

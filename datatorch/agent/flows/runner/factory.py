@@ -9,6 +9,7 @@ _use_map = {
     "cmd": CommandRunner,
     "commandline": CommandRunner,
     "shell": ShellRunner,
+    "script": ShellRunner,
     "docker": DockerRunner,
     "python": PythonRunner,
     "node": NodeRunner,

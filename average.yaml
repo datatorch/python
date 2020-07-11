@@ -1,0 +1,13 @@
+name: Average
+
+jobs:
+  average:
+    steps:
+      - action: add@1
+        inputs:
+          x: 10
+          y: 20
+      - action: divide@1
+        inputs:
+          value: "{{ variable.s }}"
+          by: 2

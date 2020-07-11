@@ -1,0 +1,11 @@
+name: Hello World
+
+jobs:
+  hellos:
+    steps:
+      - action: hello-command@1
+        inputs:
+          message: Hello from flow using command line!
+      - action: hello-script@1
+        inputs:
+          message: Hello from flow using script!

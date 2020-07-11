@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "description": "Schema for building flows for DataTorch.",
+  "properties": {
+    "name": {
+      "description": "Name of the workflow. Must be unique for a give project.",
+      "type": "string"
+    },
+    "jobs": {
+      "description": "A workflow run is made up of one or more jobs. Jobs run in parallel by default.",
+      "type": "object",
+      "patternProperties": {
+        "^[_a-zA-Z][a-zA-Z0-9_-]*$": {
+          "description": "Each job must have an id to associate with the job. The key job_id is a string and its value is a map of the job's configuration data.",
+          "type": "object",
+          "properties": {
+            "name": {
+              "description": "The name of the job displayed on DataTorch.",
+              "type": "string"
+            },
+            "steps": {
+              "description": "A job contains a sequence of tasks called steps.",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "if": {
+                    "description": "You can use the if conditional to prevent a step from running unless a condition is met.",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "A name for your step to display on GitHub.",
+                    "type": "string"
+                  },
+                  "action": {
+                    "description": "Selects an action to run as part of a step in your job. An action is a reusable unit of code. You can use an action defined in the same repository as the workflow, a public repository, or in a published Docker container image (https://hub.docker.com/).\nWe strongly recommend that you include the version of the action you are using by specifying a Git ref, SHA, or Docker tag number.",
+                    "type": "string"
+                  },
+                  "timeout": {
+                    "description": "The maximum number of minutes to run the step before killing the process.",
+                    "type": "number"
+                  },
+                  "additionalProperties": false
+                },
+                "additionalItems": false,
+                "minItems": 1
+              }
+            }
+          }
+        }
+      },
+      "minProperties": 1,
+      "additionalProperties": false
+    }
+  },
+  "required": ["name", "jobs"],
+  "additionalProperties": false
+}

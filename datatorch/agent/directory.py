@@ -53,13 +53,11 @@ class AgentDirectory(object):
     def action_dir(self, name: str, version: str):
         return os.path.join(self.actions_dir, *name.lower().split("/"), version)
 
-    def task_dir(self, task: Union[str, dict]):
+    def task_dir(self, task_id: str):
         """ Returns the directory for a given task """
-        if isinstance(task, str):
-            task_id = task
-        else:
-            task_id = task.get("id")
-        return os.path.join(self.tasks_dir, task_id)
+        path = os.path.join(self.tasks_dir, task_id)
+        mkdir_exists(path)
+        return path
 
     def project_dir(self, project: Union[str, dict]):
         """ Returns the directory for a given project """

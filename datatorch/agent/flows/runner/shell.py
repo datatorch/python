@@ -3,6 +3,10 @@ import os
 from .runner import Runner
 
 
+class ScriptFailedError(Exception):
+    pass
+
+
 class ShellRunner(Runner):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -12,6 +16,5 @@ class ShellRunner(Runner):
     async def execute(self):
         script = self.get("script").strip("/")
         script_command = os.path.join(self.action.dir, script)
-
         await self.run_cmd("chmod +x {}".format(script_command.split(" ", 1)[0]))
-        completed = await self.run_cmd(script_command)
+        await self.monitor_cmd(script_command)

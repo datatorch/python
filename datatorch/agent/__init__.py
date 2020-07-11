@@ -32,7 +32,7 @@ _transport = WebsocketsTransport(
 _client = Client(transport=_transport, fetch_schema_from_transport=True)
 
 
-def _setup_logging() -> None:
+def setup_logging() -> None:
     logs_dir = agent_directory.logs_dir
     logging.basicConfig(
         format="%(asctime)s %(name)-30s %(levelname)-8s %(message)s",
@@ -80,7 +80,7 @@ async def _exit_tasks() -> None:
 
 async def start() -> None:
     """ Creates and runs an agent. """
-    _setup_logging()
+    setup_logging()
 
     click.echo(
         click.style(f"Starting DataTorch Agent v{get_version()}", fg="blue", bold=True)
@@ -92,6 +92,7 @@ async def start() -> None:
     while True:
         try:
             async with _client as session:
+                backoff_wait = 2
                 await Agent.run(session)
 
         except (

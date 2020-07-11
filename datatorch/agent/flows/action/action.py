@@ -1,8 +1,8 @@
 import os
 import yaml
 import logging
+import json
 
-from typing import Awaitable
 from ..runner import RunnerFactory
 
 
@@ -38,12 +38,48 @@ class Action(object):
         with open(self.config_path, "r") as config_file:
             return yaml.load(config_file, Loader=yaml.FullLoader)
 
-    async def run(self, inputs: dict = {}) -> Awaitable[dict]:
+    async def run(self, inputs: dict = {}) -> dict:
         logger.info("Running action {}".format(self.identifier))
-        output = await self.runner.run(inputs)
-        logger.debug("Finished running '{}' v{}".format(self.name, self.version))
+
+        # Validate input
+        for k, v in self.config.get("inputs", {}).items():
+            # Set default values
+            variable_value = inputs.get(k)
+
+            if inputs.get(k) is None:
+                inputs[k] = v.get("default")
+
+            if variable_value is None:
+                # Error if input is required but missing
+                if v.get("required", False):
+                    raise ValueError(f"Value required for input '{k}'")
+            else:
+                # Check value typing
+                variable_type = v.get("type")
+
+                if not variable_type:
+                    return
+
+                if variable_type == "float":
+                    inputs[k] = float(variable_value)
+
+                if variable_type == "integer":
+                    inputs[k] = int(variable_value)
+
+                if variable_type == "string":
+                    inputs[k] = str(variable_value)
+
+                if variable_type == "boolean":
+                    inputs[k] = bool(variable_value)
+
+        logger.debug(f"Inputs for '{self.full_name}': {json.dumps(inputs or {})}")
+
+        output = (await self.runner.run(inputs)) or {}
+
+        logger.info(f"Finished running '{self.full_name}'")
+        logger.debug(f"Outputs for '{self.full_name}': {json.dumps(output)}")
         return output
 
     @property
     def full_name(self):
-        return "{}@{}".format(self.name, self.version)
+        return f"{self.name} v{self.version}"

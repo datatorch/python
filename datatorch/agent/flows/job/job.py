@@ -1,41 +1,34 @@
 import logging
 import asyncio
+import os
+import yaml
 
 from typing import List
+
+from ...directory import agent_directory
 from ..step import Step
 
 
 logger = logging.getLogger("datatorch.agent.job")
 
 
-STEP_TIMEOUT = 60 * 60 * 24 * 5  # 5 days
-
-
-def _dict_to_job(name: str, config: dict, agent=None):
-    assert "steps" in config, "A job must have steps."
-    assert len(config["steps"]) != 0, "A job must have steps."
-    steps = Step.from_dict_list(config["steps"], agent)
-    return Job(name, steps, agent)
-
-
 class Job(object):
-    @classmethod
-    def from_dict(cls, config: dict, agent=None):
-        return [_dict_to_job(k, v, agent) for k, v in config.items()]
-
-    def __init__(self, name, steps: List[Step], agent=None):
-        self.current_step = 0
-        self.name = name
-        self.steps = steps
+    def __init__(self, config: dict, agent=None):
+        self.config = config
         self.agent = agent
 
+        job_id = self.config.get("id")
+        self.dir = agent_directory.task_dir(job_id) if job_id else "./"
+
+        if job_id:
+            path = os.path.join(self.dir, "job.yaml")
+            with open(path, "w") as config:
+                yaml.dump(self.config, config, default_flow_style=False)
+
     async def run(self):
-        inputs = []
-        for step in self.steps:
-            try:
-                inputs = await asyncio.wait_for(step.run(inputs), timeout=STEP_TIMEOUT)
-            except (ValueError, SyntaxError) as e:
-                logger.error(e)
-                break
+        steps = Step.from_dict_list(self.config.get("steps"), agent=self.agent)
+        inputs = {}
+        for step in steps:
+            inputs = {**inputs, **await step.run(inputs)}
         else:
             logger.info("Successfully completed job.")

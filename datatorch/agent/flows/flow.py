@@ -14,20 +14,21 @@ class Flow(object):
     def from_yaml(cls, path, agent=None):
         with open(path, "r") as config_file:
             config = yaml.load(config_file, Loader=yaml.FullLoader)
-        name = config.get("name") or os.path.splitext(os.path.basename(path))[0]
-        jobs = Job.from_dict(config.get("jobs", {}), agent)
-        return Flow(name, jobs, agent=agent)
+        config["name"] = config.get("name", os.path.splitext(os.path.basename(path))[0])
+        return cls.from_config(config, agent)
 
-    def __init__(self, name: str, jobs: List[Job], agent=None):
-        self.name = name
-        self.jobs = jobs
+    @classmethod
+    def from_config(cls, config: Union[str, dict], agent=None):
 
-    async def run(self, job: Union[str, int, Job], inputs: dict = {}):
+        if isinstance(config, str):
+            config = yaml.load(config, Loader=yaml.FullLoader)
+
+        return Flow(config, agent=agent)
+
+    def __init__(self, config: dict, agent=None):
+        self.name = config.get("name")
+        self.config = config
+
+    async def run(self, job_config: dict):
         """ Runs a job. """
-        if isinstance(job, str):
-            job = [x for x in self.jobs if x.name == job]
-
-        if isinstance(job, int):
-            job = self.jobs[job]
-
-        await job.run()
+        await Job(job_config, agent=self.agent).run()
