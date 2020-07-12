@@ -38,7 +38,7 @@ class Action(object):
         with open(self.config_path, "r") as config_file:
             return yaml.load(config_file, Loader=yaml.FullLoader)
 
-    async def run(self, inputs: dict = {}) -> dict:
+    async def run(self, inputs: dict = {}, step=None) -> dict:
         logger.info("Running action {}".format(self.identifier))
 
         # Validate input
@@ -72,7 +72,11 @@ class Action(object):
                 if variable_type == "boolean":
                     inputs[k] = bool(variable_value)
 
-        logger.debug(f"Inputs for '{self.full_name}': {json.dumps(inputs or {})}")
+        if step is not None:
+            # Update steps output after casting.
+            await step.update(inputs=inputs)
+
+        logger.debug(f"Inputs for '{self.full_name}': {json.dumps(inputs)}")
 
         output = (await self.runner.run(inputs)) or {}
 

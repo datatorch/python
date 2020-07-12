@@ -20,6 +20,11 @@ class AgentApiClient(object):
                         text
                         config
                     }
+                    steps {
+                        id
+                        name
+                        action
+                    }
                 }
             }
         """)
@@ -92,6 +97,32 @@ class AgentApiClient(object):
         # fmt: on
         params = {"agentId": agent_directory.settings.agent_id, **metrics}
         return self.execute(mutate, params=params)
+
+    def update_step(self, values: dict):
+        # fmt: off
+        mutate = """
+            mutation UpdateStepRun(
+                $id: ID!
+                $inputs: JSON
+                $outputs: JSON
+                $status: String
+                $startedAt: DateTime
+                $finishedAt: DateTime
+            ) {
+                updateFlowStep(
+                    id: $id,
+                    input: {
+                        status: $status
+                        output: $outputs
+                        input: $inputs
+                        startedAt: $startedAt
+                        finishedAt: $finishedAt
+                    }
+                )
+            }
+        """
+        # fmt: on
+        return self.execute(mutate, params=values)
 
     def execute(self, query, *args, params: dict = {}, **kwargs) -> dict:
         """ Wrapper around execute """

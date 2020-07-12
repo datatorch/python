@@ -29,6 +29,12 @@ class Job(object):
         steps = Step.from_dict_list(self.config.get("steps"), agent=self.agent)
         inputs = {}
         for step in steps:
-            inputs = {**inputs, **await step.run(inputs)}
+            try:
+                inputs = {**inputs, **await step.run(inputs)}
+            except Exception as e:
+                logger.error(
+                    f"Job {self.config.get('name')} {self.config.get('id')} failed: {e}"
+                )
+                await step.update(status="FAILED")
         else:
             logger.info("Successfully completed job.")

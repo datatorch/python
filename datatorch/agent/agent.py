@@ -59,11 +59,24 @@ class Agent(object):
         """ Runs a job """
         job_id = job.get("id")
         job_name = job.get("name")
+        job_steps = job.get("steps")
+
         flow_config = job.get("run").get("config")
 
         job_config = flow_config.get("jobs").get(job_name)
         job_config["id"] = job_id
         job_config["name"] = job_name
+
+        # Match db steps id to flow config steps
+        for step in job_config.get("steps"):
+            for i, d in enumerate(job_steps):
+                same_action = d["action"] == step.get("action")
+                same_name = d["name"] == step.get("name")
+                if same_action and same_name:
+                    step["id"] = job_steps.pop(i).get("id")
+
+            if step.get("id") == None:
+                raise ValueError(f"No ID found for step {step.get('action')}.")
 
         job = Job(job_config)
 
@@ -74,6 +87,3 @@ class Agent(object):
 
         except asyncio.CancelledError:
             logger.info(f"Canceling job {job_id}")
-
-        except Exception as e:
-            logger.error(f"Job {job_name} {job_id} failed: {e}")
