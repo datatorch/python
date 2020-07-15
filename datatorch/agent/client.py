@@ -1,5 +1,13 @@
+from typing import List
 from gql import gql
 from .directory import agent_directory
+
+from typing_extensions import TypedDict
+
+
+class Log(TypedDict):
+    createdAt: str
+    message: str
 
 
 class AgentApiClient(object):
@@ -110,7 +118,7 @@ class AgentApiClient(object):
                 $finishedAt: DateTime
             ) {
                 updateFlowStep(
-                    id: $id,
+                    id: $id
                     input: {
                         status: $status
                         output: $outputs
@@ -124,11 +132,34 @@ class AgentApiClient(object):
         # fmt: on
         return self.execute(mutate, params=values)
 
-    def execute(self, query, *args, params: dict = {}, **kwargs) -> dict:
+    async def update_job(self, values: dict):
+        # fmt: off
+        mutate = """
+            mutation UpdateFlowJob($id: ID!, $status: String) {
+                updateFlowJobRun(
+                    id: $id,
+                    input: { status: $status }
+                )
+            }
+        """
+        # fmt: on
+        return await self.execute(mutate, params=values)
+
+    def upload_step_logs(self, step_id: str, logs: List[Log]):
+        # fmt: off
+        mutate = """
+            mutation UploadStepLogs($id: ID!, $logs: [CreateFlowStepLog!]!) {
+                createFlowStepLog(stepId: $id, logs: $logs)
+            }
+        """
+        # fmt: on
+        return self.execute(mutate, params={"id": step_id, "logs": logs})
+
+    async def execute(self, query, *args, params: dict = {}, **kwargs) -> dict:
         """ Wrapper around execute """
         removed_none = dict((k, v) for k, v in params.items() if v is not None)
         if type(query) == str:
             query = gql(query)
-        return self.session.execute(
+        return await self.session.execute(
             query, *args, variable_values=removed_none, **kwargs
         )

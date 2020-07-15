@@ -10,7 +10,7 @@ from .monitoring import AgentSystemStats
 from .directory import agent_directory
 
 
-from gql.client import AsyncClientSession
+from gql.client import AsyncClientSession  # type: ignore
 from datatorch.agent.flows import Job
 
 

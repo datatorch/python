@@ -2,8 +2,13 @@ from typing import List
 from datetime import datetime, timezone
 from ..action import get_action, Action
 from ..template import render
+from typing import TYPE_CHECKING
+import asyncio
 
-import copy
+
+if TYPE_CHECKING:
+    from ..job import Job
+    from ...client import Log
 
 
 def _pick(dic: dict, keys: List[str]):
@@ -12,44 +17,45 @@ def _pick(dic: dict, keys: List[str]):
 
 class Step(object):
     @classmethod
-    def from_dict_list(cls, steps: List[dict], agent=None):
-        return [cls.from_dict(s, agent) for s in steps]
+    def from_dict_list(cls, steps: List[dict], job: "Job" = None):
+        return [cls.from_dict(s, job) for s in steps]
 
     @classmethod
-    def from_dict(cls, step: dict, agent=None):
+    def from_dict(cls, step: dict, job: "Job" = None):
         return cls(
             id=step.get("id"),
-            action_string=step.get("action"),
-            name=step.get("name"),
+            action_string=step.get("action", ""),
+            name=step.get("name", ""),
             inputs=step.get("inputs", {}),
-            agent=agent,
+            job=job,
         )
 
     def __init__(
         self,
         id: str = None,
-        action_string: str = None,
+        action_string: str = "",
         name: str = "",
         inputs: dict = {},
-        agent=None,
+        job: "Job" = None,
     ):
         self._action_string = action_string
         self.id = id
+        self.logs: "List[Log]" = []
         self.name = name
         self.inputs = inputs
-        self.agent = agent
+        self.job = job
 
     async def action(self) -> Action:
-        return await get_action(self._action_string, agent=self.agent)
+        return await get_action(self._action_string, step=self)
 
     async def update(
         self, inputs: dict = None, status: str = None, outputs: dict = None
     ):
-        if self.agent is None and self.id is None:
+        if self.api is None or self.id is None:
             return
 
         if inputs is not None:
-            inputs = _pick(inputs.copy(), self.inputs.keys())
+            inputs = _pick(inputs.copy(), list(self.inputs.keys()))
 
         iso_date = datetime.now(timezone.utc).isoformat()[:-9] + "Z"
         variables = {
@@ -58,11 +64,16 @@ class Step(object):
             "outputs": outputs,
             "status": status,
             "startedAt": iso_date if status == "RUNNING" else None,
-            "finishedAt": iso_date if status == "COMPLETED" else None,
+            "finishedAt": iso_date
+            if status == "SUCCESS" or status == "FAILED"
+            else None,
         }
-        await self.agent.api.update_step(variables)
+        await self.api.update_step(variables)
 
     async def run(self, inputs: dict = {}) -> dict:
+
+        # Upload logs in the background.
+        task = asyncio.create_task(self.log_uploader())
 
         # Add specified inputs
         for k, v in self.inputs.items():
@@ -74,8 +85,31 @@ class Step(object):
         await self.update(status="RUNNING")
 
         action = await self.action()
-        outputs = await action.run(inputs, self)
+        outputs = await action.run(inputs)
 
-        await self.update(outputs=outputs, status="COMPLETED")
+        task.cancel()
+        await self.update(outputs=outputs, status="SUCCESS")
+        await self.upload_logs()
 
         return outputs
+
+    async def log_uploader(self):
+        await asyncio.sleep(5)
+        await self.upload_logs()
+
+    @property
+    def api(self):
+        """ Agent API Client if it exists. """
+        return self.job and self.job.api
+
+    def log(self, message: str):
+        """ Records a log message. """
+        iso_date = datetime.now(timezone.utc).isoformat()[:-9] + "Z"
+        self.logs.append(dict(createdAt=iso_date, message=message))  # type: ignore
+
+    async def upload_logs(self):
+        """ Uploads saved logs to webserver. """
+        if self.id and len(self.logs) > 0:
+            logs = self.logs
+            self.logs = []
+            await self.api.upload_step_logs(self.id, logs)

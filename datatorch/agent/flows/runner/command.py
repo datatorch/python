@@ -18,4 +18,4 @@ class CommandRunner(Runner):
 
     async def execute(self):
         command = self.config.get("command")
-        await self.monitor_cmd(command)
+        await self.monitor_cmd(str(command))

@@ -1,9 +1,9 @@
+from datatorch.agent.client import AgentApiClient
 import logging
-from datatorch.api import ApiClient
 
 
 class AgentAPIHandler(logging.Handler):
-    def __init__(self, api: ApiClient, size: int = 2):
+    def __init__(self, api: AgentApiClient, size: int = 2):
         logging.Handler.__init__(self)
         self.api = api
         self.records = []

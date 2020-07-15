@@ -6,7 +6,7 @@ assert sys.version_info >= (3, 6, 0), "DataTorch requires Python 3.6+"
 with open("README.md", "r", encoding="utf-8") as fp:
     long_description = fp.read()
 
-requirements = ["Click~=7.0", "numpy", "gql==3.0.0a0"]
+requirements = ["Click~=7.0", "numpy", "gql==3.0.0a1", "typing_extensions~=3.7"]
 
 requirements_agents = [
     "psutil~=5.7",

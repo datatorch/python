@@ -2,10 +2,13 @@ from .action import Action
 
 import os
 import logging
+import typing
 
-from typing import Awaitable
-from datatorch.api import ApiClient
 from datatorch.agent.directory import agent_directory
+
+
+if typing.TYPE_CHECKING:
+    from ..step import Step
 
 
 __all__ = ["Action", "get_action"]
@@ -14,11 +17,11 @@ __all__ = ["Action", "get_action"]
 logger = logging.getLogger("datatorch.agent.action")
 
 
-def _download_action(name, version, uri):
+def _download_action(name: str, version: str, uri: str):
     pass
 
 
-async def get_action(action: str, agent=None) -> Awaitable[Action]:
+async def get_action(action: str, step: "Step" = None) -> Action:
     name, version = action.split("@", 1)
     uri = "https://github.com/"
 
@@ -32,9 +35,4 @@ async def get_action(action: str, agent=None) -> Awaitable[Action]:
         logger.debug("Downloading action {}@{}.".format(name, version))
         _download_action(name, version, uri)
 
-    return Action(action, action_dir, agent=agent)
-
-
-def get_inputs() -> dict:
-
-    return {}
+    return Action(action, action_dir, step=step)

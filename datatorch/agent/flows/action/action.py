@@ -2,15 +2,21 @@ import os
 import yaml
 import logging
 import json
+import typing
 
 from ..runner import RunnerFactory
+
+if typing.TYPE_CHECKING:
+    from ..step import Step
 
 
 logger = logging.getLogger("datatorch.agent.action")
 
 
 class Action(object):
-    def __init__(self, action: str = "default@1", directory: str = "./", agent=None):
+    def __init__(
+        self, action: str = "default@1", directory: str = "./", step: "Step" = None
+    ):
         name, version = action.split("@", 1)
 
         self.dir = directory
@@ -19,13 +25,13 @@ class Action(object):
         self.config = self._load_config()
 
         self.version = version
-        self.agent = agent
+        self.step = step
         self.name: str = self.config.get("name", name)
         self.description: str = self.config.get("description", "")
         self.inputs: dict = self.config.get("inputs", {})
         self.outputs: dict = self.config.get("outputs", {})
 
-        runs = self.config.get("runs", None)
+        runs = self.config.get("runs")
         if runs is None:
             raise ValueError("Action must have a run section.")
 
@@ -34,11 +40,11 @@ class Action(object):
             "datatorch.agent.action.{}".format(self.identifier)
         )
 
-    def _load_config(self):
+    def _load_config(self) -> dict:
         with open(self.config_path, "r") as config_file:
             return yaml.load(config_file, Loader=yaml.FullLoader)
 
-    async def run(self, inputs: dict = {}, step=None) -> dict:
+    async def run(self, inputs: dict = {}) -> dict:
         logger.info("Running action {}".format(self.identifier))
 
         # Validate input
@@ -58,7 +64,7 @@ class Action(object):
                 variable_type = v.get("type")
 
                 if not variable_type:
-                    return
+                    continue
 
                 if variable_type == "float":
                     inputs[k] = float(variable_value)
@@ -72,9 +78,9 @@ class Action(object):
                 if variable_type == "boolean":
                     inputs[k] = bool(variable_value)
 
-        if step is not None:
+        if self.step is not None:
             # Update steps output after casting.
-            await step.update(inputs=inputs)
+            await self.step.update(inputs=inputs)
 
         logger.debug(f"Inputs for '{self.full_name}': {json.dumps(inputs)}")
 
@@ -85,5 +91,5 @@ class Action(object):
         return output
 
     @property
-    def full_name(self):
+    def full_name(self) -> str:
         return f"{self.name} v{self.version}"
