@@ -19,6 +19,6 @@ class PythonRunner(Runner):
     async def execute(self):
         main = self.get("main").strip("/")
         main_command = os.path.join(self.action.dir, main)
-        json_input = json.dumps(self.inputs).replace("'", '\\"')
+        json_input = json.dumps(self.variables.inputs).replace("'", '\\"')
 
         await self.monitor_cmd(f"{sys.executable} {main_command} '{json_input}'")

@@ -27,6 +27,13 @@ class AgentApiClient(object):
                         name
                         text
                         config
+                        runNumber
+                        flow {
+                            id
+                            projectId
+                            creatorId
+                            lastRunNumber
+                        }
                     }
                     steps {
                         id

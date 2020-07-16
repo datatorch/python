@@ -15,6 +15,6 @@ def mkdir_exists(path: str) -> None:
         os.makedirs(path)
     except OSError as e:
         if e.errno == errno.EEXIST and os.path.isdir(path):
-            return False
+            return
         else:
             raise

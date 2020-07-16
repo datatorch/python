@@ -1,14 +1,14 @@
 import os
+import json
 import logging
 import asyncio
 
 from typing import List
-from .flows import Flow
 from .client import AgentApiClient
+from .flows.template import Variables
 from .log_handler import AgentAPIHandler
 from .monitoring import AgentSystemStats
 from .directory import agent_directory
-
 
 from gql.client import AsyncClientSession  # type: ignore
 from datatorch.agent.flows import Job
@@ -61,7 +61,8 @@ class Agent(object):
         job_name = job.get("name")
         job_steps = job.get("steps")
 
-        flow_config = job.get("run").get("config")
+        flow_run = job.get("run")
+        flow_config = flow_run.get("config")
 
         job_config = flow_config.get("jobs").get(job_name)
         job_config["id"] = job_id
@@ -70,19 +71,27 @@ class Agent(object):
         # Match db steps id to flow config steps
         for step in job_config.get("steps"):
             for i, d in enumerate(job_steps):
-                same_action = d["action"] == step.get("action")
+                if isinstance(step.get("action"), dict):
+                    try:
+                        same_action = json.loads(d["action"]) == step.get("action")
+                    except:
+                        same_action = False
+                else:
+                    same_action = d["action"] == step.get("action")
+
                 same_name = d["name"] == step.get("name")
+
                 if same_action and same_name:
                     step["id"] = job_steps.pop(i).get("id")
 
             if step.get("id") == None:
                 raise ValueError(f"No ID found for step {step.get('action')}.")
 
-        job = Job(job_config)
+        variables = Variables(flow_run)
 
         try:
             logger.info(f"Starting {job_name} {job_id}")
-            await Job(job_config, agent=self).run()
+            await Job(job_config, agent=self).run(variables)
             logger.info(f"Finishing {job_id}")
 
         except asyncio.CancelledError:

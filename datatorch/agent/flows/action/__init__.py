@@ -4,7 +4,9 @@ import os
 import logging
 import typing
 
+from typing import Union
 from datatorch.agent.directory import agent_directory
+from .config import ActionConfig
 
 
 if typing.TYPE_CHECKING:
@@ -17,22 +19,19 @@ __all__ = ["Action", "get_action"]
 logger = logging.getLogger("datatorch.agent.action")
 
 
-def _download_action(name: str, version: str, uri: str):
-    pass
-
-
-async def get_action(action: str, step: "Step" = None) -> Action:
-    name, version = action.split("@", 1)
-    uri = "https://github.com/"
+async def get_action(action: Union[str, dict], step: "Step" = None) -> Action:
+    config = ActionConfig(action)
 
     # Get actions directory
-    action_dir = agent_directory.action_dir(name, version)
+    action_dir = agent_directory.action_dir(config.name, config.version)
     folder_exists = os.path.exists(action_dir)
 
     if folder_exists:
-        logger.debug("Action found locally ({}@{}).".format(name, version))
+        logger.debug(
+            "Action found locally ({}@{}).".format(config.name, config.version)
+        )
     else:
-        logger.debug("Downloading action {}@{}.".format(name, version))
-        _download_action(name, version, uri)
+        logger.debug("Downloading action {}@{}.".format(config.name, config.version))
+        await config.download()
 
-    return Action(action, action_dir, step=step)
+    return Action(config, action_dir, step=step)

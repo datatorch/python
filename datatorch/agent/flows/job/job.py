@@ -5,6 +5,7 @@ import typing
 
 from ...directory import agent_directory
 from ..step import Step
+from ..template import Variables
 
 if typing.TYPE_CHECKING:
     from ...agent import Agent
@@ -32,18 +33,20 @@ class Job(object):
         variables = {"id": self.id, "status": status}
         await self.agent.api.update_job(variables)
 
-    async def run(self):
+    async def run(self, variables: Variables):
         """ Runs each step of the job. """
         steps = Step.from_dict_list(self.config.get("steps", []), job=self)
         inputs = {}
         await self.update("RUNNING")
 
+        variables.set_job(self)
+
         for step in steps:
             try:
-                inputs = {**inputs, **await step.run(inputs)}
+                await step.run(variables)
             except Exception as e:
                 logger.error(f"Job {self.config.get('name')} {self.id} failed: {e}")
-                step.log(f"Step failed {e}.")
+                step.log(f"Step failed: {e}.")
                 await step.upload_logs()
                 await step.update(status="FAILED")
                 break

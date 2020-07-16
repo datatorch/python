@@ -1,8 +1,8 @@
 from typing import List
 from datetime import datetime, timezone
 from ..action import get_action, Action
-from ..template import render
-from typing import TYPE_CHECKING
+from ..template import Variables
+from typing import TYPE_CHECKING, Union
 import asyncio
 
 
@@ -24,7 +24,7 @@ class Step(object):
     def from_dict(cls, step: dict, job: "Job" = None):
         return cls(
             id=step.get("id"),
-            action_string=step.get("action", ""),
+            action=step.get("action", ""),
             name=step.get("name", ""),
             inputs=step.get("inputs", {}),
             job=job,
@@ -33,12 +33,12 @@ class Step(object):
     def __init__(
         self,
         id: str = None,
-        action_string: str = "",
+        action: Union[str, dict] = "",
         name: str = "",
         inputs: dict = {},
         job: "Job" = None,
     ):
-        self._action_string = action_string
+        self._action = action
         self.id = id
         self.logs: "List[Log]" = []
         self.name = name
@@ -46,7 +46,7 @@ class Step(object):
         self.job = job
 
     async def action(self) -> Action:
-        return await get_action(self._action_string, step=self)
+        return await get_action(self._action, step=self)
 
     async def update(
         self, inputs: dict = None, status: str = None, outputs: dict = None
@@ -70,22 +70,26 @@ class Step(object):
         }
         await self.api.update_step(variables)
 
-    async def run(self, inputs: dict = {}) -> dict:
+    async def run(self, variables: Variables) -> dict:
 
         # Upload logs in the background.
         task = asyncio.create_task(self.log_uploader())
 
+        variables.set_step(self)
+
         # Add specified inputs
         for k, v in self.inputs.items():
-            # If input is a string, render any variables
-            inputs[k] = render(v, {"variable": inputs}) if isinstance(v, str) else v
+            variables.add_input(k, v)
 
         # Outputs will be updated by the action as it casts them into the
         # correct format.
         await self.update(status="RUNNING")
 
         action = await self.action()
-        outputs = await action.run(inputs)
+        outputs = await action.run(variables)
+
+        for k, v in outputs.items():
+            variables.add_input(k, v)
 
         task.cancel()
         await self.update(outputs=outputs, status="SUCCESS")

@@ -3,10 +3,8 @@ import json
 import typing
 import asyncio
 
-from datetime import datetime, timezone
-
 from typing import Awaitable
-from ..template import render
+from ..template import Variables
 
 if typing.TYPE_CHECKING:
     from ..action import Action
@@ -21,8 +19,8 @@ class Runner(object):
         self.config = config
         self.action = action
 
-    async def run(self, inputs: dict = {}):
-        self.inputs = inputs
+    async def run(self, variables: Variables):
+        self.variables = variables
         self.outputs = {}
         await self.execute()
         return self.outputs
@@ -51,10 +49,7 @@ class Runner(object):
 
     def get(self, key: str, default=None):
         """ Gets a string from config and renders template. """
-        return self.template(self.config.get(key, default), {"variable": self.inputs})
-
-    def template(self, string: str, variables={}) -> str:
-        return render(string, variables or {})
+        return self.variables.render(self.config.get(key, default))
 
     def check_for_output(self, string: str) -> bool:
         """ Parse output variable from string if valid. """
