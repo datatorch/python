@@ -101,7 +101,7 @@ class Project(BaseEntity):
             params={"projectId": self.id},
         )
 
-    def files(self, where: Where = None, limit=500, page=1):
+    def files(self, where: Where = None, limit=500, page=1) -> List[File]:
         if where is None:
             where = Where()
         return self.client.query_to_class(

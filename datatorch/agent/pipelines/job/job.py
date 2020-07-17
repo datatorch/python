@@ -28,7 +28,7 @@ class Job(object):
                 yaml.dump(self.config, yaml_config, default_flow_style=False)
 
     async def update(self, status: str) -> None:
-        if self.agent is None:
+        if self.agent is None or self.id is None:
             return None
         variables = {"id": self.id, "status": status}
         await self.agent.api.update_job(variables)
@@ -36,9 +36,7 @@ class Job(object):
     async def run(self, variables: Variables):
         """ Runs each step of the job. """
         steps = Step.from_dict_list(self.config.get("steps", []), job=self)
-        inputs = {}
         await self.update("RUNNING")
-
         variables.set_job(self)
 
         for step in steps:

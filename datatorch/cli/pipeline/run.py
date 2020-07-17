@@ -2,20 +2,16 @@ import click
 import yaml
 import asyncio
 
-from datatorch.agent.flows import Flow, Job
+from datatorch.agent.pipelines import Pipeline, Job
 from datatorch.agent import setup_logging
 
 
-class FlowRun(object):
-    pass
-
-
-@click.command(help="Runs a flow yaml file on local machine.")
+@click.command(help="Runs a pipeline yaml file on local machine.")
 @click.argument("path", type=click.Path(exists=True))
 def run(path):
     setup_logging()
 
-    async def run_jobs(flow: Flow):
+    async def run_jobs(flow: Pipeline):
         """ Run tasks in parallel """
 
         tasks = []
@@ -26,4 +22,4 @@ def run(path):
         await asyncio.wait(tasks)
 
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(run_jobs(Flow.from_yaml(path)))
+    loop.run_until_complete(run_jobs(Pipeline.from_yaml(path)))

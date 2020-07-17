@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import click
-import sys
 import os
 
 from logging.handlers import RotatingFileHandler
@@ -69,7 +68,7 @@ async def _exit_tasks() -> None:
     tasks = [
         task
         for task in asyncio.Task.all_tasks()
-        if task is not asyncio.tasks.Task.current_task()
+        if task is not asyncio.tasks.Task.current_task()  # type: ignore
     ]
 
     for task in tasks:

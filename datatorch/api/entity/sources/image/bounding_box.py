@@ -23,11 +23,11 @@ class BoundingBox(Source):
     @property
     def top_left(self) -> Point2D:
         """ Top-left point of the box """
-        return [self.x, self.y]
+        return (self.x, self.y)
 
     @property
     def bottom_right(self) -> Point2D:
-        return [self.x + self.width, self.y + self.height]
+        return (self.x + self.width, self.y + self.height)
 
     @property
     def size(self) -> float:

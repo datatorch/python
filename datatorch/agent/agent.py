@@ -5,13 +5,13 @@ import asyncio
 
 from typing import List
 from .client import AgentApiClient
-from .flows.template import Variables
+from .pipelines.template import Variables
 from .log_handler import AgentAPIHandler
 from .monitoring import AgentSystemStats
 from .directory import agent_directory
 
 from gql.client import AsyncClientSession  # type: ignore
-from datatorch.agent.flows import Job
+from datatorch.agent.pipelines import Job
 
 
 logger = logging.getLogger(__name__)
@@ -61,10 +61,10 @@ class Agent(object):
         job_name = job.get("name")
         job_steps = job.get("steps")
 
-        flow_run = job.get("run")
-        flow_config = flow_run.get("config")
+        run = job.get("run")
+        run_config = run.get("config")
 
-        job_config = flow_config.get("jobs").get(job_name)
+        job_config = run_config.get("jobs").get(job_name)
         job_config["id"] = job_id
         job_config["name"] = job_name
 
@@ -87,7 +87,7 @@ class Agent(object):
             if step.get("id") == None:
                 raise ValueError(f"No ID found for step {step.get('action')}.")
 
-        variables = Variables(flow_run)
+        variables = Variables(run)
 
         try:
             logger.info(f"Starting {job_name} {job_id}")

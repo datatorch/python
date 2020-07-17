@@ -1,4 +1,4 @@
-from datatorch.agent.flows.template import Variables
+from datatorch.agent.pipelines.template import Variables
 import os
 import yaml
 import logging

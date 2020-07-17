@@ -12,7 +12,7 @@ if typing.TYPE_CHECKING:
 
 global_variables = {
     "machine": {
-        "name": platform.machine(),
+        "name": platform.node(),
         "os": platform.system(),
         "version": platform.version(),
     },
@@ -24,28 +24,28 @@ global_variables = {
 
 
 class Variables(object):
-    def __init__(self, flow_run: dict):
+    def __init__(self, run: dict):
         self.variables = {"variable": {}, "input": {}}
-        flow = flow_run.get("flow")
+        pipeline = run.get("pipeline")
         self.set(
-            "flow",
+            "pipeline",
             {
-                "id": flow.get("id"),
-                "name": flow.get("name"),
-                "creatorId": flow.get("creatorId"),
-                "projectId": flow.get("projectId"),
-                "lastRunNumber": flow.get("lastRunNumber"),
+                "id": pipeline.get("id"),
+                "name": pipeline.get("name"),
+                "creatorId": pipeline.get("creatorId"),
+                "projectId": pipeline.get("projectId"),
+                "lastRunNumber": pipeline.get("lastRunNumber"),
             },
         )
 
         self.set(
             "run",
             {
-                "id": flow_run.get("id"),
-                "name": flow_run.get("name"),
-                "config": flow_run.get("config"),
-                "createdAt": flow_run.get("createdAt"),
-                "runNumber": flow_run.get("runNumber"),
+                "id": run.get("id"),
+                "name": run.get("name"),
+                "config": run.get("config"),
+                "createdAt": run.get("createdAt"),
+                "runNumber": run.get("runNumber"),
             },
         )
         print(self.variables)
@@ -78,7 +78,12 @@ class Variables(object):
         self.variables[section] = {**self.variables[section], **variables}
 
     def render(self, string: str):
-        tp = Template(string)
+        tp = Template(
+            string,
+            block_start_string="${%",
+            variable_start_string="${{",
+            comment_start_string="${#",
+        )
         return tp.render({**global_variables, **self.variables})
 
     @property

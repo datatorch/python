@@ -28,7 +28,7 @@ class AgentApiClient(object):
                         text
                         config
                         runNumber
-                        flow {
+                        pipeline {
                             id
                             projectId
                             creatorId
@@ -124,7 +124,7 @@ class AgentApiClient(object):
                 $startedAt: DateTime
                 $finishedAt: DateTime
             ) {
-                updateFlowStep(
+                updatePipelineStep(
                     id: $id
                     input: {
                         status: $status
@@ -142,8 +142,8 @@ class AgentApiClient(object):
     async def update_job(self, values: dict):
         # fmt: off
         mutate = """
-            mutation UpdateFlowJob($id: ID!, $status: String) {
-                updateFlowJobRun(
+            mutation UpdateJob($id: ID!, $status: String) {
+                updatePipelineJobRun(
                     id: $id,
                     input: { status: $status }
                 )
@@ -155,8 +155,8 @@ class AgentApiClient(object):
     def upload_step_logs(self, step_id: str, logs: List[Log]):
         # fmt: off
         mutate = """
-            mutation UploadStepLogs($id: ID!, $logs: [CreateFlowStepLog!]!) {
-                createFlowStepLog(stepId: $id, logs: $logs)
+            mutation UploadStepLogs($id: ID!, $logs: [CreatePipelineStepLog!]!) {
+                createPipelineStepLog(stepId: $id, logs: $logs)
             }
         """
         # fmt: on

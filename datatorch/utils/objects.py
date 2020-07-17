@@ -1,7 +1,7 @@
 from inspect import getmembers, isclass
 
 
-def is_class_of(cls: object, class_or_tuple) -> bool:
+def is_class_of(cls: type, class_or_tuple) -> bool:
     return not (isclass(cls) and issubclass(cls, class_or_tuple))
 
 

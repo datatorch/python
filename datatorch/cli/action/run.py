@@ -6,7 +6,7 @@ import logging
 import json
 
 from datatorch.agent import logger
-from datatorch.agent.flows.action import Action
+from datatorch.agent.pipelines.action import Action
 
 
 input_types = {"string": str, "boolean": bool, "number": float}

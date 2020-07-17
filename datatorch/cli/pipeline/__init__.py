@@ -6,10 +6,10 @@ from .upload import upload
 
 
 @click.group()
-def flow():
+def pipeline():
     pass
 
 
-flow.add_command(run)
-flow.add_command(generate)
-flow.add_command(upload)
+pipeline.add_command(run)
+pipeline.add_command(generate)
+pipeline.add_command(upload)
