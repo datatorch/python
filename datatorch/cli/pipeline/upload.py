@@ -1,12 +1,6 @@
 import click
-import yaml
-import asyncio
 
 from datatorch.api import ApiClient
-
-
-class FlowRun(object):
-    pass
 
 
 @click.command(help="Uploads a flow yaml/json to webserver.")

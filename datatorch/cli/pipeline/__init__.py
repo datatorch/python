@@ -10,6 +10,6 @@ def pipeline():
     pass
 
 
-pipeline.add_command(run)
-pipeline.add_command(generate)
-pipeline.add_command(upload)
+pipeline.add_command(run)  # type: ignore
+pipeline.add_command(generate)  # type: ignore
+pipeline.add_command(upload)  # type: ignore

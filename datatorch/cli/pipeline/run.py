@@ -1,8 +1,7 @@
 import click
-import yaml
 import asyncio
 
-from datatorch.agent.pipelines import Pipeline, Job
+from datatorch.agent.pipelines import Pipeline, Job, Variables
 from datatorch.agent import setup_logging
 
 
@@ -13,11 +12,11 @@ def run(path):
 
     async def run_jobs(flow: Pipeline):
         """ Run tasks in parallel """
-
         tasks = []
         for k, v in flow.config.get("jobs").items():
+            variables = Variables(v.get("run"))
             v["name"] = k
-            tasks.append(Job(v).run())
+            tasks.append(Job(v).run(variables))
 
         await asyncio.wait(tasks)
 

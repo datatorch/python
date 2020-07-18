@@ -1,6 +1,6 @@
 import logging
 
-from typing import overload, List
+from typing import overload, List, cast
 
 from .where import Where
 from .client import Client
@@ -72,19 +72,21 @@ class ApiClient(Client):
 
     def settings(self) -> ApiSettings:
         """ API instance settings """
-        return self.query_to_class(ApiSettings, _SETTINGS, path="settings")
+        return cast(
+            ApiSettings, self.query_to_class(ApiSettings, _SETTINGS, path="settings")
+        )
 
     def viewer(self) -> User:
         """ Current logged in user """
-        return self.query_to_class(User, _VIEWER, path="viewer")
+        return cast(User, self.query_to_class(User, _VIEWER, path="viewer"))
 
     @overload
-    def project(self, id: str) -> Project:
+    def project(self, id: str) -> Project:  # type: ignore
         """ Retrieve a project by ID """
         pass
 
     @overload
-    def project(self, login: str, slug: str) -> Project:
+    def project(self, login: str, slug: str) -> Project:  # type: ignore
         """ Retrieve a project by login and slug """
         pass
 
@@ -96,10 +98,14 @@ class ApiClient(Client):
             params = {"id": loginOrId}
             query = _PROJECT_BY_ID
 
-        return self.query_to_class(Project, query, path="project", params=params)
+        return cast(
+            Project, self.query_to_class(Project, query, path="project", params=params)
+        )
 
     def file(self, id: str) -> File:
-        return self.query_to_class(File, _FILE, path="file", params={"fileId": id})
+        return cast(
+            File, self.query_to_class(File, _FILE, path="file", params={"fileId": id})
+        )
 
     def files(self, where: Where = None, limit: int = 400) -> List[File]:
         pass

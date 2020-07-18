@@ -6,8 +6,10 @@ from gql.transport.websockets import WebsocketsTransport
 from gql.transport.requests import RequestsHTTPTransport
 
 from datatorch.core import user_settings
+from typing import Any, TypeVar, Type
 
-import json
+
+T = TypeVar("T")
 
 
 __all__ = "Client"
@@ -77,7 +79,7 @@ class Client(object):
             return self.execute(f.read(), *args, params=params, **kwargs)
 
     def execute(
-        self, query: Union[any, str], *args, params: dict = {}, **kwargs
+        self, query: Union[Any, str], *args, params: dict = {}, **kwargs
     ) -> dict:
         """ Wrapper around execute """
         removed_none = dict((k, v) for k, v in params.items() if v is not None)
@@ -85,14 +87,16 @@ class Client(object):
             query = gql(query)
         return self.client.execute(query, *args, variable_values=removed_none, **kwargs)
 
-    def query_to_class(self, Entity, query: str, path: str = "", params: dict = {}):
+    def query_to_class(
+        self, Entity: Type[T], query: str, path: str = "", params: dict = {}
+    ) -> Union[T, List[T]]:
         results = self.execute(query, params=params)
         return self.to_class(Entity, results, path=path)
 
-    def to_class(self, Entity, results: dict, path: str = ""):
+    def to_class(self, Entity, results: Union[dict, list, None], path: str = ""):
 
         for key in path.split("."):
-            results = results.get(key)
+            results = results.get(key)  # type: ignore
 
         if results is None:
             raise ValueError("Result value is null.")

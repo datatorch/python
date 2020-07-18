@@ -9,7 +9,7 @@ from ..main.login import login
 from ..spinner import Spinner
 
 
-def create_agent(name) -> str:
+def create_agent(name: str) -> dict:
     api = ApiClient()
     # fmt: off
     results = api.execute(

@@ -13,8 +13,8 @@ from ..spinner import Spinner
     help="Url to to a specific API instance of DataTorch.",
 )
 @click.option("--web", is_flag=True, help="Opens webbrowser to access token link.")
-def login(key, host, web):
-    key: str = next(iter(key), None)
+def login(key, host, web):  # type: ignore
+    key: str = next(iter(key), None)  # type: ignore
     host = host.strip("/")
 
     if key is None:

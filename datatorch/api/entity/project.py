@@ -7,6 +7,7 @@ from .base import BaseEntity
 from .file import File
 from .storage_link import StorageLink
 
+from typing import cast
 
 __all__ = "Project"
 
@@ -94,39 +95,52 @@ class Project(BaseEntity):
     updated_at: str
 
     def datasets(self) -> List[Dataset]:
-        return self.client.query_to_class(
-            Dataset,
-            _DATASETS,
-            path="project.datasets.nodes",
-            params={"projectId": self.id},
+        return cast(
+            List[Dataset],
+            self.client.query_to_class(
+                Dataset,
+                _DATASETS,
+                path="project.datasets.nodes",
+                params={"projectId": self.id},
+            ),
         )
 
     def files(self, where: Where = None, limit=500, page=1) -> List[File]:
         if where is None:
             where = Where()
-        return self.client.query_to_class(
-            File,
-            _DATASET_FILES,
-            path="project.files.nodes",
-            params={
-                "projectId": self.id,
-                "perPage": limit,
-                "page": page,
-                "where": where.input,
-            },
+        print(where.input)
+        return cast(
+            List[File],
+            self.client.query_to_class(
+                File,
+                _DATASET_FILES,
+                path="project.files.nodes",
+                params={
+                    "projectId": self.id,
+                    "perPage": limit,
+                    "page": page,
+                    "where": where.input,
+                },
+            ),
         )
 
     def labels(self) -> List[Label]:
-        return self.client.query_to_class(
-            Label, _LABELS, path="project.labels", params={"projectId": self.id}
+        return cast(
+            List[Label],
+            self.client.query_to_class(
+                Label, _LABELS, path="project.labels", params={"projectId": self.id}
+            ),
         )
 
     def storage_links(self) -> List[StorageLink]:
-        return self.client.query_to_class(
-            StorageLink,
-            _STORAGE_LINKS,
-            path="project.storageLinks",
-            params={"projectId": self.id},
+        return cast(
+            List[StorageLink],
+            self.client.query_to_class(
+                StorageLink,
+                _STORAGE_LINKS,
+                path="project.storageLinks",
+                params={"projectId": self.id},
+            ),
         )
 
     def add(self, entity: AddableEntity):

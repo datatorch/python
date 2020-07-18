@@ -2,5 +2,5 @@ import click
 
 
 @click.command()
-def generate(ctx):
+def generate():
     pass

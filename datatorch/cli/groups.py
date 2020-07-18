@@ -11,6 +11,7 @@ from .main.version import version
 from .agent import agent
 from .pipeline import pipeline
 from .action import action
+from .import_cmds import import_cmd
 
 
 @click.group()
@@ -27,3 +28,4 @@ main.add_command(package_upgrade)
 main.add_command(pipeline)
 main.add_command(agent)
 main.add_command(action)
+main.add_command(import_cmd)
