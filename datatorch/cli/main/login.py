@@ -51,4 +51,3 @@ def login(key, host, web):  # type: ignore
     except Exception as ex:
         spinner.done(click.style("Error connecting with API!", fg="red", bold=True))
         click.echo(ex)
-
