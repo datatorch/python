@@ -4,7 +4,7 @@ import platform
 import asyncio
 
 from datetime import datetime, timezone
-
+from datatorch.utils.package import get_version
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +28,7 @@ class AgentSystemStats(object):
         mem = psutil.virtual_memory()
 
         return {
+            "version": get_version(),
             "os": platform.system(),
             "osRelease": platform.release(),
             "osVersion": platform.version(),

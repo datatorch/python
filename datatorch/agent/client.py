@@ -51,6 +51,7 @@ class AgentApiClient(object):
         mutate = """
             mutation updateAgent(
                 $id: ID!
+                $version: String
                 $os: String
                 $osRelease: String
                 $osVersion: String
@@ -63,6 +64,7 @@ class AgentApiClient(object):
                 $cpuCoresLogical: Int
             ) {
                 updateAgent(id: $id, input: {
+                    version: $version
                     os: $os
                     osRelease: $osRelease
                     osVersion: $osVersion
