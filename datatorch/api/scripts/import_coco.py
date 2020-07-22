@@ -258,7 +258,7 @@ def import_coco(
                 anno["segmentation"] = simplify_segmentation(
                     anno["segmentation"], tolerance=simplify_tolerance
                 )
-                
+
                 if len(anno["segmentation"]) > 0:
                     anno_mask = coco.annToMask(anno)
 
@@ -269,7 +269,10 @@ def import_coco(
                         path_data = segmentation_to_points(anno["segmentation"])
                         created_segmentation = True
                         annotation["sources"].append(
-                            {"type": "PaperSegmentations", "data": {"pathData": path_data}}
+                            {
+                                "type": "PaperSegmentations",
+                                "data": {"pathData": path_data},
+                            }
                         )
 
             if created_segmentation or created_bbox:
