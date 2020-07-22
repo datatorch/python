@@ -93,4 +93,4 @@ class Action(object):
 
     @property
     def full_name(self) -> str:
-        return f"{self.name} v{self.version}"
+        return f"{self.name} {self.version}"

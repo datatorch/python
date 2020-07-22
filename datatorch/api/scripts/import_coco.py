@@ -6,7 +6,7 @@ import click
 from typing import List
 from .utils import simplify
 
-from .. import ApiClient, BoundingBox, File, Segmentations, Where, Project
+from .. import ApiClient, BoundingBox, File, Where, Project
 
 try:
     from pycocotools.coco import COCO
@@ -211,7 +211,9 @@ def import_coco(
                         dt_mask = coco.annToMask(anno_copy)
                         dt_segmentations.append(dt_mask)
                     if source.type == "PaperBox":
-                        dt_bbox.append(source.xywh)
+                        dt_bbox.append(
+                            [source.x, source.y, source.width, source.height]
+                        )
 
         print(f"[{dt_file.name}] Importing {len(coco_annotations)} coco annotations.")
         new_annotations = []
@@ -228,7 +230,7 @@ def import_coco(
             created_bbox = False
             created_segmentation = False
 
-            if import_bbox:
+            if import_bbox and len(anno["bbox"]) == 4:
                 bbox = BoundingBox.xywh(*anno["bbox"])
                 if not check_iou or (
                     check_iou and not has_bbox(bbox, dt_bbox, max_iou)
@@ -252,21 +254,23 @@ def import_coco(
             if import_bbox and not created_bbox:
                 continue
 
-            if import_segmentation:
+            if import_segmentation and len(anno["segmentation"]) > 0:
                 anno["segmentation"] = simplify_segmentation(
                     anno["segmentation"], tolerance=simplify_tolerance
                 )
-                anno_mask = coco.annToMask(anno)
+                
+                if len(anno["segmentation"]) > 0:
+                    anno_mask = coco.annToMask(anno)
 
-                if not check_iou or (
-                    check_iou and not has_mask(anno_mask, dt_segmentations, max_iou)
-                ):
-                    print(f"[{dt_file.name}] Adding new segmentation.")
-                    path_data = segmentation_to_points(anno["segmentation"])
-                    created_segmentation = True
-                    annotation["sources"].append(
-                        {"type": "PaperSegmentations", "data": {"pathData": path_data}}
-                    )
+                    if not check_iou or (
+                        check_iou and not has_mask(anno_mask, dt_segmentations, max_iou)
+                    ):
+                        print(f"[{dt_file.name}] Adding new segmentation.")
+                        path_data = segmentation_to_points(anno["segmentation"])
+                        created_segmentation = True
+                        annotation["sources"].append(
+                            {"type": "PaperSegmentations", "data": {"pathData": path_data}}
+                        )
 
             if created_segmentation or created_bbox:
                 #     dt_file.add(dt_anno)
