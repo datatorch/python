@@ -40,10 +40,15 @@ def login(key, host, web):  # type: ignore
         return
 
     spinner = Spinner("Validating API key")
-    api = ApiClient()
-    user = api.viewer()
-    user_settings.set("userLogin", user.login)
-    user_settings.set("userName", user.name)
-    spinner.done("Successfully logged in.")
-    hello = click.style(user.name or user.login, fg="blue", bold=True)
-    click.echo(f"Hello, {hello}!")
+    try:
+        api = ApiClient()
+        user = api.viewer()
+        user_settings.set("userLogin", user.login)
+        user_settings.set("userName", user.name)
+        spinner.done("Successfully logged in.")
+        hello = click.style(user.name or user.login, fg="blue", bold=True)
+        click.echo(f"Hello, {hello}!")
+    except Exception as ex:
+        spinner.done(click.style("Error connecting with API!", fg="red", bold=True))
+        click.echo(ex)
+

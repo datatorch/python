@@ -15,6 +15,7 @@ from datatorch.agent.pipelines import Job
 
 
 logger = logging.getLogger(__name__)
+tasks: List[asyncio.Task] = []
 
 
 class Agent(object):
@@ -26,7 +27,6 @@ class Agent(object):
     def __init__(self, session: AsyncClientSession):
         self.api = AgentApiClient(session)
         self.directory = agent_directory
-        self.tasks: List[asyncio.Task] = []
 
         os.chdir(self.directory.dir)
 
@@ -43,7 +43,7 @@ class Agent(object):
         self.system_stats = AgentSystemStats(self)
         loop = asyncio.get_event_loop()
         task = loop.create_task(self.system_stats.start())
-        task.set_name("agent-monitoring")
+        tasks.append(task)
 
     async def process_loop(self):
         """ Waits for jobs from server. """
@@ -53,7 +53,8 @@ class Agent(object):
             loop = asyncio.get_event_loop()
             job = job.get("job")
             task = loop.create_task(self._run_job(job))
-            task.set_name(f"job-{job.get('id')}")
+
+            tasks.append(task)
 
     async def _run_job(self, job):
         """ Runs a job """

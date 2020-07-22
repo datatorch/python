@@ -8,7 +8,7 @@ from logging.handlers import RotatingFileHandler
 from datatorch.utils.package import get_version
 
 from .directory import agent_directory
-from .agent import Agent
+from .agent import Agent, tasks
 
 from gql.transport.websockets import WebsocketsTransport
 from websockets import ConnectionClosedError
@@ -49,12 +49,11 @@ def setup_logging() -> None:
 
 async def _exit_jobs() -> None:
     """ Exits active running agent jobs """
-    jobs = [
-        task for task in asyncio.Task.all_tasks() if task.get_name().startswith("job-")
-    ]
+    jobs = tasks
     logger.info(f"Exiting {len(jobs)} active jobs.")
     for job in jobs:
         job.cancel()
+
     await asyncio.gather(*jobs, return_exceptions=True)
 
 
