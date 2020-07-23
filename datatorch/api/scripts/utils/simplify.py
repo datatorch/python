@@ -105,7 +105,7 @@ def simplify_douglas_peucker(points, tolerance):
     return new_points
 
 
-def simplify(points, tolerance=0.1, highestQuality=True):
+def simplify_points(points, tolerance=0.1, highestQuality=True):
     sqtolerance = tolerance * tolerance
 
     if not highestQuality:

@@ -3,10 +3,12 @@ import sys
 import copy
 import numpy as np
 import click
+
 from typing import List
-from .utils import simplify
+from .utils.simplify import simplify_points
 
 from .. import ApiClient, BoundingBox, File, Where, Project
+
 
 try:
     from pycocotools.coco import COCO
@@ -110,7 +112,7 @@ def simplify_segmentation(segmentation: List[List[float]], tolerance: float = 1)
 
     points_format = segmentation_to_points(segmentation)
     simplified = [
-        simplify.simplify(polygon, tolerance=tolerance, highestQuality=False)
+        simplify_points(polygon, tolerance=tolerance, highestQuality=False)
         for polygon in points_format
     ]
     simplified = [polygon for polygon in simplified if len(polygon) >= 6]
