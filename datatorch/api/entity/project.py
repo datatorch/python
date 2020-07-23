@@ -108,7 +108,6 @@ class Project(BaseEntity):
     def files(self, where: Where = None, limit=500, page=1) -> List[File]:
         if where is None:
             where = Where()
-        print(where.input)
         return cast(
             List[File],
             self.client.query_to_class(

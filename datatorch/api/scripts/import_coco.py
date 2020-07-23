@@ -132,7 +132,8 @@ def import_coco(
     import_bbox: bool = False,
     import_segmentation: bool = True,
     max_iou: float = 0.99,
-    simplify_tolerance: float = 1.0,
+    simplify_tolerance: float = 0,
+    ignore_annotations_with_ids: bool = True,
 ):
     if not import_segmentation and not import_bbox:
         print("Nothing to import. Both segmentation and bbox are disabled.")
@@ -220,7 +221,10 @@ def import_coco(
         print(f"[{dt_file.name}] Importing {len(coco_annotations)} coco annotations.")
         new_annotations = []
         for anno in coco_annotations:
-            if anno.get("datatorch_id") is not None:
+            if anno.get("datatorch_id") is not None and ignore_annotations_with_ids:
+                print(
+                    f"[{dt_file.name}] Ignoring annotation as it already has a DataTorch ID ({anno.get('datatorch_id')})."
+                )
                 continue
 
             label = label_mapping.get(anno["category_id"])
