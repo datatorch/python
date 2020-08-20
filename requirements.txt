@@ -1,3 +1,4 @@
 Click~=7.0
 gql~=2.0.0
 numpy
+pycocotools
