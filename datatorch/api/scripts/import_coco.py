@@ -282,7 +282,6 @@ def import_coco(
                         )
 
             if created_segmentation or created_bbox:
-                #     dt_file.add(dt_anno)
                 new_annotations.append(annotation)
 
         if len(new_annotations) > 0:

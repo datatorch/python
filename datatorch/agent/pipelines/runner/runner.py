@@ -63,7 +63,10 @@ class Runner(object):
     async def run_cmd(self, command: str, wait: bool = True):
         """ Runs a command using asyncio """
         process = await asyncio.create_subprocess_shell(
-            command, shell=True, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT
+            command,
+            shell=True,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
         )
         if wait:
             await process.wait()
