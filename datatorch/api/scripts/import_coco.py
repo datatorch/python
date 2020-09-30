@@ -134,6 +134,7 @@ def import_coco(
     max_iou: float = 0.99,
     simplify_tolerance: float = 0,
     ignore_annotations_with_ids: bool = True,
+    api: ApiClient = None,
 ):
     if not import_segmentation and not import_bbox:
         print("Nothing to import. Both segmentation and bbox are disabled.")
@@ -147,7 +148,9 @@ def import_coco(
 
     # Get DataTorch project information
     print("Connecting to DataTorch API.")
-    api = ApiClient()
+    if api is None:
+        api = ApiClient()
+        
     print("Loading Project Information.")
     if "/" in project_string:
         project: Project = api.project(*project_string.split("/", 1))
