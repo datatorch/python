@@ -35,7 +35,7 @@ class AgentDirectory(object):
 
     @property
     def projects_dir(self):
-        """ Directory where projects are stored.
+        """Directory where projects are stored.
 
         Commonly used for caching project information such as annotations and
         files.

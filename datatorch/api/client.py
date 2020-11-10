@@ -27,7 +27,10 @@ class Client(object):
     """ Wrapper for the DataTorch API including GraphQL and uploading """
 
     def __init__(
-        self, api_key: str = None, api_url: str = None, use_sockets: bool = False,
+        self,
+        api_key: str = None,
+        api_url: str = None,
+        use_sockets: bool = False,
     ):
         self.client = None
         self._use_sockets = use_sockets

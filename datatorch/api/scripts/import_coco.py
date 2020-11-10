@@ -69,10 +69,10 @@ def bbox_iou(bb1o: BoundingBox, bb2o: BoundingBox):
 
 
 def has_bbox(bbox: BoundingBox, bboxs: List[tuple], max_iou: float) -> bool:
-    """ 
+    """
     Checks if the bounding box has a matching annotation in the bounding box
     list. Returns true if the iou of any segmentation in the list is over the
-    max iou otherwise false.    
+    max iou otherwise false.
     """
     for bb in bboxs:
         if bbox_iou(bbox, BoundingBox.xywh(*bb)) > max_iou:
@@ -91,10 +91,10 @@ def mask_iou(mask1, mask2):
 
 
 def has_mask(anno_mask: np.array, masks: List[np.array], max_iou: float) -> bool:
-    """ 
+    """
     Checks if the coco annotation has a matching annotation in the segmentation
     list. Returns true if the iou of any segmentation in the list is over the
-    max iou otherwise false.    
+    max iou otherwise false.
     """
     for mask in masks:
         iou = mask_iou(anno_mask, mask)
@@ -150,7 +150,7 @@ def import_coco(
     print("Connecting to DataTorch API.")
     if api is None:
         api = ApiClient()
-        
+
     print("Loading Project Information.")
     if "/" in project_string:
         project: Project = api.project(*project_string.split("/", 1))

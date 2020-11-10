@@ -47,13 +47,11 @@ class Agent(object):
 
     async def process_loop(self):
         """ Waits for jobs from server. """
-
         logger.info("Waiting for jobs.")
-        async for job in self.api.agent_jobs():
+        async for job_request in self.api.agent_jobs():
             loop = asyncio.get_event_loop()
-            job = job.get("job")
+            job = job_request.get("job")
             task = loop.create_task(self._run_job(job))
-
             tasks.append(task)
 
     async def _run_job(self, job):
