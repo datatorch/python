@@ -11,6 +11,9 @@ if TYPE_CHECKING:
     from ...client import Log
 
 
+UPLOAD_LOGS_EVERY_SECONDS = 10
+
+
 def _pick(dic: dict, keys: List[str]):
     return {key: dic[key] for key in keys}
 
@@ -98,7 +101,7 @@ class Step(object):
         return outputs
 
     async def log_uploader(self):
-        await asyncio.sleep(5)
+        await asyncio.sleep(UPLOAD_LOGS_EVERY_SECONDS)
         await self.upload_logs()
 
     @property

@@ -1,3 +1,5 @@
+from typing import Any, Dict, TypedDict
+from datatorch.agent.client import AgentRunConfig
 import platform
 
 from jinja2 import Template
@@ -24,8 +26,19 @@ global_variables = {
 
 
 class Variables(object):
-    def __init__(self, run: dict):
-        self.variables = {"variable": {}, "input": {}}
+    def __init__(self, run: AgentRunConfig):
+        self.variables: Dict[str, dict] = {"variable": {}, "input": {}}
+        self.set(
+            "run",
+            {
+                "id": run.get("id"),
+                "name": run.get("name"),
+                "config": run.get("config"),
+                "createdAt": run.get("createdAt"),
+                "runNumber": run.get("runNumber"),
+            },
+        )
+
         pipeline = run.get("pipeline")
         self.set(
             "pipeline",
@@ -38,17 +51,9 @@ class Variables(object):
             },
         )
 
-        self.set(
-            "run",
-            {
-                "id": run.get("id"),
-                "name": run.get("name"),
-                "config": run.get("config"),
-                "createdAt": run.get("createdAt"),
-                "runNumber": run.get("runNumber"),
-            },
-        )
-        print(self.variables)
+        trigger = run.get("trigger", {})
+        self.set("trigger", {"id": trigger.get("id"), "type": trigger.get("type")})
+        self.set("event", trigger.get("event"))
 
     def set_job(self, job: "Job"):
         """ Setup job related variables """
@@ -65,9 +70,15 @@ class Variables(object):
         self.set("step", {"id": step.id, "name": step.name})
 
     def set_action(self, action: "Action"):
+        action.full_name
         self.set(
             "action",
-            {"name": action.name, "directory": action.dir, "version": action.version},
+            {
+                "name": action.name,
+                "directory": action.dir,
+                "version": action.version,
+                "description": action.description,
+            },
         )
 
     def add_input(self, key: str, value):

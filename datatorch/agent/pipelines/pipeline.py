@@ -2,7 +2,7 @@ import os
 import yaml
 import logging
 
-from typing import Union, TYPE_CHECKING
+from typing import TypedDict, Union, TYPE_CHECKING
 from .job import Job
 
 

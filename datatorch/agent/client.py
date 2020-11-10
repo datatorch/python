@@ -1,6 +1,7 @@
-from typing import List
+from typing import AsyncGenerator, List, cast
 from gql import gql
 from .directory import agent_directory
+from gql.client import AsyncClientSession
 
 from typing_extensions import TypedDict
 
@@ -10,8 +11,42 @@ class Log(TypedDict):
     message: str
 
 
+class AgentPipelineConfig(TypedDict):
+    id: str
+    projectId: str
+    creatorId: str
+    lastRunNumber: str
+
+
+class AgentStepsConfig(TypedDict):
+    id: str
+    name: str
+    action: str
+
+
+class AgentTriggerConfig(TypedDict):
+    id: str
+    type: str
+    event: dict
+
+
+class AgentRunConfig(TypedDict):
+    id: str
+    name: str
+    text: str
+    config: dict
+    runNumber: int
+    pipeline: AgentPipelineConfig
+    steps: List[AgentStepsConfig]
+    trigger: AgentTriggerConfig
+
+
+class AgentJobConfig(TypedDict):
+    job: AgentRunConfig
+
+
 class AgentApiClient(object):
-    def __init__(self, session):
+    def __init__(self, session: AsyncClientSession):
         self.session = session
 
     def agent_jobs(self):
@@ -44,7 +79,7 @@ class AgentApiClient(object):
             }
         """)
         # fmt: on
-        return self.session.subscribe(sub)
+        return cast(AsyncGenerator[AgentJobConfig, None], self.session.subscribe(sub))
 
     def initial_metrics(self, metrics):
         # fmt: off
