@@ -53,7 +53,12 @@ class Variables(object):
     def set_job(self, job: "Job"):
         """ Setup job related variables """
         self.set(
-            "job", {"id": job.id, "directory": job.dir, "name": job.config.get("name"),}
+            "job",
+            {
+                "id": job.id,
+                "directory": job.dir,
+                "name": job.config.get("name"),
+            },
         )
 
     def set_step(self, step: "Step"):
