@@ -8,7 +8,7 @@ from datatorch.agent import start as start_agent
 from datatorch.agent import stop as stop_agent
 
 
-def add_signal_handlers(loop: AbstractEventLoop):
+def add_signal_handlers(loop: AbstractEventLoop):    
     exit_func = functools.partial(asyncio.ensure_future, stop_agent())
     try:
         loop.add_signal_handler(SIGINT, exit_func)
