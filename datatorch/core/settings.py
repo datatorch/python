@@ -1,3 +1,4 @@
+from datatorch.utils.url import normalize_api_url
 import logging
 import json
 import os
@@ -48,7 +49,7 @@ class UserSettings(Settings):
 
     @api_url.setter
     def api_url(self, value: str):
-        self.set("apiUrl", value.strip())
+        self.set("apiUrl", normalize_api_url(value))
 
 
 def _load_json(path: str) -> dict:

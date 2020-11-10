@@ -12,6 +12,7 @@ class User(BaseEntity):
     name: ClassVar[str]
     login: ClassVar[str]
     email: ClassVar[str]
+    display_name: ClassVar[str]
     company: ClassVar[str]
     location: ClassVar[str]
     website_url: ClassVar[str]

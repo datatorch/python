@@ -12,6 +12,10 @@ __all__ = "BaseEntity"
 
 
 class BaseEntity(object):
+    """
+    Generates GraphQL Fragment based on class properties.
+    The generated fragment will be called '{ClassName}Fields'.
+    """
 
     id: str
     client: Client

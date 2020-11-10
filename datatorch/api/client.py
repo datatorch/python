@@ -6,6 +6,7 @@ from gql.transport.websockets import WebsocketsTransport
 from gql.transport.requests import RequestsHTTPTransport
 from graphql.language.ast import DocumentNode
 
+from datatorch.utils import normalize_api_url
 from datatorch.core import user_settings
 from typing import Any, TypeVar, Type
 
@@ -34,6 +35,7 @@ class Client(object):
         api_url: str = None,
         use_sockets: bool = False,
     ):
+        self.client = None
         self._use_sockets = use_sockets
         self.api_url = api_url or user_settings.api_url
         self.transport = _create_transport(self.graphql_url, use_sockets=use_sockets)
@@ -60,13 +62,13 @@ class Client(object):
 
     @api_url.setter
     def api_url(self, value):
-        self._api_url = value
+        self._api_url = normalize_api_url(value)
         if self.client:
             self.transport.url = self.graphql_url
 
     @property
     def graphql_url(self) -> str:
-        url = "{}/graphql".format(self.api_url)
+        url = f"{self.api_url}/graphql"
         if self._use_sockets:
             url = url.replace("http", "ws")
         return url

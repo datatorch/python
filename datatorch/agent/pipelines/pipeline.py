@@ -2,8 +2,7 @@ import os
 import yaml
 import logging
 
-from typing import TypedDict, Union, TYPE_CHECKING
-from .job import Job
+from typing import Union, TYPE_CHECKING
 
 
 if TYPE_CHECKING:
