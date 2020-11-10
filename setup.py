@@ -10,6 +10,7 @@ requirements = [
     "Click~=7.0",
     "numpy",
     "gql==3.0.0a4",
+    "websockets",
     "typing_extensions~=3.7",
     "psutil~=5.7.3",
     "aiodocker~=0.19.1",
