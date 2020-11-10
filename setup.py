@@ -11,7 +11,7 @@ requirements = [
     "numpy",
     "gql==3.0.0a4",
     "websockets",
-    "typing_extensions~=3.7",
+    "requests" "typing_extensions~=3.7",
     "psutil~=5.7.3",
     "aiodocker~=0.19.1",
     "Jinja2~=2.11",
