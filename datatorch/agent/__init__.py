@@ -5,6 +5,8 @@ import os
 
 from logging.handlers import RotatingFileHandler
 
+from gql import client
+
 from datatorch.utils.package import get_version
 
 from .directory import agent_directory
@@ -83,6 +85,7 @@ async def start() -> None:
     click.echo(
         click.style(f"Starting DataTorch Agent v{get_version()}", fg="blue", bold=True)
     )
+    logger.debug(f"API Endpoint at {_url}")
 
     backoff_wait = 2
     backoff_factor = 1.5

@@ -48,7 +48,7 @@ class AgentDirectory(object):
         return os.path.join(self.dir, "actions")
 
     def open(self, file: str, mode: str):
-        return open(os.join(self.directory, file), mode)
+        return open(os.path.join(self.dir, file), mode)
 
     def action_dir(self, name: str, version: str):
         return os.path.join(self.actions_dir, *name.lower().split("/"), version)

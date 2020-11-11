@@ -9,8 +9,7 @@ class Settings(BaseEntity):
     """ Settings for the DataTorch API instance """
 
     api_version: ClassVar[str]
-    frontend: ClassVar[str]
-    api: ClassVar[str]
+    fqdn: ClassVar[str]
 
     def set(self, setting: str, value):
         """ Update an instance configuration property """
@@ -24,4 +23,4 @@ class Settings(BaseEntity):
         """ Open frontend in webbrowser """
         import webbrowser
 
-        webbrowser.open(self.frontend)
+        webbrowser.open(self.fqdn)
