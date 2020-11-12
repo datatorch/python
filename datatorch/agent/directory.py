@@ -64,7 +64,7 @@ class AgentDirectory(object):
         if isinstance(project, str):
             project_id = project
         else:
-            project_id = project.get("id")
+            project_id = project.get("id", "")
         return os.path.join(self.projects_dir, project_id)
 
 

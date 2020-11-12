@@ -1,8 +1,10 @@
-from datatorch.utils.url import normalize_api_url
+from typing import Union
+
 import logging
 import json
 import os
 
+from datatorch.utils.url import normalize_api_url
 from datatorch.utils.files import mkdir_exists
 from datatorch.core import folder, env
 
@@ -25,7 +27,7 @@ class Settings(object):
 
         return env_value or value or default
 
-    def set(self, key: str, value: str) -> None:
+    def set(self, key: str, value: Union[str, None]) -> None:
         """ Saves a value to the settings file. """
         self.settings[key] = value
         _save_json(self.file, self.settings)
@@ -40,16 +42,16 @@ class UserSettings(Settings):
         return self.get("apiKey", env=env.API_KEY)
 
     @api_key.setter
-    def api_key(self, value: str):
-        self.set("apiKey", value.strip())
+    def api_key(self, value: Union[str, None]):
+        self.set("apiKey", value if value is None else value.strip())
 
     @property
     def api_url(self):
         return self.get("apiUrl", env=env.API_URL)
 
     @api_url.setter
-    def api_url(self, value: str):
-        self.set("apiUrl", normalize_api_url(value))
+    def api_url(self, value: Union[str, None]):
+        self.set("apiUrl", value if value is None else normalize_api_url(value))
 
 
 def _load_json(path: str) -> dict:

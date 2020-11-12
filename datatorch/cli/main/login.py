@@ -1,4 +1,3 @@
-from datatorch.utils.url import normalize_api_url
 import click
 
 from datatorch.core import BASE_URL, user_settings
@@ -13,7 +12,11 @@ from ..spinner import Spinner
     default=user_settings.api_url or BASE_URL,
     help="Url to to a specific API instance of DataTorch.",
 )
-@click.option("--no-web", is_flag=True, help="Opens webbrowser to access token link.")
+@click.option(
+    "--no-web",
+    is_flag=True,
+    help="Disable opening of the webbrowser to access token link.",
+)
 @click.option("--relogin", is_flag=True, help="Force relogin if already logged in.")
 def login(key, host, no_web, relogin):  # type: ignore
     key: str = next(iter(key), None)  # type: ignore
@@ -63,4 +66,10 @@ def login(key, host, no_web, relogin):  # type: ignore
                 bold=True,
             )
         )
-        click.echo(ex)
+        user_settings.api_url = None
+        user_settings.api_key = None
+
+        user_settings.set("userLogin", None)
+        user_settings.set("userName", None)
+
+        print(ex)

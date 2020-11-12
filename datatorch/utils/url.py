@@ -1,2 +1,5 @@
 def normalize_api_url(url: str):
-    return url.strip().strip("/").strip("/api")
+    url = url.strip().strip("/").strip("/api")
+    if not url.endswith("/api"):
+        url = f"{url}/api"
+    return url

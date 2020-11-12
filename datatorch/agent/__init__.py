@@ -1,19 +1,22 @@
 import asyncio
+from asyncio.exceptions import IncompleteReadError
 import logging
 import click
 import os
 
 from logging.handlers import RotatingFileHandler
 
-from gql import client
 
 from datatorch.utils.package import get_version
 
 from .directory import agent_directory
 from .agent import Agent, tasks
 
+from gql.transport.exceptions import TransportClosed, TransportServerError
 from gql.transport.websockets import WebsocketsTransport
+from websockets.exceptions import InvalidMessage
 from websockets import ConnectionClosedError
+
 from gql import Client
 
 
@@ -99,7 +102,10 @@ async def start() -> None:
         except (
             ConnectionClosedError,
             ConnectionRefusedError,
-            asyncio.IncompleteReadError,
+            IncompleteReadError,
+            TransportServerError,
+            TransportClosed,
+            InvalidMessage,
         ) as e:
             await _exit_jobs()
             await _exit_tasks()
