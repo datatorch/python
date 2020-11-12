@@ -1,0 +1,16 @@
+name: Average of 10 and 20
+
+jobs:
+  average:
+    steps:
+        # This action sets the 'sum' variable. Viewing an actions yaml file will
+        # show all outputs.
+      - action: datatorch/add@v1
+        inputs:
+          a: 10
+          b: 20
+      - action: datatorch/divide@v1
+        inputs:
+          # Accessing the output from the previous step.
+          num: "{{ variable.sum }}"
+          by: 2

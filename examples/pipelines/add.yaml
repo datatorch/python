@@ -1,0 +1,9 @@
+name: Add 10 and 20
+
+jobs:
+  add:
+    steps:
+      - action: datatorch/add@v1
+        inputs:
+          a: 10
+          b: 20
