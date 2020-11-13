@@ -13,10 +13,11 @@ requirements = [
     "websockets",
     "requests",
     "typing_extensions~=3.7",
-    "psutil~=5.7.3",
-    "aiodocker~=0.19.1",
-    "Jinja2~=2.11",
-    "PyYAML~=5.3",
+    "psutil~=5.7.0",
+    "aiodocker~=0.19.0",
+    "Jinja2~=2.0",
+    "PyYAML~=5.0",
+    "aiostream~=4.1",
 ]
 
 requirements_agents = []

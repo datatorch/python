@@ -20,7 +20,8 @@ class Job(object):
         self.agent = agent
 
         self.id = self.config.get("id")
-        self.dir = agent_directory.task_dir(self.id) if self.id else "./"
+        # Id wont be passed in when we are running a pipeline from the CLI tool.
+        self.dir = agent_directory.run_dir(self.id) if self.id else "./"
 
         if self.id:
             path = os.path.join(self.dir, "job.yaml")
@@ -37,7 +38,6 @@ class Job(object):
         """ Runs each step of the job. """
         steps = Step.from_dict_list(self.config.get("steps", []), job=self)
         await self.update("RUNNING")
-        variables.set_job(self)
 
         for step in steps:
             try:

@@ -15,23 +15,29 @@ class AgentDirectory(object):
         self.settings = AgentSettings()
 
         mkdir_exists(self.dir)
-        mkdir_exists(self.tasks_dir)
+        mkdir_exists(self.db_dir)
         mkdir_exists(self.logs_dir)
-        mkdir_exists(self.projects_dir)
+        mkdir_exists(self.runs_dir)
         mkdir_exists(self.actions_dir)
+        mkdir_exists(self.projects_dir)
 
     @property
     def dir(self):
         return self.path()
 
     @property
-    def tasks_dir(self):
-        return os.path.join(self.dir, "tasks")
+    def runs_dir(self):
+        return os.path.join(self.dir, "runs")
 
     @property
     def logs_dir(self):
         """ Directory where agent logs are stored. """
         return os.path.join(self.dir, "logs")
+
+    @property
+    def db_dir(self):
+        """ Sqlite database are stored. """
+        return os.path.join(self.dir, "db")
 
     @property
     def projects_dir(self):
@@ -53,19 +59,17 @@ class AgentDirectory(object):
     def action_dir(self, name: str, version: str):
         return os.path.join(self.actions_dir, *name.lower().split("/"), version)
 
-    def task_dir(self, task_id: str):
+    def run_dir(self, task_id: str):
         """ Returns the directory for a given task """
-        path = os.path.join(self.tasks_dir, task_id)
+        path = os.path.join(self.runs_dir, task_id)
         mkdir_exists(path)
         return path
 
-    def project_dir(self, project: Union[str, dict]):
+    def project_dir(self, project_id: str):
         """ Returns the directory for a given project """
-        if isinstance(project, str):
-            project_id = project
-        else:
-            project_id = project.get("id", "")
-        return os.path.join(self.projects_dir, project_id)
+        path = os.path.join(self.projects_dir, project_id)
+        mkdir_exists(path)
+        return path
 
 
 class AgentSettings(Settings):

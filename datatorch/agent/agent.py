@@ -4,7 +4,7 @@ import logging
 import asyncio
 
 from typing import List
-from .client import AgentApiClient
+from .client import AgentApiClient, AgentJobConfig, AgentRunConfig
 from .pipelines.template import Variables
 from .log_handler import AgentAPIHandler
 from .monitoring import AgentSystemStats
@@ -54,43 +54,27 @@ class Agent(object):
             task = loop.create_task(self._run_job(job))
             tasks.append(task)
 
-    async def _run_job(self, job):
+    async def _run_job(self, job: AgentJobConfig):
         """ Runs a job """
         job_id = job.get("id")
         job_name = job.get("name")
         job_steps = job.get("steps")
 
         run = job.get("run")
-        run_config = run.get("config")
+        config = run.get("config")
+        config_job = config.get("jobs").get(job_name)
 
-        job_config = run_config.get("jobs").get(job_name)
-        job_config["id"] = job_id
-        job_config["name"] = job_name
+        # Add entity ids to config
+        config_job["id"] = job_id
+        # Add ids of steps in db to config yaml
+        for idx, step in enumerate(config_job.get("steps")):
+            step["id"] = job_steps[idx].get("id")
 
-        # Match db steps id to flow config steps
-        for step in job_config.get("steps"):
-            for i, d in enumerate(job_steps):
-                if isinstance(step.get("action"), dict):
-                    try:
-                        same_action = json.loads(d["action"]) == step.get("action")
-                    except:
-                        same_action = False
-                else:
-                    same_action = d["action"] == step.get("action")
-
-                same_name = d["name"] == step.get("name")
-
-                if same_action and same_name:
-                    step["id"] = job_steps.pop(i).get("id")
-
-            if step.get("id") == None:
-                raise ValueError(f"No ID found for step {step.get('action')}.")
-
-        variables = Variables(run)
+        variables = Variables(job)
 
         try:
             logger.info(f"Starting {job_name} {job_id}")
-            await Job(job_config, agent=self).run(variables)
+            await Job(config_job, agent=self).run(variables)
             logger.info(f"Finishing {job_id}")
 
         except asyncio.CancelledError:

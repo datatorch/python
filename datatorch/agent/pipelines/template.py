@@ -1,13 +1,12 @@
-from typing import Dict
-from datatorch.agent.client import AgentRunConfig
-import platform
-
-from jinja2 import Template
 import typing
+import platform
+from typing import Dict
+from jinja2 import Template
+from datatorch.agent.client import AgentJobConfig
+from ..directory import agent_directory
 
 
 if typing.TYPE_CHECKING:
-    from .job import Job
     from .step import Step
     from .action import Action
 
@@ -26,16 +25,30 @@ global_variables = {
 
 
 class Variables(object):
-    def __init__(self, run: AgentRunConfig):
+    """
+    Instigated before each Job.
+    """
+
+    def __init__(self, job: AgentJobConfig):
         self.variables: Dict[str, dict] = {"variable": {}, "input": {}}
+        self.set(
+            "job",
+            {
+                "id": job.get("id"),
+                "name": job.get("name"),
+            },
+        )
+        run = job.get("run")
+        run_id = run.get("id")
         self.set(
             "run",
             {
-                "id": run.get("id"),
+                "id": run_id,
                 "name": run.get("name"),
                 "config": run.get("config"),
                 "createdAt": run.get("createdAt"),
                 "runNumber": run.get("runNumber"),
+                "directory": agent_directory.run_dir(run_id),
             },
         )
 
@@ -55,17 +68,6 @@ class Variables(object):
         self.set("trigger", {"id": trigger.get("id"), "type": trigger.get("type")})
         self.set("event", trigger.get("event"))
 
-    def set_job(self, job: "Job"):
-        """ Setup job related variables """
-        self.set(
-            "job",
-            {
-                "id": job.id,
-                "directory": job.dir,
-                "name": job.config.get("name"),
-            },
-        )
-
     def set_step(self, step: "Step"):
         self.set("step", {"id": step.id, "name": step.name})
 
@@ -77,6 +79,7 @@ class Variables(object):
                 "name": action.name,
                 "directory": action.dir,
                 "version": action.version,
+                "tag": action.version,
                 "description": action.description,
             },
         )

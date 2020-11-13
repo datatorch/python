@@ -22,6 +22,7 @@ class AgentStepsConfig(TypedDict):
     id: str
     name: str
     action: str
+    index: int
 
 
 class AgentTriggerConfig(TypedDict):
@@ -37,12 +38,18 @@ class AgentRunConfig(TypedDict):
     config: dict
     runNumber: int
     pipeline: AgentPipelineConfig
-    steps: List[AgentStepsConfig]
     trigger: AgentTriggerConfig
 
 
 class AgentJobConfig(TypedDict):
-    job: AgentRunConfig
+    id: str
+    name: str
+    run: AgentRunConfig
+    steps: List[AgentStepsConfig]
+
+
+class AgentRequestConfig(TypedDict):
+    job: AgentJobConfig
 
 
 class AgentApiClient(object):
@@ -73,13 +80,16 @@ class AgentApiClient(object):
                     steps {
                         id
                         name
+                        index
                         action
                     }
                 }
             }
         """)
         # fmt: on
-        return cast(AsyncGenerator[AgentJobConfig, None], self.session.subscribe(sub))
+        return cast(
+            AsyncGenerator[AgentRequestConfig, None], self.session.subscribe(sub)
+        )
 
     def initial_metrics(self, metrics):
         # fmt: off

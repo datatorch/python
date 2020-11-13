@@ -3,7 +3,7 @@ import json
 import typing
 import asyncio
 
-from typing import Awaitable
+from typing import Any, Awaitable, Dict
 from ..template import Variables
 
 if typing.TYPE_CHECKING:
@@ -18,6 +18,7 @@ class Runner(object):
     def __init__(self, config: dict, action: "Action"):
         self.config = config
         self.action = action
+        self.outputs: Dict[str, Any] = {}
 
     async def run(self, variables: Variables):
         self.variables = variables
@@ -39,7 +40,6 @@ class Runner(object):
         async for log in process.stdout:
             log = log.decode("utf-8")
             self.check_for_output(log)
-            print(log, end="")
             self.log(log)
 
         if process.returncode != 0:
@@ -53,6 +53,7 @@ class Runner(object):
 
     def check_for_output(self, string: str) -> bool:
         """ Parse output variable from string if valid. """
+        # ::varname::value tranlatest to varname = value
         result = string.split("::", 2)
         if len(result) != 3:
             return False

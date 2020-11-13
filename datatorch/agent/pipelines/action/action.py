@@ -1,3 +1,4 @@
+from typing import Any, Dict
 from datatorch.agent.pipelines.template import Variables
 import os
 import yaml
@@ -44,17 +45,17 @@ class Action(object):
         with open(self.config_path, "r") as config_file:
             return yaml.load(config_file, Loader=yaml.FullLoader)
 
-    async def run(self, variables: Variables) -> dict:
+    async def run(self, variables: Variables) -> Dict[str, Any]:
         logger.info("Running action {}".format(self.identifier))
 
         variables.set_action(self)
         # Validate input
         for k, v in self.config.get("inputs", {}).items():
             # Set default values
-            variable_value = variables.inputs.get(k)
-
             if variables.inputs.get(k) is None:
                 variables.add_input(k, v.get("default"))
+
+            variable_value = variables.inputs.get(k)
 
             if variable_value is None:
                 # Error if input is required but missing
