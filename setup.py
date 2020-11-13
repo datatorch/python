@@ -17,7 +17,7 @@ requirements = [
     "aiodocker~=0.19.0",
     "Jinja2~=2.0",
     "PyYAML~=5.0",
-    "aiostream~=4.1",
+    "aiostream~=0.4.0",
 ]
 
 requirements_agents = []

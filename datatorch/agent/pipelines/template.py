@@ -1,8 +1,9 @@
+from datatorch.utils.objects import deep_merge
 import typing
 import platform
-from typing import Dict
+from typing import Dict, Union, cast
 from jinja2 import Template
-from datatorch.agent.client import AgentJobConfig
+from datatorch.agent.client import AgentJobConfig, AgentRunConfig
 from ..directory import agent_directory
 
 
@@ -14,6 +15,13 @@ if typing.TYPE_CHECKING:
 global_variables = {
     "agent": {
         "id": agent_directory.settings.agent_id,
+        "directory": agent_directory.dir,
+    },
+    "directory": {
+        "agent": agent_directory.dir,
+        "actions": agent_directory.actions_dir,
+        "logs": agent_directory.logs_dir,
+        "temp": agent_directory.temp_dir,
     },
     "machine": {
         "name": platform.node(),
@@ -25,6 +33,38 @@ global_variables = {
         "implementation": platform.python_implementation(),
     },
 }
+
+
+def create_variables_mock(job: Union[AgentJobConfig, dict] = {}):
+    """ Merges config with mocked data."""
+    run: AgentRunConfig = {
+        "id": "run-id",
+        "name": "Action Name Mock",
+        "text": "Mocked Config",
+        "config": {"mock": True},
+        "runNumber": -1,
+        "pipeline": {
+            "id": "pipeline-id",
+            "creatorId": "mocked",
+            "projectId": "project-id",
+            "lastRunNumber": -1,
+        },
+        "trigger": {
+            "id": "trigger-id",
+            "type": "local-trigger",
+            "event": {},
+        },
+    }
+    result = deep_merge(
+        {
+            "id": "job-id",
+            "name": "Local Action Job",
+            "run": run,
+            "steps": [],
+        },
+        job,
+    )
+    return Variables(cast(AgentJobConfig, result))
 
 
 class Variables(object):
@@ -96,7 +136,7 @@ class Variables(object):
         )
 
     def add_input(self, key: str, value):
-        # If input is a string, render any variables
+        # If input is a string, run it though render as it might contain variables.
         value = self.render(value) if isinstance(value, str) else value
         self.variables["variable"][key] = value
         self.variables["input"][key] = value

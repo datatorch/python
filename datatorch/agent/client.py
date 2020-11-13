@@ -15,7 +15,7 @@ class AgentPipelineConfig(TypedDict):
     id: str
     projectId: str
     creatorId: str
-    lastRunNumber: str
+    lastRunNumber: int
 
 
 class AgentStepsConfig(TypedDict):

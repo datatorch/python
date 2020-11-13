@@ -18,16 +18,16 @@ logger = logging.getLogger("datatorch.agent.action")
 
 class Action(object):
     def __init__(
-        self, action: ActionConfig, directory: str = "./", step: "Step" = None
+        self, config: ActionConfig, directory: str = "./", step: "Step" = None
     ):
         self.dir = directory
-        self.identifier = action
-        self.config_path = os.path.join(self.dir, action.file)
+        self.identifier = config
+        self.config_path = os.path.join(self.dir, config.file)
         self.config = self._load_config()
 
-        self.version = action.version
+        self.version = config.version
         self.step = step
-        self.name: str = self.config.get("name", action.name)
+        self.name: str = self.config.get("name", config.name)
         self.description: str = self.config.get("description", "")
         self.inputs: dict = self.config.get("inputs", {})
         self.outputs: dict = self.config.get("outputs", {})

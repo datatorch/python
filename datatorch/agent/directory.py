@@ -17,6 +17,7 @@ class AgentDirectory(object):
         mkdir_exists(self.dir)
         mkdir_exists(self.db_dir)
         mkdir_exists(self.logs_dir)
+        mkdir_exists(self.temp_dir)
         mkdir_exists(self.runs_dir)
         mkdir_exists(self.actions_dir)
         mkdir_exists(self.projects_dir)
@@ -70,6 +71,10 @@ class AgentDirectory(object):
         path = os.path.join(self.projects_dir, project_id)
         mkdir_exists(path)
         return path
+
+    @property
+    def temp_dir(self):
+        return os.path.join(self.dir, "temp")
 
 
 class AgentSettings(Settings):

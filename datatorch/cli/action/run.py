@@ -3,13 +3,39 @@ import yaml
 import os
 import asyncio
 import logging
-import json
 
 from datatorch.agent import logger
 from datatorch.agent.pipelines.action import Action
+from datatorch.agent.pipelines.template import Variables, create_variables_mock
+from datatorch.agent.pipelines.action.config import ActionConfig
+from datatorch.agent.client import AgentJobConfig, AgentRunConfig
 
 
-input_types = {"string": str, "boolean": bool, "number": float}
+def _prompt_for_action_inputs(action: Action, variables: Variables):
+    if len(action.inputs) > 0:
+        click.echo(
+            click.style("Please fill out the input properties:", fg="blue", bold=True)
+        )
+
+    for name, props in action.inputs.items():
+        default = props.get("default", None)
+        required = props.get("required", False)
+        r = click.prompt(f"{name}", default=default, show_default=not required)
+        variables.add_input(name, r)
+
+
+def _create_local_action(folder: str):
+    folder_abs = os.path.abspath(folder)
+    folder_name = os.path.dirname(folder_abs)
+    action_name = f"{folder_name}@local"
+
+    action_config = ActionConfig(action_name)
+    return Action(action_config, directory=folder)
+
+
+def _is_action_directory(folder: str):
+    yaml_file = os.path.join(folder, "action-datatorch.yaml")
+    return os.path.exists(yaml_file)
 
 
 @click.command(help="Runs an action locally.")
@@ -23,29 +49,19 @@ input_types = {"string": str, "boolean": bool, "number": float}
 def run(folder):
     logger.setLevel(logging.DEBUG)
 
-    action = Action(directory=folder)
+    if not _is_action_directory(folder):
+        return
 
-    if len(action.inputs) > 0:
-        click.echo(
-            click.style("Please fill out the input properties:", fg="blue", bold=True)
-        )
+    action = _create_local_action(folder)
 
-    inputs = {}
-    for name, props in action.inputs.items():
-        default = props.get("default", None)
-        required = props.get("required", False)
-        input_type = props.get("type", "string")
-        r = click.prompt(
-            f"{name}",
-            default=default,
-            show_default=not required,
-            type=input_types[input_type],
-        )
-        inputs[name] = r
+    variables = create_variables_mock()
+    variables.set_action(action)
+
+    _prompt_for_action_inputs(action, variables)
 
     async def run_action():
-        click.echo(click.style("\nAction Log:", bold=True))
-        output = await action.run(inputs)
+        click.echo(click.style("\nAction Logs:", bold=True))
+        output = await action.run(variables)
         click.echo(click.style("Action Output:", bold=True))
         if output:
             click.echo(yaml.dump(output))
