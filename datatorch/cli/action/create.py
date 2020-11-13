@@ -37,7 +37,7 @@ def create(name, description, json):
             }
         },
         "outputs": {},
-        "runs": {"using": "cmd", "command": "echo {{ input.example }}"},
+        "runs": {"using": "cmd", "command": "echo ${{ input.example }}"},
     }
     if json:
         with open("action-datatorch.json", "w") as outfile:

@@ -11,6 +11,5 @@ jobs:
           b: 20
       - action: datatorch/divide@v1
         inputs:
-          # Accessing the output from the previous step.
-          num: "{{ variable.sum }}"
+          num: ${{ variable.sum }}
           by: 2

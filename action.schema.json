@@ -150,7 +150,7 @@
       },
       "runs": {
         "using": "cmd",
-        "command": "echo {{ input.string }}"
+        "command": "echo ${{ input.string }}"
       }
     }
   ]

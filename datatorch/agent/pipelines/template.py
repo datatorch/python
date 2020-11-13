@@ -12,6 +12,9 @@ if typing.TYPE_CHECKING:
 
 
 global_variables = {
+    "agent": {
+        "id": agent_directory.settings.agent_id,
+    },
     "machine": {
         "name": platform.node(),
         "os": platform.system(),
@@ -64,9 +67,17 @@ class Variables(object):
             },
         )
 
-        trigger = run.get("trigger", {})
-        self.set("trigger", {"id": trigger.get("id"), "type": trigger.get("type")})
+        trigger = run.get("trigger")
+        self.set(
+            "trigger",
+            {
+                "id": trigger.get("id"),
+                "type": trigger.get("type"),
+                "config": trigger.get("config"),
+            },
+        )
         self.set("event", trigger.get("event"))
+        self.set("input", trigger.get("event"))
 
     def set_step(self, step: "Step"):
         self.set("step", {"id": step.id, "name": step.name})
