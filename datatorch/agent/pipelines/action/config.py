@@ -30,7 +30,6 @@ class GitCloneBuilder(object):
 
     def build(self):
         base = f"git clone --depth {self._depth} --single-branch -q "
-        print(self._branch)
         if self._branch:
             base += f"--branch {self._branch} "
         base += f"{self.repo} "
@@ -77,3 +76,7 @@ class ActionConfig(object):
             command, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL  # type: ignore
         )
         await process.wait()
+
+    @property
+    def full_name(self):
+        return f"{self.name}@{self.version}"

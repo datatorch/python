@@ -1,3 +1,5 @@
+from datatorch.agent.pipelines.action.config import ActionConfig
+import logging
 from typing import List
 from datetime import datetime, timezone
 from ..action import get_action, Action
@@ -41,12 +43,13 @@ class Step(object):
         inputs: dict = {},
         job: "Job" = None,
     ):
-        self._action = action
+        self._action = ActionConfig(action)
         self.id = id
         self.logs: "List[Log]" = []
         self.name = name
         self.inputs = inputs
         self.job = job
+        self.logger = logging.getLogger(f"datatorch.agent.[{self._action.full_name}]")
 
     async def action(self) -> Action:
         return await get_action(self._action, step=self)
@@ -113,6 +116,7 @@ class Step(object):
         """ Records a log message. """
         iso_date = datetime.now(timezone.utc).isoformat()[:-9] + "Z"
         self.logs.append(dict(createdAt=iso_date, message=message))  # type: ignore
+        self.logger.info(message)
 
     async def upload_logs(self):
         """ Uploads saved logs to webserver. """

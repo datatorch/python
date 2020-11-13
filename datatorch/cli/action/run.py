@@ -11,7 +11,7 @@ from datatorch.agent.pipelines.action.config import ActionConfig
 from datatorch.agent.client import AgentJobConfig, AgentRunConfig
 
 
-def _prompt_for_action_inputs(action: Action, variables: Variables):
+def _prompt_for_inputs(action: Action, variables: Variables):
     if len(action.inputs) > 0:
         click.echo(
             click.style("Please fill out the input properties:", fg="blue", bold=True)
@@ -57,16 +57,14 @@ def run(folder):
     variables = create_variables_mock()
     variables.set_action(action)
 
-    _prompt_for_action_inputs(action, variables)
+    _prompt_for_inputs(action, variables)
 
     async def run_action():
         click.echo(click.style("\nAction Logs:", bold=True))
         output = await action.run(variables)
+
         click.echo(click.style("Action Output:", bold=True))
-        if output:
-            click.echo(yaml.dump(output))
-        else:
-            click.echo("No output found.")
+        click.echo(yaml.dump(output) if output else "No output.")
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(run_action())

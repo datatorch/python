@@ -4,7 +4,6 @@ import os
 import logging
 import typing
 
-from typing import Union
 from datatorch.agent.directory import agent_directory
 from .config import ActionConfig
 
@@ -19,8 +18,7 @@ __all__ = ["Action", "get_action"]
 logger = logging.getLogger("datatorch.agent.action")
 
 
-async def get_action(action: Union[str, dict], step: "Step" = None) -> Action:
-    config = ActionConfig(action)
+async def get_action(config: ActionConfig, step: "Step" = None) -> Action:
 
     # Get actions directory
     action_dir = agent_directory.action_dir(config.name, config.version)

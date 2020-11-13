@@ -73,9 +73,9 @@ class Agent(object):
         variables = Variables(job)
 
         try:
-            logger.info(f"Starting {job_name} {job_id}")
+            logger.info(f"Job received (name: {job_name}, id: {job_id})")
             await Job(config_job, agent=self).run(variables)
-            logger.info(f"Finishing {job_id}")
+            logger.info(f"Job finished (name: {job_name}, id: {job_id})")
 
         except asyncio.CancelledError:
             logger.info(f"Canceling job {job_id}")

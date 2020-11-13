@@ -37,16 +37,13 @@ class Action(object):
             raise ValueError("Action must have a run section.")
 
         self.runner = RunnerFactory.create(self, runs)
-        self.logger = logging.getLogger(
-            "datatorch.agent.action.{}".format(self.identifier)
-        )
 
     def _load_config(self) -> dict:
         with open(self.config_path, "r") as config_file:
             return yaml.load(config_file, Loader=yaml.FullLoader)
 
     async def run(self, variables: Variables) -> Dict[str, Any]:
-        logger.info("Running action {}".format(self.identifier))
+        logger.info("Running {}".format(self.identifier.full_name))
 
         variables.set_action(self)
         # Validate input
