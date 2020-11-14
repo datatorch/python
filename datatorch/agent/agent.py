@@ -27,7 +27,7 @@ class Agent(object):
     def __init__(self, session: AsyncClientSession):
         self.api = AgentApiClient(session)
         self.directory = agent_directory
-
+        logger.debug(f"Switch to agent directory: {self.directory.dir}")
         os.chdir(self.directory.dir)
 
         self._init_logger()

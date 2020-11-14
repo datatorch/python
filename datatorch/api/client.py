@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, cast
 
 from gql import Client as GqlClient, gql
 from gql.transport.transport import Transport
@@ -17,61 +17,69 @@ T = TypeVar("T")
 __all__ = "Client"
 
 
-def _create_transport(
-    url: str, use_sockets: bool = False
-) -> Union[WebsocketsTransport, RequestsHTTPTransport]:
-    if use_sockets:
-        url = url.replace("http", "ws", 1)
-        return WebsocketsTransport(headers={}, url=url)
-    return RequestsHTTPTransport(headers={}, use_json=True, url=url)
+_AGENT_TOKEN_HEADER = "datatorch-agent-token"
+_API_KEY_HEADER = "datatorch-api-key"
 
 
 class Client(object):
     """ Wrapper for the DataTorch API including GraphQL and uploading """
 
+    @classmethod
+    def create_socket_transport(
+        cls, url: str, api_token: str = None, agent: bool = False
+    ):
+        return cast(
+            WebsocketsTransport,
+            cls.create_transport(url, api_token=api_token, agent=agent, sockets=True),
+        )
+
+    @staticmethod
+    def create_transport(
+        url: str, api_token: str = None, agent: bool = False, sockets: bool = False
+    ):
+        api_url = normalize_api_url(url)
+        header_key = _AGENT_TOKEN_HEADER if agent else _API_KEY_HEADER
+        headers = {header_key: api_token} if api_token else {}
+        if sockets:
+            api_url = api_url.replace("http", "ws", 1)
+            return WebsocketsTransport(headers=headers, url=api_url)
+        return RequestsHTTPTransport(headers=headers, use_json=True, url=api_url)
+
     def __init__(
         self,
         api_key: str = None,
         api_url: str = None,
-        use_sockets: bool = False,
+        sockets: bool = False,
     ):
-        self.client = None
-        self._use_sockets = use_sockets
-        self.api_url = api_url or user_settings.api_url
-        self.transport = _create_transport(self.graphql_url, use_sockets=use_sockets)
+        self._use_sockets = sockets
+        self._api_url = normalize_api_url(api_url or user_settings.api_url)
+        self._graphql_url = f"{self.api_url}/graphql"
+        self.transport = self.create_transport(self._graphql_url, sockets=sockets)
         self.client = GqlClient(
             transport=self.transport, fetch_schema_from_transport=True
         )
-        self.api_key = api_key or user_settings.api_key
+        self.set_api_key(api_key or user_settings.api_key)
 
-    @property
-    def api_key(self) -> Union[str, None]:
-        return self._api_key
-
-    @api_key.setter
-    def api_key(self, api_key):
-        self._api_key = api_key
+    def set_api_key(self, api_key: str):
         headers = self.transport.headers
-        if self.client and isinstance(headers, dict):
-            assert self.api_key is not None, "Invalid API Key"
-            headers["datatorch-api-key"] = self.api_key
+        if isinstance(headers, dict):
+            headers[_API_KEY_HEADER] = api_key
+            headers[_AGENT_TOKEN_HEADER] = None
+
+    def set_agent_token(self, agent_token: str):
+        self._api_key = agent_token
+        headers = self.transport.headers
+        if isinstance(headers, dict):
+            headers[_API_KEY_HEADER] = None
+            headers[_AGENT_TOKEN_HEADER] = agent_token
 
     @property
     def api_url(self) -> Union[str, None]:
         return self._api_url
 
-    @api_url.setter
-    def api_url(self, value):
-        self._api_url = normalize_api_url(value)
-        if self.client:
-            self.transport.url = self.graphql_url
-
     @property
     def graphql_url(self) -> str:
-        url = f"{self.api_url}/graphql"
-        if self._use_sockets:
-            url = url.replace("http", "ws")
-        return url
+        return self.transport.url
 
     def execute_files(
         self, paths: List[str], *args, params: dict = {}, **kwargs

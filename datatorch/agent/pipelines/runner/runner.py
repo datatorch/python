@@ -74,9 +74,7 @@ class Runner(object):
         return process
 
     def log(self, message: str):
-        step = self.action.step
         message = message.strip("\n")
-        if step:
-            self.action.step.log(message)
-        else:
-            print(message)
+        step = self.action.step
+        log = step.log if step else print
+        log(message)

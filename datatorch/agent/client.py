@@ -1,3 +1,4 @@
+from datatorch.api.api import ApiClient
 from typing import AsyncGenerator, List, cast
 from gql import gql
 from .directory import agent_directory
@@ -217,3 +218,7 @@ class AgentApiClient(object):
         return await self.session.execute(
             query, *args, variable_values=removed_none, **kwargs
         )
+
+
+def create_client():
+    ApiClient

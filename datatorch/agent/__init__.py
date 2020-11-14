@@ -1,6 +1,7 @@
 import asyncio
 from asyncio import IncompleteReadError
 import logging
+from typing import cast
 import click
 import os
 
@@ -14,11 +15,11 @@ from .agent import Agent, tasks
 
 from gql.transport.exceptions import TransportClosed, TransportServerError
 from gql.transport.websockets import WebsocketsTransport
-from websockets.exceptions import InvalidMessage
+from websockets.exceptions import InvalidMessage, InvalidOrigin, InvalidURI
 from websockets import ConnectionClosedError
 
-from gql import Client
-
+from gql import Client as GqlClient
+from datatorch.api import Client as DtClient
 
 __all__ = ["Agent", "start", "stop"]
 
@@ -26,14 +27,13 @@ __all__ = ["Agent", "start", "stop"]
 logger = logging.getLogger(__name__)
 
 
-_url = (agent_directory.settings.api_url or "").strip("/")
-_url = _url.replace("http", "ws", 1)
-_url = f"{_url}/graphql"
+_url = agent_directory.settings.api_url
+_agent_token = agent_directory.settings.agent_token
 
-_transport = WebsocketsTransport(
-    url=_url, headers={"datatorch-agent-token": agent_directory.settings.agent_token}
-)
-_client = Client(transport=_transport, fetch_schema_from_transport=True)
+
+BACKOFF_INIT_WAIT = 2
+BACKOFF_FACTOR = 1.5
+BACKOFF_MAX = 900
 
 
 def setup_logging() -> None:
@@ -48,27 +48,32 @@ def setup_logging() -> None:
             logging.StreamHandler(),
         ],
     )
-
     logger.setLevel(logging.DEBUG)
 
 
 async def _exit_jobs() -> None:
     """ Exits active running agent jobs """
-    jobs = tasks
-    logger.info(f"Exiting {len(jobs)} active jobs.")
-    for job in jobs:
-        job.cancel()
+    logger.info(f"Exiting {len(tasks)} active jobs.")
+    for task in tasks:
+        task.cancel()
+    await asyncio.gather(*tasks, return_exceptions=True)
 
-    await asyncio.gather(*jobs, return_exceptions=True)
+
+async def _close_transport(transport: WebsocketsTransport):
+    """Make sure transport is close.
+
+    If transport is not explicitly closed tasks will hang when cancelled.
+    """
+    is_closing = transport.close_task is not None
+    already_closed = transport.websocket is None
+
+    if not already_closed and not is_closing:
+        logger.info("Closing websocket connection.")
+        await transport.close()
 
 
 async def _exit_tasks() -> None:
     """ Exits all active asyncio tasks """
-    # ? If transport is not explicitly closed tasks will hang when cancelled
-    if _transport.websocket and _transport.close_task is None:
-        logger.info("Closing websocket connection.")
-        await _transport.close()
-
     tasks = [
         task
         for task in asyncio.Task.all_tasks()
@@ -89,14 +94,15 @@ async def start() -> None:
         click.style(f"Starting DataTorch Agent v{get_version()}", fg="blue", bold=True)
     )
     logger.debug(f"API Endpoint at {_url}")
+    backoff_wait = BACKOFF_INIT_WAIT
 
-    backoff_wait = 2
-    backoff_factor = 1.5
-    backoff_max = 900
+    transport = DtClient.create_socket_transport(_url, _agent_token, agent=True)
+    client = GqlClient(transport=transport, fetch_schema_from_transport=True)
+
     while True:
         try:
-            async with _client as session:
-                backoff_wait = 2
+            async with client as session:
+                backoff_wait = BACKOFF_INIT_WAIT
                 await Agent.run(session)
 
         except (
@@ -108,18 +114,20 @@ async def start() -> None:
             InvalidMessage,
         ) as e:
             await _exit_jobs()
+            await _close_transport(transport)
             await _exit_tasks()
 
             logger.error(e)
-            backoff_wait = min(backoff_max, backoff_wait * backoff_factor)
+            backoff_wait = min(BACKOFF_MAX, backoff_wait * BACKOFF_FACTOR)
             logger.debug(
                 f"Sleeping for {round(backoff_wait)} seconds and then attempting restart."
             )
             await asyncio.sleep(backoff_wait)
 
-        except asyncio.CancelledError:
-            logger.info("Exiting job processing task.")
-            return
+        except (asyncio.CancelledError, InvalidURI):
+            break
+
+    logger.info("Exiting job processing task.")
 
 
 async def stop() -> None:

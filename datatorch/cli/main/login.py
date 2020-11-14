@@ -25,8 +25,9 @@ def login(key, host, no_web, relogin):  # type: ignore
     login = user_settings.get("userLogin")
     if login and not relogin:
         login = click.style(login, fg="blue", bold=True)
-        click.echo(f"You are already logged in as {login}.")
-        click.echo(click.style("Use the `--relogin` flag to force relogin."))
+        website = user_settings.api_url.strip("/api")
+        click.echo(f"You are already logged in as {login} ({website}).")
+        click.echo("Use the `--relogin` flag to force relogin.")
         return
 
     if key is None:
