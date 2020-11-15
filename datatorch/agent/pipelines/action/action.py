@@ -1,5 +1,8 @@
-from typing import Any, Dict
+from datatorch.agent.pipelines.action.cache import ActionHashable, ActionHashTable
 from datatorch.agent.pipelines.template import Variables
+from datatorch.utils.objects import pick
+
+from typing import Any, Dict, Union
 import os
 import yaml
 import logging
@@ -18,12 +21,16 @@ logger = logging.getLogger("datatorch.agent.action")
 
 class Action(object):
     def __init__(
-        self, config: ActionConfig, directory: str = "./", step: "Step" = None
+        self,
+        config: ActionConfig,
+        directory: str = "./",
+        step: "Union[Step, None]" = None,
     ):
         self.dir = directory
         self.identifier = config
         self.config_path = os.path.join(self.dir, config.file)
         self.config = self._load_config()
+        self.cacheable = self.config.get("cache", False)
 
         self.version = config.version
         self.step = step
@@ -31,6 +38,7 @@ class Action(object):
         self.description: str = self.config.get("description", "")
         self.inputs: dict = self.config.get("inputs", {})
         self.outputs: dict = self.config.get("outputs", {})
+        self.cache = ActionHashTable()
 
         runs = self.config.get("runs")
         if runs is None:
@@ -41,6 +49,31 @@ class Action(object):
     def _load_config(self) -> dict:
         with open(self.config_path, "r") as config_file:
             return yaml.load(config_file, Loader=yaml.FullLoader)
+
+    def cache_enabled(self):
+        """Determine if this action should be cached.
+
+        The pipeline has the file say. If cache is enabled or display in the
+        pipeline it will be disabled here. If its not specified it will be up to
+        the action.
+        """
+        if self.step:
+            if self.step.cacheable is not None:
+                return self.step.cacheable
+        return self.cacheable
+
+    def get_cached(self, variables: Variables):
+        if self.cache_enabled():
+            inputs = pick(variables.inputs.copy(), list(self.inputs.keys()))
+            hash_obj = ActionHashable(self.identifier, inputs)
+            return self.cache.get(hash_obj)
+        return None
+
+    def set_cache(self, variables: Variables, value):
+        if self.cache_enabled():
+            inputs = pick(variables.inputs.copy(), list(self.inputs.keys()))
+            hash_obj = ActionHashable(self.identifier, inputs)
+            self.cache.set(hash_obj, value)
 
     async def run(self, variables: Variables) -> Dict[str, Any]:
         logger.info("Running {}".format(self.identifier.full_name))
@@ -83,7 +116,15 @@ class Action(object):
 
         logger.debug(f"Inputs for '{self.full_name}': {json.dumps(variables.inputs)}")
 
-        output = (await self.runner.run(variables)) or {}
+        output = self.get_cached(variables)
+
+        if output is None:
+            output = (await self.runner.run(variables)) or {}
+            self.set_cache(variables, output)
+        else:
+            logger.info("Results found in cache.")
+            if self.step:
+                self.step.log("Results found in cache.")
 
         logger.info(f"Finished running '{self.full_name}'")
         logger.debug(f"Outputs for '{self.full_name}': {json.dumps(output)}")

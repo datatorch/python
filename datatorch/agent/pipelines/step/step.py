@@ -1,3 +1,4 @@
+from datatorch.utils.objects import pick
 from datatorch.agent.pipelines.action.config import ActionConfig
 import logging
 from typing import List
@@ -16,10 +17,6 @@ if TYPE_CHECKING:
 UPLOAD_LOGS_EVERY_SECONDS = 10
 
 
-def _pick(dic: dict, keys: List[str]):
-    return {key: dic[key] for key in keys}
-
-
 class Step(object):
     @classmethod
     def from_dict_list(cls, steps: List[dict], job: "Job" = None):
@@ -29,6 +26,7 @@ class Step(object):
     def from_dict(cls, step: dict, job: "Job" = None):
         return cls(
             id=step.get("id"),
+            cacheable=step.get("cache", None),
             action=step.get("action", ""),
             name=step.get("name", ""),
             inputs=step.get("inputs", {}),
@@ -40,6 +38,7 @@ class Step(object):
         id: str = None,
         action: Union[str, dict] = "",
         name: str = "",
+        cacheable: Union[bool, None] = None,
         inputs: dict = {},
         job: "Job" = None,
     ):
@@ -48,6 +47,7 @@ class Step(object):
         self.logs: "List[Log]" = []
         self.name = name
         self.inputs = inputs
+        self.cacheable = cacheable
         self.job = job
         self.logger = logging.getLogger(f"datatorch.agent.[{self._action.full_name}]")
 
@@ -61,7 +61,7 @@ class Step(object):
             return
 
         if inputs is not None:
-            inputs = _pick(inputs.copy(), list(self.inputs.keys()))
+            inputs = pick(inputs.copy(), list(self.inputs.keys()))
 
         iso_date = datetime.now(timezone.utc).isoformat()[:-9] + "Z"
         variables = {

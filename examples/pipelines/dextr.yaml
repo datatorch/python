@@ -1,0 +1,18 @@
+name: DEXTR
+
+triggers:
+  annotatorButton:
+    icon: brain
+    name: DEXTR
+    flow: 4-points
+
+jobs:
+  predict:
+    steps:
+      - action: datatorch/download-file@v1
+        cache: true
+        inputs:
+          fileId: ${{ input.fileId }}
+      - action: datatorch/download-file@v1
+        inputs:
+          fileId: ${{ input.fileId }}

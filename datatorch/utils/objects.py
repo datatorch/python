@@ -1,4 +1,5 @@
 from inspect import getmembers, isclass
+from typing import List
 
 
 def is_class_of(cls: type, class_or_tuple) -> bool:
@@ -33,3 +34,7 @@ def deep_merge(source, destination):
             destination[key] = value
 
     return destination
+
+
+def pick(dic: dict, keys: List[str]):
+    return {key: dic[key] for key in keys}

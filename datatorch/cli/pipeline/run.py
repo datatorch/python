@@ -22,7 +22,6 @@ def run(path):
                 "steps": v.get("steps"),
             }
             variables = create_variables_mock(config)
-            print(v)
             v["name"] = k
             tasks.append(Job(v).run(variables))
 
