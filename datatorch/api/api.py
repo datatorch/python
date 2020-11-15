@@ -1,9 +1,11 @@
-import logging
+import logging, requests, os, cgi
+from pathlib import Path
 
-from typing import overload, List, cast
+from typing import overload, cast
+from urllib.parse import urlencode
 
-from .where import Where
 from .client import Client
+
 from .entity.file import File
 from .entity.user import User
 from .entity.project import Project
@@ -107,8 +109,34 @@ class ApiClient(Client):
             File, self.query_to_class(File, _FILE, path="file", params={"fileId": id})
         )
 
-    def files(self, where: Where = None, limit: int = 400) -> List[File]:
-        pass
+    def download_file(
+        self,
+        id: str,
+        name: str = "",
+        directory: str = "./",
+    ):
+        query_string = urlencode({"download": "true", "stream": "true"})
+        download_url = f"{self.api_url}/file/v1/{id}/{name}?{query_string}"
+
+        result = requests.get(
+            download_url, headers={self.token_header: self._api_token}, stream=True
+        )
+
+        content = result.headers["content-disposition"]
+        _, value = cgi.parse_header(content)
+
+        name = name or value["filename"]
+        name = os.path.join(directory, name)
+        name = os.path.abspath(name)
+
+        with open(name, "wb") as f:
+            for chunk in result.iter_content(1024):
+                f.write(chunk)
+
+        return name, result
+
+    # def files(self, where: Where = None, limit: int = 400) -> List[File]:
+    #     return []
 
     def validate_endpoint(self) -> bool:
         """ Returns true if provided endpoint is correct. """

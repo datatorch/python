@@ -17,8 +17,12 @@ T = TypeVar("T")
 __all__ = "Client"
 
 
-_AGENT_TOKEN_HEADER = "datatorch-agent-token"
-_API_KEY_HEADER = "datatorch-api-key"
+AGENT_TOKEN_HEADER = "datatorch-agent-token"
+API_KEY_HEADER = "datatorch-api-key"
+
+
+def _get_token_header(agent: bool = False):
+    return AGENT_TOKEN_HEADER if agent else API_KEY_HEADER
 
 
 class Client(object):
@@ -37,45 +41,53 @@ class Client(object):
     def create_transport(
         url: str, api_token: str = None, agent: bool = False, sockets: bool = False
     ):
-        api_url = normalize_api_url(url)
-        header_key = _AGENT_TOKEN_HEADER if agent else _API_KEY_HEADER
+        graphql_url = f"{normalize_api_url(url)}/graphql"
+        header_key = _get_token_header(agent)
         headers = {header_key: api_token} if api_token else {}
         if sockets:
-            api_url = api_url.replace("http", "ws", 1)
-            return WebsocketsTransport(headers=headers, url=api_url)
-        return RequestsHTTPTransport(headers=headers, use_json=True, url=api_url)
+            graphql_url = graphql_url.replace("http", "ws", 1)
+            return WebsocketsTransport(headers=headers, url=graphql_url)
+        return RequestsHTTPTransport(headers=headers, use_json=True, url=graphql_url)
 
     def __init__(
         self,
         api_key: str = None,
         api_url: str = None,
         sockets: bool = False,
+        agent: bool = False,
     ):
         self._use_sockets = sockets
+        self._is_agent = agent
+
+        self._api_token = api_key or user_settings.api_url
         self._api_url = normalize_api_url(api_url or user_settings.api_url)
         self._graphql_url = f"{self.api_url}/graphql"
-        self.transport = self.create_transport(self._graphql_url, sockets=sockets)
+
+        self.transport = self.create_transport(
+            self._api_url, sockets=sockets, agent=agent
+        )
         self.client = GqlClient(
             transport=self.transport, fetch_schema_from_transport=True
         )
-        self.set_api_key(api_key or user_settings.api_key)
-
-    def set_api_key(self, api_key: str):
-        headers = self.transport.headers
-        if isinstance(headers, dict):
-            headers[_API_KEY_HEADER] = api_key
-            headers[_AGENT_TOKEN_HEADER] = None
-
-    def set_agent_token(self, agent_token: str):
-        self._api_key = agent_token
-        headers = self.transport.headers
-        if isinstance(headers, dict):
-            headers[_API_KEY_HEADER] = None
-            headers[_AGENT_TOKEN_HEADER] = agent_token
+        self.set_api_token(api_key or user_settings.api_key)
 
     @property
-    def api_url(self) -> Union[str, None]:
+    def token_header(self):
+        return AGENT_TOKEN_HEADER if self._is_agent else API_KEY_HEADER
+
+    def set_api_token(self, api_key: str):
+        headers = self.transport.headers
+        self._api_token = api_key
+        if isinstance(headers, dict):
+            headers[self.token_header] = api_key
+
+    @property
+    def api_url(self) -> str:
         return self._api_url
+
+    @property
+    def graphql_url(self) -> str:
+        return self._graphql_url
 
     @property
     def graphql_url(self) -> str:

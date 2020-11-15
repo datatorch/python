@@ -1,3 +1,4 @@
+import json
 import click
 import yaml
 import os
@@ -60,11 +61,13 @@ def run(folder):
     _prompt_for_inputs(action, variables)
 
     async def run_action():
-        click.echo(click.style("\nAction Logs:", bold=True))
+        click.echo(click.style("\nAction Logs:", bold=True, fg="blue"))
         output = await action.run(variables)
 
-        click.echo(click.style("Action Output:", bold=True))
-        click.echo(yaml.dump(output) if output else "No output.")
+        click.echo(click.style("\nAction Output:", bold=True, fg="blue"))
+        click.echo(
+            json.dumps(output, indent=4, sort_keys=True) if output else "No output."
+        )
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(run_action())

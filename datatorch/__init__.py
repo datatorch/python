@@ -2,9 +2,9 @@ import sys
 import json
 from typing import Any
 from datatorch.api import ApiClient
+from datatorch.core import BASE_URL, BASE_URL_API
 
-
-__all__ = ["ApiClient", "get_inputs"]
+__all__ = ["ApiClient", "get_inputs", "BASE_URL", "BASE_URL_API"]
 
 
 _inputs = None
