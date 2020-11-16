@@ -1,25 +1,23 @@
 import asyncio
-from asyncio import IncompleteReadError
 import logging
-from typing import cast
 import click
 import os
 
 from logging.handlers import RotatingFileHandler
-
-
-from datatorch.utils.package import get_version
+from asyncio import IncompleteReadError
 
 from .directory import agent_directory
 from .agent import Agent, tasks
 
+from gql import Client as GqlClient
 from gql.transport.exceptions import TransportClosed, TransportServerError
 from gql.transport.websockets import WebsocketsTransport
-from websockets.exceptions import InvalidMessage, InvalidOrigin, InvalidURI
+from websockets.exceptions import InvalidMessage, InvalidURI
 from websockets import ConnectionClosedError
 
-from gql import Client as GqlClient
 from datatorch.api import Client as DtClient
+from datatorch.utils.package import get_version
+
 
 __all__ = ["Agent", "start", "stop"]
 
@@ -54,8 +52,10 @@ def setup_logging() -> None:
 async def _exit_jobs() -> None:
     """ Exits active running agent jobs """
     logger.info(f"Exiting {len(tasks)} active jobs.")
+
     for task in tasks:
         task.cancel()
+
     await asyncio.gather(*tasks, return_exceptions=True)
 
 
@@ -74,16 +74,12 @@ async def _close_transport(transport: WebsocketsTransport):
 
 async def _exit_tasks() -> None:
     """ Exits all active asyncio tasks """
-    tasks = [
-        task
-        for task in asyncio.Task.all_tasks()
-        if task is not asyncio.tasks.Task.current_task()  # type: ignore
-    ]
+    current_task = asyncio.Task.current_task()
+    all_tasks = asyncio.Task.all_tasks()
+    not_current_tasks = [task for task in all_tasks if task is not current_task]
 
-    for task in tasks:
+    for task in not_current_tasks:
         task.cancel()
-
-    await asyncio.gather(*tasks, return_exceptions=True)
 
 
 async def start() -> None:
@@ -136,6 +132,9 @@ async def stop() -> None:
     print(" ")
 
     logger.warning("Gracefully exiting agent.")
+
+    logger.info("Closing agent jobs.")
+    await _exit_jobs()
 
     logger.info("Closing agent jobs.")
     await _exit_jobs()
