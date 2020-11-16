@@ -77,6 +77,15 @@ class AgentApiClient(object):
                             creatorId
                             lastRunNumber
                         }
+                        trigger {
+                            id
+                            trigger {
+                                id
+                                type
+                                config
+                            }
+                            event
+                        }
                     }
                     steps {
                         id
@@ -168,7 +177,7 @@ class AgentApiClient(object):
                 $id: ID!
                 $inputs: JSON
                 $outputs: JSON
-                $status: String
+                $status: PipelineStepStatus
                 $startedAt: DateTime
                 $finishedAt: DateTime
             ) {
@@ -190,7 +199,7 @@ class AgentApiClient(object):
     async def update_job(self, values: dict):
         # fmt: off
         mutate = """
-            mutation UpdateJob($id: ID!, $status: String) {
+            mutation UpdateJob($id: ID!, $status: PipelineJobStatus) {
                 updatePipelineJobRun(
                     id: $id,
                     input: { status: $status }

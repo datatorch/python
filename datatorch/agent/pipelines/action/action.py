@@ -18,6 +18,8 @@ if typing.TYPE_CHECKING:
 
 logger = logging.getLogger("datatorch.agent.action")
 
+_actions_cache = ActionHashTable()
+
 
 class Action(object):
     def __init__(
@@ -38,7 +40,7 @@ class Action(object):
         self.description: str = self.config.get("description", "")
         self.inputs: dict = self.config.get("inputs", {})
         self.outputs: dict = self.config.get("outputs", {})
-        self.cache = ActionHashTable()
+        self.cache = _actions_cache
 
         runs = self.config.get("runs")
         if runs is None:

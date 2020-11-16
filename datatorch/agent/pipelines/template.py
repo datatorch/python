@@ -107,17 +107,11 @@ class Variables(object):
             },
         )
 
-        trigger = run.get("trigger")
-        self.set(
-            "trigger",
-            {
-                "id": trigger.get("id"),
-                "type": trigger.get("type"),
-                "config": trigger.get("config"),
-            },
-        )
-        self.set("event", trigger.get("event"))
-        self.set("input", trigger.get("event"))
+        trigger_run = run.get("trigger")
+        trigger = trigger_run.get("trigger")
+        self.set("trigger", trigger_run.get("trigger"))
+        self.set("event", trigger.get("event", {}))
+        self.set("input", trigger.get("event", {}))
 
     def set_step(self, step: "Step"):
         self.set("step", {"id": step.id, "name": step.name})
