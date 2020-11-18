@@ -107,8 +107,8 @@ class Variables(object):
             },
         )
 
-        trigger_run = run.get("trigger")
-        trigger = trigger_run.get("trigger")
+        trigger_run = run.get("trigger", {})
+        trigger = trigger_run.get("trigger", {})
         self.set("trigger", trigger_run.get("trigger"))
         self.set("event", trigger.get("event", {}))
         self.set("input", trigger.get("event", {}))

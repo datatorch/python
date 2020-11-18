@@ -34,6 +34,10 @@ BACKOFF_FACTOR = 1.5
 BACKOFF_MAX = 900
 
 
+def directories():
+    return agent_directory
+
+
 def setup_logging() -> None:
     logs_dir = agent_directory.logs_dir
     logging.basicConfig(

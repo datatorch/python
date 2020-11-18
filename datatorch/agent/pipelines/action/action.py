@@ -112,6 +112,11 @@ class Action(object):
                 if variable_type == "boolean":
                     variables.add_input(k, bool(variable_value))
 
+                if variable_type == "array" or variable_type == "list":
+                    if isinstance(variable_value, str):
+                        variable_value = json.loads(variable_value)
+                    variables.add_input(k, variable_value)
+
         if self.step is not None:
             # Update steps output after casting.
             await self.step.update(inputs=variables.inputs)

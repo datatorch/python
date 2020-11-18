@@ -10,14 +10,18 @@ __all__ = ["ApiClient", "get_inputs", "BASE_URL", "BASE_URL_API"]
 _inputs = None
 
 
-def get_inputs(key: str = None) -> dict:
+def get_inputs() -> dict:
     global _inputs
     try:
         if _inputs is None:
             _inputs = json.loads(sys.argv[-1])
-        return _inputs.get(key) if key else _inputs
+        return _inputs
     except:
         return {}
+
+
+def get_input(key: str) -> Any:
+    return get_inputs().get(key)
 
 
 def set_output(var: str, value: Any):

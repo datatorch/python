@@ -23,6 +23,10 @@ class AgentDirectory(object):
         mkdir_exists(self.projects_dir)
 
     @property
+    def root(self):
+        return self.path()
+
+    @property
     def dir(self):
         return self.path()
 
