@@ -5,4 +5,4 @@ __all__ = ["Point2D", "Segment"]
 
 
 Point2D = Tuple[float, float]
-Segment = List[Point2D]
+Segment = List[List[Point2D]]
