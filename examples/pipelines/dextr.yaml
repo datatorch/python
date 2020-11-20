@@ -1,18 +1,30 @@
 name: DEXTR
 
 triggers:
+  # Adds a button to the annotator.
   annotatorButton:
+    name: 'DEXTR'
     icon: brain
-    name: DEXTR
+    # Annotator will prompt the user for 4 points before triggering the pipeline
     flow: 4-points
 
 jobs:
   predict:
+    # Properties about the trigger event can be accessed at 'event' property
     steps:
-      - action: datatorch/download-file@v1
-        cache: true
+      - name: Download File
+        action: datatorch/download-file@v1
         inputs:
-          fileId: ${{ input.fileId }}
-      - action: datatorch/download-file@v1
+          # Get the file id for the event that triggered this.
+          fileId: ${{ event.fileId }}
+
+      - name: Predict Segmentation
+        action: datatorch/dextr@latest
         inputs:
-          fileId: ${{ input.fileId }}
+          # Download file path from the previous action.
+          imagePath: ${{ variable.path }}
+          # Get the 4 points the user clicked
+          points: ${{ event.flowData.points }}
+          # Annotation created by the four points. We will insert the
+          # segmentation into this annotation
+          annotationId: ${{ event.annotationId }}
