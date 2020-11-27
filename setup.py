@@ -18,6 +18,7 @@ requirements = [
     "Jinja2~=2.0",
     "PyYAML~=5.0",
     "aiostream~=0.4.0",
+    "fastavro~=1.2",
 ]
 
 requirements_agents = []
