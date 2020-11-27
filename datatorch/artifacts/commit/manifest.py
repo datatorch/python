@@ -1,12 +1,10 @@
-from pathlib import Path
 from typing import Any, Dict, Generator, Tuple, Union, cast
+from typing_extensions import TypedDict
 
+from pathlib import Path
 import fastavro as fa
 import os
-import copy
-import json
 
-from typing_extensions import TypedDict
 
 _schema_file = {
     "type": "record",
@@ -14,7 +12,7 @@ _schema_file = {
     "fields": [
         {"name": "size", "type": "long"},
         {"name": "hash", "type": "bytes"},
-        {"name": "lastModified", "type": "int"},
+        {"name": "lastModified", "type": "float"},
     ],
 }
 
@@ -77,7 +75,7 @@ def _tarverse_record(
 
 
 _schema = {
-    "doc": "Manifest containing all files in a single commit",
+    "doc": "Manifest containing all files for a single commit",
     "name": "CommitManifest",
     "namespace": "datatorch.artifact.commit.manifest",
     "type": "record",
@@ -106,43 +104,11 @@ class CommitManifest:
     def __init__(self, record: dict = None):
         self.record = record if bool(record) else {"root": {"files": {}, "dirs": {}}}
 
-    def __getitem__(
-        self, path: str
-    ) -> Union[CommitManifestDirectory, CommitManifestFile, None]:
-        p = Path(path)
-        commit_obj = self.get_dir(p) or self.get_file(p)
-        if commit_obj is None:
-            raise KeyError(f"Path does not exist.")
-        return commit_obj
-
-    def __setitem__(
-        self,
-        artifact_path: str,
-        commit_obj: Union[CommitManifestDirectory, CommitManifestFile],
-    ):
-        path_artifact = Path(artifact_path)
-        path_name = path_artifact.name
-        path_parent = path_artifact.parent
-        obj_parent = self.get_dir(path_parent)
-
-        if obj_parent is None:
-            self._make_dirs(path_artifact)
-            obj_parent = self.get_dir(path_parent)
-
-        if _is_manifest_dir(commit_obj):
-            obj_parent["dirs"][path_name] = commit_obj  # type: ignore
-            return
-
-        if _is_manifest_file(commit_obj):
-            obj_parent["files"][path_name] = commit_obj  # type: ignore
-            return
-
-        raise ValueError("Invalid commit type.")
-
     def get_file(self, artifact_path: Path) -> Union[CommitManifestFile, None]:
         parent = artifact_path.parent
-        parent_dir = self.get_dir(parent)
-
+        parent_dir = self.get_dir(
+            parent,
+        )
         if parent_dir is None:
             return None
 
@@ -160,6 +126,41 @@ class CommitManifest:
 
         return found_dir
 
+    def get(self, artifact_path: Path):
+        return self.get_file(artifact_path) or self.get_dir(artifact_path)
+
+    def add(
+        self,
+        artifact_path: Path,
+        commit_obj: Union[CommitManifestDirectory, CommitManifestFile],
+    ):
+        path_name = artifact_path.name
+        path_parent = artifact_path.parent
+        obj_parent = self._make_dirs(path_parent)
+
+        if obj_parent is None:
+            raise ValueError(
+                "Failed to insert files into manifest. Parent object not found."
+            )
+
+        if _is_manifest_dir(commit_obj):
+            obj_parent["dirs"][path_name] = commit_obj  # type: ignore
+            return True
+
+        if _is_manifest_file(commit_obj):
+            obj_parent["files"][path_name] = commit_obj  # type: ignore
+            return True
+
+        raise ValueError("Invalid commit type.")
+
+    def remove(self, artifact_path: Path):
+        parent_path = artifact_path.parent
+        parent = self.get_dir(parent_path)
+
+        if parent:
+            parent["files"].pop(artifact_path.name)
+            parent["dirs"].pop(artifact_path.name)
+
     def _make_dirs(self, path: Path):
         if path.parent == ".":
             return self.root_dir
@@ -170,18 +171,14 @@ class CommitManifest:
 
         has_parent = self.get_dir(path.parent)
         if not has_parent:
+            # make parent directory first
             self._make_dirs(path.parent)
 
-        self._insert_dir(path)
+        # create directory
+        created_dir: CommitManifestDirectory = {"files": {}, "dirs": {}}
+        self.add(path, created_dir)
 
-    def _insert_dir(self, path: Path, directory: CommitManifestDirectory = None):
-        directory = directory or {"files": {}, "dirs": {}}
-        dir = self.get_dir(path.parent)
-        if dir:
-            dir_name = path.name
-            dir["dirs"][dir_name] = directory
-            return True
-        return False
+        return created_dir
 
     @property
     def root_dir(self):
@@ -190,6 +187,18 @@ class CommitManifest:
     def files(self, directory: CommitManifestDirectory = None):
         record = directory or self.root_dir
         return _tarverse_record(record)
+
+    def diff(self, manifest: "CommitManifest" = None):
+
+        current_files = set(map(lambda p: p[1]["hash"], self.files()))
+        other_files = set(
+            map(lambda p: p[1]["hash"], (manifest and manifest.files()) or [])
+        )
+
+        created = current_files.difference(other_files)
+        deleted = other_files.difference(current_files)
+
+        return created, deleted
 
     def write(self, path: Path):
         ps = fa.parse_schema(self.schema())
