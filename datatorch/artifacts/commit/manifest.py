@@ -1,4 +1,6 @@
-from typing import Any, Dict, Generator, Tuple, Union, cast
+from io import BufferedWriter
+from typing import Any, Dict, Generator, Set, Tuple, Union, cast
+from uuid import UUID
 from typing_extensions import TypedDict
 
 from pathlib import Path
@@ -79,7 +81,12 @@ _schema = {
     "name": "CommitManifest",
     "namespace": "datatorch.artifact.commit.manifest",
     "type": "record",
-    "fields": [{"name": "root", "type": _schema_directory}],
+    "fields": [
+        {"name": "commitId", "type": "bytes"},
+        {"name": "previousCommitId", "type": ["bytes", "null"]},
+        {"name": "branch", "type": "string", "default": "main"},
+        {"name": "root", "type": _schema_directory},
+    ],
 }
 
 
@@ -96,13 +103,32 @@ class CommitManifest:
             raise ValueError("File must be a AVRO file.")
 
         with open(str(path), "rb") as manifest_file:
-            record = next(fa.reader(manifest_file))
+            record = next(fa.reader(manifest_file), None)
             if record is None:
-                raise ValueError("Manifest contains no record.")
-            return cls(record)
+                raise ValueError("Manifest does not contain any records.")
 
-    def __init__(self, record: dict = None):
-        self.record = record if bool(record) else {"root": {"files": {}, "dirs": {}}}
+            commit_id: bytes = record["commitId"]
+            root: CommitManifestDirectory = record["root"]
+            commit_previous_id: Union[bytes, None] = record["previousCommitId"]
+            commit_previous_uuid = (
+                UUID(bytes=commit_previous_id) if commit_previous_id else None
+            )
+
+            return cls(
+                UUID(bytes=commit_id),
+                root=root,
+                previous_commit_id=commit_previous_uuid,
+            )
+
+    def __init__(
+        self,
+        commit_id: UUID,
+        root: CommitManifestDirectory = None,
+        previous_commit_id: UUID = None,
+    ):
+        self.commit_id = commit_id
+        self.previous_commit_id: Union[None, UUID] = previous_commit_id
+        self.root = root or cast(CommitManifestDirectory, {"files": {}, "dirs": {}})
 
     def get_file(self, artifact_path: Path) -> Union[CommitManifestFile, None]:
         parent = artifact_path.parent
@@ -116,9 +142,9 @@ class CommitManifest:
 
     def get_dir(self, artifact_path: Path) -> Union[CommitManifestDirectory, None]:
         if str(artifact_path) == ".":
-            return self.root_dir
+            return self.root
 
-        found_dir = self.root_dir
+        found_dir = self.root
         for dir in artifact_path.parts:
             found_dir = found_dir["dirs"].get(dir)
             if found_dir is None:
@@ -163,7 +189,7 @@ class CommitManifest:
 
     def _make_dirs(self, path: Path):
         if path.parent == ".":
-            return self.root_dir
+            return self.root
 
         has_self = self.get_dir(path)
         if has_self:
@@ -180,19 +206,15 @@ class CommitManifest:
 
         return created_dir
 
-    @property
-    def root_dir(self):
-        return cast(CommitManifestDirectory, self.record["root"])
-
     def files(self, directory: CommitManifestDirectory = None):
-        record = directory or self.root_dir
+        record = directory or self.root
         return _tarverse_record(record)
 
     def diff(self, manifest: "CommitManifest" = None):
 
-        current_files = set(map(lambda p: p[1]["hash"], self.files()))
-        other_files = set(
-            map(lambda p: p[1]["hash"], (manifest and manifest.files()) or [])
+        current_files: Set[str] = set(map(lambda p: p[1]["hash"].hex(), self.files()))
+        other_files: Set[str] = set(
+            map(lambda p: p[1]["hash"].hex(), (manifest and manifest.files()) or [])
         )
 
         created = current_files.difference(other_files)
@@ -200,7 +222,15 @@ class CommitManifest:
 
         return created, deleted
 
-    def write(self, path: Path):
+    def writer(self, buffer: BufferedWriter):
         ps = fa.parse_schema(self.schema())
-        with open(path, "wb") as out:
-            fa.writer(out, ps, [self.record])
+        record = dict(
+            commitId=self.commit_id.bytes,
+            root=self.root,
+            previousCommitId=self.previous_commit_id and self.previous_commit_id.bytes,
+        )
+        fa.writer(buffer, ps, [record])
+
+    def write(self, buff: Union[str, Path]):
+        with open(buff, "wb") as out:
+            self.writer(out)

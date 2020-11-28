@@ -1,47 +1,34 @@
-from pathlib import Path
-
-import os
-
-
-class Commit(object):
-    def __init__(self):
-        pass
-
-    def add_modal(self, local_path: str, artifact_path: str = None):
-        pass
-
-    def add_file(self, local_path: str, artifact_path: str = None):
-        path = Path(local_path).resolve(strict=True)
-        if not path.is_file():
-            raise ValueError(f"Path is not a file. '{local_path}' must be a file.")
-        print(path.lstat())
-
-    def add_dir(self, local_path: str, pattern: str = "*", artifact_path: str = ""):
-        path = Path(local_path).resolve(strict=True)
-        if not path.is_dir():
-            raise ValueError(f"Local path: '{local_path}' must be a directory.")
-        for file in path.rglob(pattern):
-            ap = os.path.join(artifact_path, file.relative_to(path))
-            self.add_file(str(file), artifact_path=ap)
+from datatorch.artifacts.commit.commit import Commit, CommitActive
+from queue import Queue
+from datatorch.utils import exit
 
 
 class Artifact(object):
-    def __init__(self) -> None:
-        self.new_commit: Commit = Commit()
+    def __init__(self, name: str) -> None:
+        self.name = name
+        self.to_push: "Queue[CommitActive]" = Queue()
+        # self._head = Commit.get(uuid4())
+        self._new_commit = CommitActive()
+        exit.register(self.push)
 
-    def add_modal(self, local_path: str, artifact_path: str = None):
-        return self.new_commit.add_modal(local_path, artifact_path=artifact_path)
+    def new_commit(self, branch: str = None):
+        return self._new_commit
 
-    def add_file(self, local_path: str, artifact_path: str = None):
-        return self.new_commit.add_file(
-            local_path=local_path, artifact_path=artifact_path
-        )
+    def add(self, local_path: str, artifact_path: str = ""):
+        self._new_commit.add(local_path, artifact_path=artifact_path)
 
-    def add_dir(self, local_path: str, pattern: str = "*", artifact_path: str = ""):
-        return self.new_commit.add_dir(
-            local_path, pattern=pattern, artifact_path=artifact_path
-        )
+    def remove(self, artifact_path: str):
+        return self._new_commit.remove(artifact_path)
 
-    def commit(self):
+    def get(self, artifact_path: str):
+        return self._new_commit.get(artifact_path)
 
-        self.new_commit = Commit()
+    def commit(self, message: str = "", defer_upload: bool = True):
+        self._new_commit.commit(message)
+        self.to_push.put(self._new_commit)
+
+    def push(self):
+        # self.new_commit.
+        print("Uploading")
+        for f, _ in self._new_commit.files():
+            print(f)
