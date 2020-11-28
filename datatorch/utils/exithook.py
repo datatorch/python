@@ -1,4 +1,3 @@
-from atexit import unregister
 from typing import Callable
 
 from datatorch.utils import ipython

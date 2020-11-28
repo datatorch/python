@@ -6,7 +6,7 @@ from datatorch.utils import exit
 class Artifact(object):
     def __init__(self, name: str) -> None:
         self.name = name
-        self.to_push: "Queue[CommitActive]" = Queue()
+        self._new_commits: "Queue[CommitActive]" = Queue()
         # self._head = Commit.get(uuid4())
         self._new_commit = CommitActive()
         exit.register(self.push)
@@ -28,6 +28,7 @@ class Artifact(object):
         self.to_push.put(self._new_commit)
 
     def push(self):
+        self._new_commits.join()
         # self.new_commit.
         print("Uploading")
         for f, _ in self._new_commit.files():
