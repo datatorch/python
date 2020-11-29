@@ -1,8 +1,9 @@
+from typing import TYPE_CHECKING
+from datatorch.uploader.pool import get_upload_pool
 import logging
 
-from uuid import uuid4
+from uuid import UUID, uuid4
 from pathlib import Path
-
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,7 @@ class UploadEvent:
 class FileApiUploadEvent(UploadEvent):
     def __init__(self):
         from datatorch.artifacts.api import ArtifactsApi
+
         super().__init__()
         self._api = ArtifactsApi()
 
@@ -47,7 +49,12 @@ class FileApiPathUploadEvent(FileApiUploadEvent):
 
 
 class ArtifactFileUploadEvent(FileApiPathUploadEvent):
-    def __init__(self, path: Path, artifact_id: str, file_hash: str):
+    @classmethod
+    def emit(cls, path: Path, artifact_id: UUID, file_hash: str):
+        event = cls(path, artifact_id, file_hash)
+        get_upload_pool().enqueue(event)
+
+    def __init__(self, path: Path, artifact_id: UUID, file_hash: str):
         super().__init__(path)
         self.artifact_id = artifact_id
         self.file_hash = file_hash
@@ -57,7 +64,12 @@ class ArtifactFileUploadEvent(FileApiPathUploadEvent):
 
 
 class CommitMigrationUploadEvent(FileApiPathUploadEvent):
-    def __init__(self, path: Path, commit_id: str):
+    @classmethod
+    def emit(cls, path: Path, commit_id: UUID):
+        event = cls(path, commit_id)
+        get_upload_pool().enqueue(event)
+
+    def __init__(self, path: Path, commit_id: UUID):
         super().__init__(path)
         self.commit_id = commit_id
 
@@ -66,7 +78,12 @@ class CommitMigrationUploadEvent(FileApiPathUploadEvent):
 
 
 class CommitManifestUploadEvent(FileApiPathUploadEvent):
-    def __init__(self, path: Path, commit_id: str):
+    @classmethod
+    def emit(cls, path: Path, commit_id: UUID):
+        event = cls(path, commit_id)
+        get_upload_pool().enqueue(event)
+
+    def __init__(self, path: Path, commit_id: UUID):
         super().__init__(path)
         self.commit_id = commit_id
 

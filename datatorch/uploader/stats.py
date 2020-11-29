@@ -150,7 +150,7 @@ class CategoryUploadStats(UploadStatsLock):
                 del stats.files[br.name]
 
     def show_progress(self):
-        from datatorch.core.upload.pool import get_upload_pool
+        from .pool import get_upload_pool
 
         if get_upload_pool().done():
             return

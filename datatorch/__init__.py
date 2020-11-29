@@ -1,10 +1,23 @@
 import sys
 import json
 from typing import Any
+
 from datatorch.api import ApiClient
+from datatorch.artifacts import Artifact, Commit
 from datatorch.core import BASE_URL, BASE_URL_API
 
-__all__ = ["ApiClient", "get_inputs", "BASE_URL", "BASE_URL_API"]
+__all__ = [
+    # Api
+    "BASE_URL",
+    "BASE_URL_API",
+    "ApiClient",
+    # Agent
+    "get_inputs",
+    # Artifact
+    "Artifact",
+    "Commit",
+    "CommitActive",
+]
 
 
 _inputs = None

@@ -1,3 +1,4 @@
+from datatorch.artifacts.directory import ArtifactDirectory
 from io import BufferedWriter
 from typing import Any, Dict, Generator, Set, Tuple, Union, cast
 from uuid import UUID

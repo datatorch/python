@@ -1,13 +1,15 @@
 from datatorch.agent import logging
 from os import cpu_count
 from queue import Queue
-from typing import List
+from typing import List, TYPE_CHECKING
 import time
 
 from datatorch.utils import exithook
 
-from .events import UploadEvent
 from .thread import StatusThread, UploadThread
+
+if TYPE_CHECKING:
+    from .events import UploadEvent
 
 
 logger = logging.getLogger(__name__)
@@ -35,8 +37,7 @@ class UploadThreadPool:
         """ Wait for completion of all tasks in queue. """
         return self.queue.join()
 
-    def enqueue(self, file: UploadEvent, block: bool = False, timeout: float = None):
-        logger.debug(f"queuing new upload job (data={file.data}, block={block}).")
+    def enqueue(self, file: "UploadEvent", block: bool = False, timeout: float = None):
         self.queue.put(file, block=block, timeout=timeout)
 
     def alive(self):

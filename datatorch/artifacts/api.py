@@ -1,19 +1,22 @@
-from typing import Union
+from datatorch.utils.files import mkdir_exists
 from uuid import UUID
-from requests.exceptions import RetryError
-from requests.sessions import HTTPAdapter
-from datatorch.api.client import Client
-from requests import Session
+from typing import Union
 from pathlib import Path
-from .directory import ArtifactDirectory
+
+from requests import Session
+from requests.adapters import Retry
+from requests.sessions import HTTPAdapter
 
 from datatorch.uploader import get_upload_stats
+from datatorch.api.client import Client
+
+from .directory import ArtifactDirectory
 
 
 class UploadSession(Session):
     def __init__(self):
         super().__init__()
-        retries = RetryError(
+        retries = Retry(
             total=10,
             backoff_factor=1,
             status_forcelist=(408, 409, 429, 500, 502, 503, 504),
@@ -41,6 +44,7 @@ class ArtifactsApi(Client):
             # Azure blob type header
             "x-ms-blob-type": "BlockBlob",
         }
+        mkdir_exists(str(path.parent))
         with self._session.get(url, headers=headers, stream=True) as stream, open(
             path, "wb"
         ) as file:
@@ -83,10 +87,13 @@ class ArtifactsApi(Client):
         self._upload_redirect(url, migration_path, category="artifact")
 
     def download_commit_manifest(self, commit_id: Union[str, UUID]):
-        url = f"{self.file_v2_url}/commit/{str(commit_id)}/manifest"
-        path = Path(self.artifact_dir.commit(commit_id)) / "manifest.avro"
+        url = f"commit/{str(commit_id)}/manifest"
+        path = Path(self.artifact_dir.commit_manifest(commit_id))
         if path.exists():
             return path
 
         self._download_redirect(url, path)
         return path
+
+    def artifact(self, commit):
+        pass

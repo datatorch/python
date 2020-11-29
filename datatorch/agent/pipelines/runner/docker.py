@@ -4,10 +4,13 @@ from aiodocker.containers import DockerContainer
 from .runner import Runner
 
 
+docker = Docker()
+
+
 class DockerRunner(Runner):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.docker = Docker()
+        self.docker = docker
 
     async def execute(self):
         container = await self.run_container()

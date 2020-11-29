@@ -1,113 +1,102 @@
+from datatorch.uploader.events import CommitMigrationUploadEvent
 import os
+import functools
+from pathlib import Path
 from os import stat_result
 from uuid import UUID, uuid4
-from pathlib import Path
-
-from typing import Dict, Union
+from typing import Dict, Optional, Union, TYPE_CHECKING, cast
 
 from ..hash import create_checksum
 from ..api import ArtifactsApi
+from ..directory import ArtifactDirectory
 
 from .migrations import CommitMigrations
 from .manifest import CommitManifest, CommitManifestFile
 
+from datatorch.uploader import CommitManifestUploadEvent, ArtifactFileUploadEvent
+
+
+if TYPE_CHECKING:
+    from ..artifact import Artifact
+
 
 class CommitLockedExpection(Exception):
+    """ Rased when trying to modify a commit that has been committed. """
+
     pass
 
 
-class _Commit(object):
+class CommitNotUploadedExpection(Exception):
     """
-    Commit class access as a high level wrapper around the CommitManifest class.
-    It manipulates the manifest file and adds some nice features on top of it.
+    Raised when trying to download a commit that hasn't successfully
+    uploaded.
     """
 
-    @classmethod
-    def from_manifest(cls, manifest_path: str):
-        path = Path(manifest_path).resolve(strict=True)
-        manifest = CommitManifest.load(path)
-        return cls(manifest, previous_commit_id=manifest.previous_commit_id)
+    pass
 
+
+class CommitMissingArtifact(Exception):
+    pass
+
+
+class Commit:
     def __init__(
         self,
-        manifest: CommitManifest = None,
-        previous_commit_id: Union[UUID, None] = None,
+        commit_id: UUID,
+        message: str = "",
+        artifact: "Artifact" = None,
+        previous: "Commit" = None,
     ):
+        self.id = commit_id
+        self.message = message
+        self.artifact = artifact
+        self.previous = previous
+
+        self.message = message
+        self.artifact: "Optional[Artifact]" = artifact
+        # When the commit is committed it cannot be modified.
+        self._committed = False
         self._api = ArtifactsApi()
-        self.commit_id = (manifest and manifest.commit_id) or uuid4()
-        self.previous_commit_id = (
-            manifest and manifest.previous_commit_id
-        ) or previous_commit_id
-        self.manifest: CommitManifest = manifest or CommitManifest(
-            self.commit_id, previous_commit_id=self.previous_commit_id
-        )
 
-    def files(self, dir: str = ""):
-        dir_obj = self.manifest.get_dir(Path(dir))
-        return self.manifest.files(dir_obj)
+        # Store files that are hashed so we can get there paths when we upload.
+        self.hashed_files: Dict[str, Path] = {}
 
-    def diff(self, commit: Union[UUID, "_Commit"] = None):
-        if isinstance(commit, self.__class__):
-            return self.manifest.diff(commit.manifest)
+    @functools.lru_cache()
+    def load_manifest(self) -> CommitManifest:
+        return CommitManifest.load(self.manifest_path)
 
-        # if isinstance(commit, UUID):
-        #     # TODO: Download commit
+    @property
+    def manifest(self):
+        return self.load_manifest()
 
-        if self.previous_commit_id:
-            return self.diff(self.previous_commit_id)
+    @property
+    def manifest_path(self):
+        return Path(ArtifactDirectory().commit_manifest(self.id))
 
-        return self.manifest.diff()
-
-    def get(self, artifact_path: str):
-        return self.manifest.get(Path(artifact_path))
+    @property
+    def migration_path(self):
+        return Path(ArtifactDirectory().commit_migration(self.id))
 
     @property
     def name(self):
-        return str(self.commit_id)
+        return str(self.id)
 
     @property
     def short_name(self):
         return self.name[:8]
 
-
-class Commit(_Commit):
-    """
-    A commit that has been committed. This commit can not be modified, only
-    deleted.
-    """
-
-    @classmethod
-    def get(cls, commit_id: UUID):
-        path = ArtifactsApi().download_commit_manifest(commit_id)
-        return cls.from_manifest(str(path))
-
-    def __init__(self, manifest: CommitManifest):
-        super().__init__(manifest)
+    def download_file(self, artifact_path: str) -> str:
+        return ""
 
     def download(self):
-        pass
+        return ""
 
-    def delete(self):
-        pass
+    def files(self, dir: str = ""):
+        dir_obj = self.manifest.get_dir(Path(dir))
+        return self.manifest.files(dir_obj)
 
-
-class CommitActive(_Commit):
-    """
-    Commit that is being constructred. Once the commit is uploaded it will
-    return a regular commit and the instace will not be modifiable.
-    """
-
-    def __init__(
-        self,
-        manifest: CommitManifest = None,
-        previous_commit_id: UUID = None,
-        message: str = "",
-    ):
-        super().__init__(manifest=manifest, previous_commit_id=previous_commit_id)
-        self.message = message
-        self.hashed_files: Dict[bytes, Path] = {}
-        # When the commit is committed it cannot be modified.
-        self._committed = False
+    def get(self, artifact_path: str):
+        return self.manifest.get(Path(artifact_path))
 
     def __setitem__(self, artifact_path: str, local_path: str):
         if not self.add(local_path, artifact_path=artifact_path):
@@ -175,26 +164,57 @@ class CommitActive(_Commit):
         self._ensure_modifiable()
         self.manifest.remove(Path(artifact_path))
 
+    def diff(self, commit: "Commit" = None):
+        return self.manifest.diff(commit and commit.manifest)
+
     def migrations(self):
-        created, deleted = self.diff(self.previous_commit_id)
+        created, deleted = self.diff(self.previous)
         migrations = {
             **dict.fromkeys(created, "CREATED"),
             **dict.fromkeys(deleted, "DELETED"),
         }
         return CommitMigrations(
-            commit_id=self.commit_id,
+            commit_id=self.id,
             migrations=migrations,
-            from_commit_id=self.previous_commit_id,
+            from_commit_id=self.previous.id,
         )
 
     def commit(self, message: str = ""):
-        self.message = message
+        """
+        Creates commit entity, and sends files to thread pool to be
+        uploaded.
+        """
+        self._ensure_artifact()
+        self._ensure_modifiable()
+
         self._committed = True
+        self.message = message or self.message
 
-    def upload(self):
-        cm = self.migrations()
+        artifact: "Artifact" = self.artifact  # type: ignore
 
-        # return Commit()
+        # TODO: GraphQL Commit create call
+
+        # Write and upload manifest.
+        self.manifest.write(self.manifest_path)
+        CommitManifestUploadEvent.emit(self.manifest_path, self.id)
+
+        # Write and upload migrations.
+        migrations = self.migrations()
+        migrations.write(self.migration_path)
+        CommitMigrationUploadEvent.emit(self.migration_path, self.id)
+
+        # Create an upload event for each new file create
+        migrations = self.migrations().migrations
+        for hash, action in migrations.items():
+            if action == "CREATED":
+                path = self.hashed_files[hash]
+                ArtifactFileUploadEvent.emit(
+                    path, artifact_id=artifact.id, file_hash=hash
+                )
+            if action == "DELETED":
+                # Just because a file is deleted from a commit does not mean we
+                # can delete it on the server. It may be used in other commits.
+                continue
 
     def _hash_file(
         self, file_path: Path, lstat: stat_result = None
@@ -206,8 +226,25 @@ class CommitActive(_Commit):
             "size": lstat.st_size,
             "lastModified": lstat.st_mtime,
         }
-        self.hashed_files[file_hash] = file_path
+        self.hashed_files[file_hash.hex()] = file_path
         return file_record
 
+    def _ensure_artifact(self):
+        if not self.artifact:
+            raise CommitMissingArtifact(
+                "This commit is missing the an artifact. You "
+                + "can assign an artifact using the `artifact` "
+                + "property."
+            )
+
     def _ensure_modifiable(self):
+        if self._committed:
+            raise CommitLockedExpection(
+                "This commit has been committed. You can not "
+                + "modify it anymore. You can branch from this "
+                + "commmit or create a new one to the head of "
+                + "the artifact."
+            )
+
+    def _ensure_downloadable(self):
         return True

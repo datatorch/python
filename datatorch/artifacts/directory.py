@@ -27,3 +27,9 @@ class ArtifactDirectory:
 
     def commit(self, commit_id: Union[str, UUID]):
         return os.path.join(self.commits, str(commit_id))
+
+    def commit_manifest(self, commit_id: Union[str, UUID]):
+        return os.path.join(self.commit(commit_id), "manifest.avro")
+
+    def commit_migration(self, commit_id: Union[str, UUID]):
+        return os.path.join(self.commit(commit_id), "migration.avro")

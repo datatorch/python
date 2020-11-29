@@ -32,7 +32,7 @@ class UploadThread(StatusThread):
                 upload_event = self.upload_queue.get(timeout=0.2)
                 self.idle.clear()
                 logger.debug(
-                    f"[{self.name}] Processing event (data={upload_event.data})"
+                    f"[{self.name}] Processing event upload event (id={upload_event.id})"
                 )
             except Empty:
                 self.idle.set()
