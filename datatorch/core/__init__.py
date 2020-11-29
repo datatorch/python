@@ -1,7 +1,4 @@
-from datatorch.core.settings import Settings, UserSettings
-
-
-user_settings = UserSettings()
+from datatorch.core.settings import Settings, user_settings
 
 
 BASE_URL = "https://datatorch.io"

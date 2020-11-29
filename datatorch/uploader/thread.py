@@ -1,7 +1,7 @@
 from datatorch.agent import logging
 from queue import Empty, Queue
 from threading import Event, Thread
-from .uploaders import UploadEvent
+from .events import UploadEvent
 
 
 logger = logging.getLogger(__name__)

@@ -70,3 +70,6 @@ def _load_json(path: str) -> dict:
 def _save_json(path: str, settings: dict):
     with open(path, "w") as f:
         json.dump(settings, f, indent=2, sort_keys=True)
+
+
+user_settings = UserSettings()

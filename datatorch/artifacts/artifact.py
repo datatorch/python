@@ -1,6 +1,6 @@
-from datatorch.artifacts.commit.commit import Commit, CommitActive
+from datatorch.artifacts.commit.commit import CommitActive
 from queue import Queue
-from datatorch.utils import exit
+from datatorch.core import user_settings
 
 
 class Artifact(object):
@@ -9,7 +9,6 @@ class Artifact(object):
         self._new_commits: "Queue[CommitActive]" = Queue()
         # self._head = Commit.get(uuid4())
         self._new_commit = CommitActive()
-        exit.register(self.push)
 
     def new_commit(self, branch: str = None):
         return self._new_commit
@@ -23,13 +22,16 @@ class Artifact(object):
     def get(self, artifact_path: str):
         return self._new_commit.get(artifact_path)
 
-    def commit(self, message: str = "", defer_upload: bool = True):
-        self._new_commit.commit(message)
-        self.to_push.put(self._new_commit)
+    def commit(self, message: str = ""):
+        # Create Commit
+        # Queue Items to upload
+        # Create new commit
+        c = self._new_commit
+        c.commit()
+        cm = c.migrations()
+        cm.migrations
 
-    def push(self):
-        self._new_commits.join()
-        # self.new_commit.
-        print("Uploading")
-        for f, _ in self._new_commit.files():
-            print(f)
+        for hash, action in cm.migrations.items():
+            if action == "CREATED":
+                url = f"{user_settings.api_url}/file/v2/commit/{self._new_commit.commit_id}/files/{hash}"
+                print(url)

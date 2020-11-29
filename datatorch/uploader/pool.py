@@ -6,7 +6,7 @@ import time
 
 from datatorch.utils import exithook
 
-from .uploaders import UploadEvent
+from .events import UploadEvent
 from .thread import StatusThread, UploadThread
 
 

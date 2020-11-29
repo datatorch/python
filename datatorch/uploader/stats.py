@@ -1,6 +1,6 @@
 from datatorch.utils.format import std_out_err_redirect_tqdm
 import logging
-
+import traceback
 from tqdm import tqdm
 
 from typing import Callable, Dict
@@ -35,14 +35,17 @@ class ProgressBufferedReader(Wrapper):
         self.total_bytes = os.fstat(file.fileno()).st_size
 
     def read(self, size: int = -1):
+
         bites = self._file.read(size)
         bytes_read = len(bites)
         self.read_bytes += bytes_read
 
         is_shrinking = not bites and self.read_bytes < self.total_bytes
-        is_growing = self.read_bytes > self.total_bytes
-        if is_shrinking or is_growing:
-            raise FileChangingError("File size is changing.")
+        # is_growing = self.read_bytes > self.total_bytes
+        if is_shrinking:
+            raise FileChangingError(
+                f"File size is shrinking (read={self.read_bytes}, size={self.total_bytes})."
+            )
 
         self.callback(bytes_read, self.read_bytes)
         return bites
@@ -126,22 +129,25 @@ class UploadStats(UploadStatsLock):
 class CategoryUploadStats(UploadStatsLock):
     def __init__(self):
         super().__init__()
+        self._category_lock = Lock()
         self._categories: Dict[str, UploadStats] = {}
 
     def add(self, category: str, br: BufferedReader):
-        if self._categories.get(category) is None:
-            self._categories[category] = UploadStats(self)
-        buff = self._categories[category].add(br)
-        return buff
+        with self._category_lock:
+            if self._categories.get(category) is None:
+                self._categories[category] = UploadStats(self)
+            buff = self._categories[category].add(br)
+            return buff
 
     def remove(self, category: str, br: BufferedReader):
-        stats = self._categories.get(category)
-        if not stats:
-            return
+        with self._category_lock:
+            stats = self._categories.get(category)
+            if not stats:
+                return
 
-        buff = stats.files.get(br.name)
-        if buff:
-            del stats.files[br.name]
+            buff = stats.files.get(br.name)
+            if buff:
+                del stats.files[br.name]
 
     def show_progress(self):
         from datatorch.core.upload.pool import get_upload_pool

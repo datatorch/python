@@ -5,8 +5,10 @@ from pathlib import Path
 
 from typing import Dict, Union
 
-from datatorch.artifacts.commit.migrations import CommitMigrations
-from datatorch.artifacts.hash import create_checksum
+from ..hash import create_checksum
+from ..api import ArtifactsApi
+
+from .migrations import CommitMigrations
 from .manifest import CommitManifest, CommitManifestFile
 
 
@@ -31,6 +33,7 @@ class _Commit(object):
         manifest: CommitManifest = None,
         previous_commit_id: Union[UUID, None] = None,
     ):
+        self._api = ArtifactsApi()
         self.commit_id = (manifest and manifest.commit_id) or uuid4()
         self.previous_commit_id = (
             manifest and manifest.previous_commit_id
@@ -75,9 +78,8 @@ class Commit(_Commit):
 
     @classmethod
     def get(cls, commit_id: UUID):
-
-        # return Commit()
-        pass
+        path = ArtifactsApi().download_commit_manifest(commit_id)
+        return cls.from_manifest(str(path))
 
     def __init__(self, manifest: CommitManifest):
         super().__init__(manifest)
