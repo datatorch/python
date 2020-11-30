@@ -152,7 +152,10 @@ class CategoryUploadStats(UploadStatsLock):
     def show_progress(self):
         from .pool import get_upload_pool
 
-        if get_upload_pool().done():
+        is_done = get_upload_pool().done()
+
+
+        if is_done:
             return
 
         with tqdm(

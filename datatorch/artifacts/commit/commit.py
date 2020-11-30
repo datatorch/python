@@ -1,8 +1,10 @@
+from datatorch.artifacts.downloader.pool import download_commit
+from enum import Enum
 from datatorch.uploader.events import CommitMigrationUploadEvent
 import os
 import functools
 from pathlib import Path
-from os import stat_result
+from os import stat, stat_result
 from uuid import UUID, uuid4
 from typing import Dict, Optional, Union, TYPE_CHECKING, cast
 
@@ -39,23 +41,38 @@ class CommitMissingArtifact(Exception):
     pass
 
 
+class CommitStatus(Enum):
+    Uploading = "UPLOADING"
+    Initalized = "INITALIZED"
+    Failed = "FAILED"
+    Committed = "COMMITTED"
+    Deleted = "DELETED"
+
+    def __eq__(self, o) -> bool:
+        return str(o) == str(self)
+    
+    def __str__(self):
+        return self.value
+
+
 class Commit:
     def __init__(
         self,
         commit_id: UUID,
         message: str = "",
         artifact: "Artifact" = None,
-        previous: "Commit" = None,
+        previous: "Optional[Commit]" = None,
+        status: CommitStatus = CommitStatus.Initalized,
     ):
         self.id = commit_id
         self.message = message
         self.artifact = artifact
         self.previous = previous
+        self.__status = status
 
         self.message = message
         self.artifact: "Optional[Artifact]" = artifact
-        # When the commit is committed it cannot be modified.
-        self._committed = False
+
         self._api = ArtifactsApi()
 
         # Store files that are hashed so we can get there paths when we upload.
@@ -63,7 +80,23 @@ class Commit:
 
     @functools.lru_cache()
     def load_manifest(self) -> CommitManifest:
-        return CommitManifest.load(self.manifest_path)
+        try:
+            path = self._api.download_commit_manifest(self.id)
+            return CommitManifest.load(path)
+        except (FileNotFoundError, ValueError):
+            if self.is_committed:
+                raise           
+
+        previous_id = self.previous and self.previous.id
+        return CommitManifest(commit_id=self.id, previous_commit_id=previous_id)
+
+    @property
+    def is_committed(self):
+        return self.__status == CommitStatus.Committed
+
+    @property
+    def is_uploading(self):
+        return self.__status == CommitStatus.Uploading
 
     @property
     def manifest(self):
@@ -86,9 +119,13 @@ class Commit:
         return self.name[:8]
 
     def download_file(self, artifact_path: str) -> str:
+        self._ensure_downloadable()
+
         return ""
 
-    def download(self):
+    def download(self, wait=True):
+        self._ensure_downloadable()
+        download_commit(self, wait=wait)
         return ""
 
     def files(self, dir: str = ""):
@@ -176,7 +213,7 @@ class Commit:
         return CommitMigrations(
             commit_id=self.id,
             migrations=migrations,
-            from_commit_id=self.previous.id,
+            from_commit_id=self.previous and self.previous.id,
         )
 
     def commit(self, message: str = ""):
@@ -187,7 +224,7 @@ class Commit:
         self._ensure_artifact()
         self._ensure_modifiable()
 
-        self._committed = True
+        self.__status = CommitStatus.Uploading
         self.message = message or self.message
 
         artifact: "Artifact" = self.artifact  # type: ignore
@@ -202,11 +239,13 @@ class Commit:
         migrations = self.migrations()
         migrations.write(self.migration_path)
         CommitMigrationUploadEvent.emit(self.migration_path, self.id)
-
+        for i, b in self.files():
+            print(i, b['hash'].hex())
         # Create an upload event for each new file create
         migrations = self.migrations().migrations
         for hash, action in migrations.items():
             if action == "CREATED":
+                print(action, hash)
                 path = self.hashed_files[hash]
                 ArtifactFileUploadEvent.emit(
                     path, artifact_id=artifact.id, file_hash=hash
@@ -238,7 +277,7 @@ class Commit:
             )
 
     def _ensure_modifiable(self):
-        if self._committed:
+        if self.__status != CommitStatus.Initalized:
             raise CommitLockedExpection(
                 "This commit has been committed. You can not "
                 + "modify it anymore. You can branch from this "
@@ -247,4 +286,5 @@ class Commit:
             )
 
     def _ensure_downloadable(self):
-        return True
+        if self.__status != CommitStatus.Committed:
+            pass

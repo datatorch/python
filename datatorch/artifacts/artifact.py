@@ -1,3 +1,5 @@
+import functools
+from datatorch.artifacts.commit.commit import CommitStatus
 from typing import Optional, Union
 from uuid import UUID, uuid4
 
@@ -18,7 +20,9 @@ class Artifact(object):
         self.tag = tag
         self.branch: str = "main"
 
-        self._new_commit: Commit = Commit(uuid4(), artifact=self)
+        self._new_commit: Commit = Commit(
+            uuid4(), status=CommitStatus.Initalized, artifact=self
+        )
         self._head: Optional[Commit] = None
 
     def add(self, local_path: str, artifact_path: str = ""):
@@ -27,10 +31,14 @@ class Artifact(object):
     def remove(self, artifact_path: str):
         return self._new_commit.remove(artifact_path)
 
+    @functools.lru_cache()
+    def __entity(self):
+        pass
+
     @property
     def id(self) -> UUID:
         # TODO: get artifacts ID.
-        return uuid4()
+        return UUID('e84610e7-2a0b-4cd6-aa34-cf9e9afbec82')
 
     @property
     def head(self) -> Union[Commit, None]:
@@ -40,7 +48,9 @@ class Artifact(object):
         self._new_commit.commit()
 
         self._head = self._new_commit
-        self._new_commit = Commit(uuid4(), artifact=self)
+        self._new_commit = Commit(
+            uuid4(), status=CommitStatus.Initalized, artifact=self
+        )
 
     def download_file(self, artifact_path: str):
         if self.head:

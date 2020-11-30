@@ -212,12 +212,11 @@ class CommitManifest:
         return _tarverse_record(record)
 
     def diff(self, manifest: "CommitManifest" = None):
-
         current_files: Set[str] = set(map(lambda p: p[1]["hash"].hex(), self.files()))
         other_files: Set[str] = set(
             map(lambda p: p[1]["hash"].hex(), (manifest and manifest.files()) or [])
         )
-
+        
         created = current_files.difference(other_files)
         deleted = other_files.difference(current_files)
 

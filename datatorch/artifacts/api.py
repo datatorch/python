@@ -1,6 +1,7 @@
 from datatorch.utils.files import mkdir_exists
 from uuid import UUID
-from typing import Union
+from typing import Union, cast
+from typing_extensions import TypedDict
 from pathlib import Path
 
 from requests import Session
@@ -28,6 +29,13 @@ class UploadSession(Session):
         )
         self.mount("http://", adapter)
         self.mount("https://", adapter)
+
+
+
+class ArtifactEntity(TypedDict):
+    id: str
+    name: str
+
 
 
 class ArtifactsApi(Client):
@@ -95,5 +103,8 @@ class ArtifactsApi(Client):
         self._download_redirect(url, path)
         return path
 
-    def artifact(self, commit):
-        pass
+    def artifact(self, artifact_id) -> ArtifactEntity:
+        self.execute("""
+        
+        """)
+        return cast(ArtifactEntity, {})
