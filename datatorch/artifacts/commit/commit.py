@@ -6,10 +6,10 @@ import functools
 from pathlib import Path
 from os import stat, stat_result
 from uuid import UUID, uuid4
-from typing import Dict, Optional, Union, TYPE_CHECKING, cast
+from typing import Dict, List, Optional, TYPE_CHECKING, cast
 
 from ..hash import create_checksum
-from ..api import ArtifactsApi
+from ..api import ArtifactsApi, CommitEntity
 from ..directory import ArtifactDirectory
 
 from .migrations import CommitMigrations
@@ -48,6 +48,20 @@ class CommitStatus(Enum):
     Committed = "COMMITTED"
     Deleted = "DELETED"
 
+    @classmethod
+    def from_str(cls, string: str):
+        if string in ("UPLOADING"):
+            return cls.Uploading
+        if string in ("INITALIZED"):
+            return cls.Initalized
+        if string in ("FAILED"):
+            return cls.Failed
+        if string in ("COMMITTED"):
+            return cls.Committed
+        if string in ("DELETED"):
+            return cls.Deleted
+        raise ValueError
+
     def __eq__(self, o) -> bool:
         return str(o) == str(self)
 
@@ -56,24 +70,42 @@ class CommitStatus(Enum):
 
 
 class Commit:
+    @classmethod
+    def request(cls, id: UUID):
+        commit = ArtifactsApi.instance().commit(id)
+        return cls.from_dict(commit)
+
+    @classmethod
+    def from_dict(cls, dic: CommitEntity):
+        parent_id = dic.get("parentId")
+        return cls(
+            commit_id=UUID(dic["id"]),
+            message=dic["message"],
+            status=CommitStatus.from_str(dic["status"]),
+            parent_id=parent_id and UUID(parent_id),  # type: ignore
+        )
+
     def __init__(
         self,
         commit_id: UUID,
         message: str = "",
-        artifact: "Artifact" = None,
-        previous: "Optional[Commit]" = None,
+        tags: List[str] = [],
+        artifact: "Optional[Artifact]" = None,
+        parent_id: "Optional[UUID]" = None,
         status: CommitStatus = CommitStatus.Initalized,
     ):
         self.id = commit_id
         self.message = message
         self.artifact = artifact
-        self.previous = previous
+        self.tags = tags
+
+        self._parent_id = parent_id
         self.__status = status
 
         self.message = message
         self.artifact: "Optional[Artifact]" = artifact
 
-        self._api = ArtifactsApi()
+        self._api = ArtifactsApi.instance()
 
         # Store files that are hashed so we can get there paths when we upload.
         self.hashed_files: Dict[str, Path] = {}
@@ -87,8 +119,27 @@ class Commit:
             if self.is_committed:
                 raise
 
-        previous_id = self.previous and self.previous.id
-        return CommitManifest(commit_id=self.id, previous_commit_id=previous_id)
+        return CommitManifest(
+            commit_id=self.id, previous_commit_id=self.parent and self.parent.id
+        )
+
+    @functools.lru_cache()
+    def load_previous(self) -> "Optional[Commit]":
+        if self._parent_id:
+            c = Commit.request(self._parent_id)
+            c.artifact = self.artifact
+            return c
+
+    @property
+    def parent(self) -> "Optional[Commit]":
+        if self.__status == CommitStatus.Initalized:
+            self._ensure_artifact()
+            return self.artifact.head
+
+        if self._parent_id:
+            return self.load_previous()
+
+        return None
 
     @property
     def is_committed(self):
@@ -120,12 +171,13 @@ class Commit:
 
     def download_file(self, artifact_path: str) -> str:
         self._ensure_downloadable()
-
+        # TODO(justin): downloading of single commit file path.
         return ""
 
     def download(self, wait=True):
         self._ensure_downloadable()
         download_commit(self, wait=wait)
+        # TODO(justin): downloading of all commit files.
         return ""
 
     def files(self, dir: str = ""):
@@ -151,7 +203,7 @@ class Commit:
             self.add_dir(local_path, artifact_path=artifact_path)
             return True
 
-        # TODO: Allow regex for absolute paths
+        # TODO(justin): Allow regex for absolute paths
         return self.add_dir(".", artifact_path=artifact_path, pattern=local_path)
 
     def add_file(self, local_path: str, artifact_path: str = ""):
@@ -205,7 +257,7 @@ class Commit:
         return self.manifest.diff(commit and commit.manifest)
 
     def migrations(self):
-        created, deleted = self.diff(self.previous)
+        created, deleted = self.diff(self.parent)
         migrations = {
             **dict.fromkeys(created, "CREATED"),
             **dict.fromkeys(deleted, "DELETED"),
@@ -213,10 +265,21 @@ class Commit:
         return CommitMigrations(
             commit_id=self.id,
             migrations=migrations,
-            from_commit_id=self.previous and self.previous.id,
+            from_commit_id=self.parent and self.parent.id,
         )
 
-    def commit(self, message: str = ""):
+    def __create(self):
+        """ Insert create commit entity with API calls"""
+        self._ensure_artifact()
+        self._api.create_commit(
+            str(self.id),
+            str(self.artifact and self.artifact.id),
+            parent_id=self.parent and str(self.parent.id),
+            status=self.__status,
+            message=self.message,
+        )
+
+    def commit(self, message: str = "", tags: List[str] = []):
         """
         Creates commit entity, and sends files to thread pool to be
         uploaded.
@@ -224,28 +287,32 @@ class Commit:
         self._ensure_artifact()
         self._ensure_modifiable()
 
-        self.__status = CommitStatus.Uploading
         self.message = message or self.message
+        self.tags = tags
 
         artifact: "Artifact" = self.artifact  # type: ignore
+        migrations = self.migrations()
 
-        # TODO: GraphQL Commit create call
+        has_migrations = bool(migrations.migrations)
+        if not has_migrations:
+            # Nothing to change.
+            return
+
+        # TODO(justin): update commit when finished uploading
+        self.__status = CommitStatus.Uploading
+        self.__create()
 
         # Write and upload manifest.
         self.manifest.write(self.manifest_path)
         CommitManifestUploadEvent.emit(self.manifest_path, self.id)
 
         # Write and upload migrations.
-        migrations = self.migrations()
         migrations.write(self.migration_path)
         CommitMigrationUploadEvent.emit(self.migration_path, self.id)
-        for i, b in self.files():
-            print(i, b["hash"].hex())
+
         # Create an upload event for each new file create
-        migrations = self.migrations().migrations
-        for hash, action in migrations.items():
+        for hash, action in migrations.migrations.items():
             if action == "CREATED":
-                print(action, hash)
                 path = self.hashed_files[hash]
                 ArtifactFileUploadEvent.emit(
                     path, artifact_id=artifact.id, file_hash=hash

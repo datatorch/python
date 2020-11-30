@@ -1,13 +1,10 @@
 import functools
-from typing import Optional, Union
+from typing import List, Optional, Union
 from uuid import UUID, uuid4
 
+from .api import ArtifactExistsError, ArtifactsApi
 from .commit.commit import CommitStatus
 from .commit import Commit
-from .api import ArtifactsApi
-
-
-_api = ArtifactsApi()
 
 
 class InvalidArtifactName(Exception):
@@ -23,12 +20,14 @@ class Artifact(object):
     def create(cls, full_name: str):
         pass
 
-    def __init__(self, full_name: str, tag: str = "latest") -> None:
-        global _api
-        self._api = _api
+    def __init__(self, full_name: Union[str, UUID], tag: str = "latest") -> None:
 
+        if isinstance(full_name, UUID):
+            raise ValueError("TODO")
+
+        self._api = ArtifactsApi.instance()
+        self._artifact_id = id
         self.tag = tag
-        self.branch: str = "main"
 
         if len(full_name.split("/")) != 3:
             raise InvalidArtifactName(
@@ -52,19 +51,38 @@ class Artifact(object):
         return self._new_commit.remove(artifact_path)
 
     @functools.lru_cache()
-    def __entity(self):
-        return self._api.artifact_by_name(self.namespace, self.project_name, self.name)
+    def __get_entity(self):
+        try:
+            return self._api.artifact_by_name(self.namespace, self.project_name, self.name)
+        except ArtifactExistsError:
+            # return self._api.create_artifact(self.namespace, self.project_name, self.name)
+            pass
+    
+    @functools.lru_cache()
+    def __get_commit(self, commit_id: UUID) -> Optional[Commit]:
+        commit = Commit.request(commit_id)
+        commit.artifact = self
+        return commit
+
+    @property
+    def head(self) -> Optional[Commit]:
+        if self.tag == "latest":
+            entity = self.__get_entity()
+            commit_entity = entity.get("latest")
+            if not commit_entity:
+                return None
+            commit = Commit.from_dict(commit_entity)
+            commit.artifact = self
+            return commit
+
+        # TODO: get head when a tag is provided
 
     @property
     def id(self) -> UUID:
-        return UUID(self.__entity().get("id"))
+        return UUID(self.__get_entity().get("id"))
 
-    @property
-    def head(self) -> Union[Commit, None]:
-        return self._head
-
-    def commit(self, message: str = ""):
-        self._new_commit.commit()
+    def commit(self, message: str = "", tags: List[str] = []):
+        self._new_commit.commit(message=message, tags=tags)
 
         self._head = self._new_commit
         self._new_commit = Commit(

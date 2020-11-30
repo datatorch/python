@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+
 __artifact_api: "Optional[ArtifactsApi]" = None
 
 
@@ -23,14 +24,13 @@ def _artifact_api():
     if __artifact_api is None:
         from datatorch.artifacts.api import ArtifactsApi
 
-        __artifact_api = ArtifactsApi()
+        __artifact_api = ArtifactsApi.instance()
     return __artifact_api
 
 
 class FileApiUploadEvent(ThreadJob):
     def __init__(self):
-        from datatorch.artifacts.api import ArtifactsApi
-
+        self._api = _artifact_api()
         super().__init__()
 
 
@@ -55,9 +55,7 @@ class ArtifactFileUploadEvent(FileApiPathUploadEvent):
         self.file_hash = file_hash
 
     def run(self):
-        _artifact_api().upload_artifact_file(
-            self.artifact_id, self.path, self.file_hash
-        )
+        self._api.upload_artifact_file(self.artifact_id, self.path, self.file_hash)
 
 
 class CommitMigrationUploadEvent(FileApiPathUploadEvent):
@@ -71,7 +69,7 @@ class CommitMigrationUploadEvent(FileApiPathUploadEvent):
         self.commit_id = commit_id
 
     def run(self):
-        _artifact_api().upload_commit_migration(self.commit_id, self.path)
+        self._api.upload_commit_migration(self.commit_id, self.path)
 
 
 class CommitManifestUploadEvent(FileApiPathUploadEvent):
@@ -85,7 +83,7 @@ class CommitManifestUploadEvent(FileApiPathUploadEvent):
         self.commit_id = commit_id
 
     def run(self):
-        _artifact_api().upload_commit_manifest(self.commit_id, self.path)
+        self._api.upload_commit_manifest(self.commit_id, self.path)
 
 
 # TODO: Use TUS for resumable uploads.
