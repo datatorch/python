@@ -154,7 +154,6 @@ class CategoryUploadStats(UploadStatsLock):
 
         is_done = get_upload_pool().done()
 
-
         if is_done:
             return
 

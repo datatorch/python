@@ -31,11 +31,9 @@ class UploadSession(Session):
         self.mount("https://", adapter)
 
 
-
 class ArtifactEntity(TypedDict):
     id: str
     name: str
-
 
 
 class ArtifactsApi(Client):
@@ -103,8 +101,21 @@ class ArtifactsApi(Client):
         self._download_redirect(url, path)
         return path
 
-    def artifact(self, artifact_id) -> ArtifactEntity:
-        self.execute("""
-        
-        """)
-        return cast(ArtifactEntity, {})
+    def artifact_by_name(self, login: str, project: str, name: str) -> ArtifactEntity:
+        res = self.execute(
+            """
+            query GetArtifact($login: String!, $project: String!, $name: String!) {
+                artifact: artifactByName(login: $login, project: $project, name: $name) {
+                    id
+                    name
+                }
+            }
+            """,
+            params=dict(login=login, project=project, name=name),
+        )
+        artifact = res.get("artifact")
+        if artifact is None:
+            raise ValueError(
+                "Invalid artifact name. Use `Artifact.create(...)` to create a new artifact."
+            )
+        return cast(ArtifactEntity, artifact)

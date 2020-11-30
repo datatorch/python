@@ -26,6 +26,7 @@ def _artifact_api():
         __artifact_api = ArtifactsApi()
     return __artifact_api
 
+
 class FileApiUploadEvent(ThreadJob):
     def __init__(self):
         from datatorch.artifacts.api import ArtifactsApi
@@ -54,7 +55,9 @@ class ArtifactFileUploadEvent(FileApiPathUploadEvent):
         self.file_hash = file_hash
 
     def run(self):
-        _artifact_api().upload_artifact_file(self.artifact_id, self.path, self.file_hash)
+        _artifact_api().upload_artifact_file(
+            self.artifact_id, self.path, self.file_hash
+        )
 
 
 class CommitMigrationUploadEvent(FileApiPathUploadEvent):

@@ -50,7 +50,7 @@ class CommitStatus(Enum):
 
     def __eq__(self, o) -> bool:
         return str(o) == str(self)
-    
+
     def __str__(self):
         return self.value
 
@@ -85,7 +85,7 @@ class Commit:
             return CommitManifest.load(path)
         except (FileNotFoundError, ValueError):
             if self.is_committed:
-                raise           
+                raise
 
         previous_id = self.previous and self.previous.id
         return CommitManifest(commit_id=self.id, previous_commit_id=previous_id)
@@ -240,7 +240,7 @@ class Commit:
         migrations.write(self.migration_path)
         CommitMigrationUploadEvent.emit(self.migration_path, self.id)
         for i, b in self.files():
-            print(i, b['hash'].hex())
+            print(i, b["hash"].hex())
         # Create an upload event for each new file create
         migrations = self.migrations().migrations
         for hash, action in migrations.items():
