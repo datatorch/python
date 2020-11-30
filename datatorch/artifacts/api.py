@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 class ArtifactExistsError(Exception):
     pass
 
+
 class CommitExistsError(Exception):
     pass
 
@@ -162,7 +163,9 @@ class ArtifactsApi(Client):
         artifact = res.get("artifact")
         if artifact is None:
             raise ArtifactExistsError(
-                "Artifact does not exist. Use `Artifact.create(...)` to create a new artifact."
+                "Artifact does not exist. Makes sure you are "
+                + "using the correct, namespace, project name "
+                + "and artifact name."
             )
         return cast(ArtifactEntity, artifact)
 

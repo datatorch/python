@@ -53,11 +53,13 @@ class Artifact(object):
     @functools.lru_cache()
     def __get_entity(self):
         try:
-            return self._api.artifact_by_name(self.namespace, self.project_name, self.name)
+            return self._api.artifact_by_name(
+                self.namespace, self.project_name, self.name
+            )
         except ArtifactExistsError:
             # return self._api.create_artifact(self.namespace, self.project_name, self.name)
-            pass
-    
+            raise
+
     @functools.lru_cache()
     def __get_commit(self, commit_id: UUID) -> Optional[Commit]:
         commit = Commit.request(commit_id)
