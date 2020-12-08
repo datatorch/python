@@ -3,10 +3,11 @@ from enum import Enum
 from datatorch.uploader.events import CommitMigrationUploadEvent
 import os
 import functools
+import logging
 from pathlib import Path
-from os import stat, stat_result
-from uuid import UUID, uuid4
-from typing import Dict, List, Optional, TYPE_CHECKING, cast
+from os import stat_result
+from uuid import UUID
+from typing import Dict, List, Optional, TYPE_CHECKING
 
 from ..hash import create_checksum
 from ..api import ArtifactsApi, CommitEntity
@@ -20,6 +21,9 @@ from datatorch.uploader import CommitManifestUploadEvent, ArtifactFileUploadEven
 
 if TYPE_CHECKING:
     from ..artifact import Artifact
+
+
+logger = logging.getLogger(__name__)
 
 
 class CommitLockedExpection(Exception):
@@ -112,16 +116,16 @@ class Commit:
 
     @functools.lru_cache()
     def load_manifest(self) -> CommitManifest:
+        if self.__status == CommitStatus.Initalized:
+            return CommitManifest(
+                commit_id=self.id, previous_commit_id=self.parent and self.parent.id
+            )
+
         try:
             path = self._api.download_commit_manifest(self.id)
             return CommitManifest.load(path)
         except (FileNotFoundError, ValueError):
-            if self.is_committed:
-                raise
-
-        return CommitManifest(
-            commit_id=self.id, previous_commit_id=self.parent and self.parent.id
-        )
+            raise
 
     @functools.lru_cache()
     def load_previous(self) -> "Optional[Commit]":
@@ -132,7 +136,10 @@ class Commit:
 
     @property
     def parent(self) -> "Optional[Commit]":
-        if self.__status == CommitStatus.Initalized:
+        if (
+            self.__status == CommitStatus.Initalized
+            or self.__status == CommitStatus.Uploading
+        ):
             self._ensure_artifact()
             return self.artifact.head
 
@@ -211,6 +218,7 @@ class Commit:
 
         path = Path(local_path).resolve(strict=True)
         path_artifact = Path(artifact_path or path.name)
+        print(f"adding file: {path} => {path_artifact}")
 
         if not path.is_file():
             raise ValueError(f"Path is not a file. '{local_path}' must be a file.")
@@ -300,6 +308,7 @@ class Commit:
 
         # TODO(justin): update commit when finished uploading
         self.__status = CommitStatus.Uploading
+        # raise Exception("ERROR")
         self.__create()
 
         # Write and upload manifest.

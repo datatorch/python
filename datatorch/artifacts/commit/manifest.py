@@ -231,6 +231,7 @@ class CommitManifest:
         )
         fa.writer(buffer, ps, [record])
 
-    def write(self, buff: Union[str, Path]):
-        with open(buff, "wb") as out:
+    def write(self, path: Path):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "wb") as out:
             self.writer(out)
