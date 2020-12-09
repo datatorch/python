@@ -228,3 +228,28 @@ class ArtifactsApi(Client):
             ),
         )
         return res.get("commit") is not None
+
+    def update_commit(
+        self, commit_id: str, message: str = None, status: "CommitStatus" = None
+    ):
+        res = self.execute(
+            """
+            mutation UpdateArtifactCommit(
+                $commitId: ID!
+                $status: ArtifactCommitStatus
+                $message: String
+            ) {
+                commit: updateArtifactCommit(
+                    id: $commitId
+                    input: {
+                        status: $status
+                        message: $message
+                    }
+                ) {
+                    id
+                }
+            }
+            """,
+            params=dict(commitId=commit_id, message=message, status=str(status)),
+        )
+        return res.get("commit") is not None

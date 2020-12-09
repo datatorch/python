@@ -1,11 +1,19 @@
+from typing import Set, TYPE_CHECKING
 from datatorch.agent import logging
 from datatorch.utils.thread_pool import ThreadPool
+
+if TYPE_CHECKING:
+    from datatorch.artifacts.commit.commit import Commit
 
 
 logger = logging.getLogger(__name__)
 
 
 class UploadThreadPool(ThreadPool):
+    def __init__(self) -> None:
+        super().__init__()
+        self.processed_commit: Set[Commit] = set([])
+
     def join(self):
         """ Wait for completion of all tasks in queue. """
         return self.queue.join()
@@ -21,7 +29,13 @@ class UploadThreadPool(ThreadPool):
         get_upload_stats().show_progress()
         get_upload_stats()._reset_bytes()
 
+        self._mark_commits_as_committed()
+
         return super(UploadThreadPool, self).shutdown()
+
+    def _mark_commits_as_committed(self):
+        for commit in self.processed_commit:
+            commit._mark_committed()
 
 
 _upload_pool = UploadThreadPool()

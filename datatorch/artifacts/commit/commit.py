@@ -1,3 +1,4 @@
+from datatorch.uploader.pool import get_upload_pool
 from datatorch.artifacts.downloader.pool import download_commit
 from enum import Enum
 from datatorch.uploader.events import CommitMigrationUploadEvent
@@ -287,6 +288,12 @@ class Commit:
             message=self.message,
         )
 
+    def __update(self):
+        self._api.update_commit(str(self.id), status=self.__status)
+
+    def __hash__(self) -> int:
+        return self.id.__hash__()
+
     def commit(self, message: str = "", tags: List[str] = []):
         """
         Creates commit entity, and sends files to thread pool to be
@@ -310,6 +317,8 @@ class Commit:
         self.__status = CommitStatus.Uploading
         # raise Exception("ERROR")
         self.__create()
+
+        get_upload_pool().processed_commit.add(self)
 
         # Write and upload manifest.
         self.manifest.write(self.manifest_path)
@@ -364,3 +373,7 @@ class Commit:
     def _ensure_downloadable(self):
         if self.__status != CommitStatus.Committed:
             pass
+
+    def _mark_committed(self):
+        self.__status = CommitStatus.Committed
+        self.__update()
