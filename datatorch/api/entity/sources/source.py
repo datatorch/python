@@ -70,11 +70,11 @@ class Source(BaseEntity):
         r_source = results.get("source")
         self.id = r_source.get("id")
 
-    def update(self, client=None):
-      super().create(client=client)
+    def save(self, client=None):
+      super().save(client=client)
 
       assert self.type is not None, "Source must have a type"
-      results = self.client.execute(
+      self.client.execute(
           _UPDATE_SOURCE,
           params={
               "id": self.id,
