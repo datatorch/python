@@ -33,7 +33,9 @@ _UPDATE_SOURCE = """
       id: $id
       type: $type
       data: $data
-    )
+    ) {
+      id
+    }
   }
 """
 
