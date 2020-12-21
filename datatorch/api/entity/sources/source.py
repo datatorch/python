@@ -23,6 +23,21 @@ _CREATE_SOURCE = """
   }
 """
 
+_UPDATE_SOURCE = """
+  mutation UpdateSource(
+    $id: ID!
+    $type: String!
+    $data: JSON!
+  ) {
+    source: updateSource(
+      id: $id
+      type: $type
+      data: $data
+    ) {
+      id
+    }
+  }
+"""
 
 class Source(BaseEntity):
 
@@ -56,3 +71,16 @@ class Source(BaseEntity):
         )
         r_source = results.get("source")
         self.id = r_source.get("id")
+
+    def save(self, client=None):
+      super().save(client=client)
+
+      assert self.type is not None, "Source must have a type"
+      self.client.execute(
+          _UPDATE_SOURCE,
+          params={
+              "id": self.id,
+              "type": self.type,
+              "data": self.data(),
+          },
+      )
