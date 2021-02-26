@@ -129,6 +129,7 @@ _CREATE_ANNOTATIONS = """
 def import_coco(
     file_path: str,
     project_string: str,
+    image_base_path: str = None,
     import_bbox: bool = False,
     import_segmentation: bool = True,
     max_iou: float = 0.99,
@@ -184,7 +185,10 @@ def import_coco(
         (coco_image,) = coco.loadImgs(ids=image_id)
         image_name = coco_image["file_name"]
 
-        file_filter = Where(name=image_name)
+        if image_base_path is None:
+            file_filter = Where(name=image_name)
+        else:
+            file_filter = Where(path=str(pathlib.PurePosixPath(image_base_path.strip('/')).joinpath(image_name)))
         dt_files = project.files(file_filter, limit=2)
 
         if len(dt_files) > 1:
