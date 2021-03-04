@@ -194,16 +194,17 @@ def import_coco(
             file_filter = Where(path=str(pathlib.PurePosixPath(image_base_path.strip('/')).joinpath(image_name)))
         dt_files = project.files(file_filter, limit=2)
 
-        if len(dt_files) > 1:
-            _LOGGER.error(f"Multiple files found of {image_name}, skipping")
-            continue
+        with tqdm.tqdm.external_write_mode():
+            if len(dt_files) > 1:
+                _LOGGER.error(f"Multiple files found of {image_name}, skipping")
+                continue
 
-        if len(dt_files) == 0:
-            _LOGGER.error(f"No files found of {image_name}, skipping")
-            continue
+            if len(dt_files) == 0:
+                _LOGGER.error(f"No files found of {image_name}, skipping")
+                continue
 
-        dt_file: File = dt_files[0]
-        _LOGGER.info(f"[{dt_file.name}] Successfully found file.")
+            dt_file: File = dt_files[0]
+            _LOGGER.info(f"[{dt_file.name}] Successfully found file.")
 
         coco_annotation_ids = coco.getAnnIds(
             catIds=coco_category_ids, imgIds=coco_image["id"]
@@ -228,13 +229,15 @@ def import_coco(
                             [source.x, source.y, source.width, source.height]
                         )
 
-        _LOGGER.debug(f"[{dt_file.name}] Importing {len(coco_annotations)} coco annotations.")
+        with tqdm.tqdm.external_write_mode():
+            _LOGGER.debug(f"[{dt_file.name}] Importing {len(coco_annotations)} coco annotations.")
         new_annotations = []
         for anno in tqdm.tqdm(coco_annotations, unit='annotations', disable=None):
             if anno.get("datatorch_id") is not None and ignore_annotations_with_ids:
-                _LOGGER.warning(
-                    f"[{dt_file.name}] Ignoring annotation as it already has a DataTorch ID ({anno.get('datatorch_id')})."
-                )
+                with tqdm.tqdm.external_write_mode():
+                    _LOGGER.warning(
+                        f"[{dt_file.name}] Ignoring annotation as it already has a DataTorch ID ({anno.get('datatorch_id')})."
+                    )
                 continue
 
             label = label_mapping.get(anno["category_id"])
@@ -251,7 +254,8 @@ def import_coco(
                 if not check_iou or (
                     check_iou and not has_bbox(bbox, dt_bbox, max_iou)
                 ):
-                    _LOGGER.debug(f"[{dt_file.name}] Adding new bounding box.")
+                    with tqdm.tqdm.external_write_mode():
+                        _LOGGER.debug(f"[{dt_file.name}] Adding new bounding box.")
                     created_bbox = True
                     annotation["sources"].append(
                         {
@@ -281,7 +285,8 @@ def import_coco(
                     if not check_iou or (
                         check_iou and not has_mask(anno_mask, dt_segmentations, max_iou)
                     ):
-                        _LOGGER.debug(f"[{dt_file.name}] Adding new segmentation.")
+                        with tqdm.tqdm.external_write_mode():
+                            _LOGGER.debug(f"[{dt_file.name}] Adding new segmentation.")
                         path_data = segmentation_to_points(anno["segmentation"])
                         created_segmentation = True
                         annotation["sources"].append(
@@ -298,4 +303,5 @@ def import_coco(
             # Insert new annotations
             api.execute(_CREATE_ANNOTATIONS, params={"annotations": new_annotations})
 
-        _LOGGER.info(f"[{dt_file.name}] Added {len(new_annotations)} annnotations.")
+        with tqdm.tqdm.external_write_mode():
+            _LOGGER.info(f"[{dt_file.name}] Added {len(new_annotations)} annnotations.")
