@@ -206,6 +206,10 @@ def import_coco(
             dt_file: File = dt_files[0]
             _LOGGER.info(f"[{dt_file.name}] Successfully found file.")
 
+            if dt_file.status == 'COMPLETED':
+                _LOGGER.error(f"{image_name} is already marked as 'COMPLETED', skipping")
+                continue
+
         coco_annotation_ids = coco.getAnnIds(
             catIds=coco_category_ids, imgIds=coco_image["id"]
         )
