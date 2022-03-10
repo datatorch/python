@@ -3,6 +3,9 @@ import sys
 import copy
 import numpy as np
 import click
+import logging
+import pathlib
+import tqdm
 
 from typing import List
 from .utils.simplify import simplify_points
@@ -16,6 +19,7 @@ except:
     click.echo("Please install pycocotools should be installed:")
     click.echo("\t pip3 install pycocotools")
 
+_LOGGER = logging.getLogger(__name__)
 
 def points_to_segmentation(points: List[List[List[float]]]) -> List[List[float]]:
     """
@@ -129,6 +133,7 @@ _CREATE_ANNOTATIONS = """
 def import_coco(
     file_path: str,
     project_string: str,
+    image_base_path: str = None,
     import_bbox: bool = False,
     import_segmentation: bool = True,
     max_iou: float = 0.99,
@@ -137,28 +142,27 @@ def import_coco(
     api: ApiClient = None,
 ):
     if not import_segmentation and not import_bbox:
-        print("Nothing to import. Both segmentation and bbox are disabled.")
-        sys.exit(1)
+        _LOGGER.warning("Nothing to import. Both segmentation and bbox are disabled.")
+        return
 
     if not os.path.isfile(file_path):
-        print("Provided path is not a file.")
-        sys.exit(2)
+        raise ValueError(f"Provided path '{file_path}' is not a file.")
 
     check_iou: bool = max_iou != 0
 
     # Get DataTorch project information
-    print("Connecting to DataTorch API.")
+    _LOGGER.debug("Connecting to DataTorch API.")
     if api is None:
         api = ApiClient()
 
-    print("Loading Project Information.")
+    _LOGGER.debug("Loading Project Information.")
     if "/" in project_string:
         project: Project = api.project(*project_string.split("/", 1))
     else:
         project: Project = api.project(project_string)
 
     labels = project.labels()
-    print(f"Project ID: {project.id}")
+    _LOGGER.debug("Project ID: %s", project.id)
     names_mapping = dict(((label.name, label) for label in labels))
 
     # Load coco file
@@ -167,36 +171,44 @@ def import_coco(
 
     # Maps COCO Category ids to DataTorch ids. This is
     # done by matching label names.
-    print(f"Maping coco labels to project labels.")
+    _LOGGER.info("Mapping coco labels to project labels...")
     label_mapping: dict = {}
     for category in coco_categories:
         name = category["name"]
         label_mapping[category["id"]] = datatorch_label = names_mapping.get(name)
 
         if not datatorch_label:
-            print(f"Could not find {name} in project labels.")
+            _LOGGER.error("Could not find %s in project labels.", name)
             continue
 
-    print(f"Beginning annotation imports.")
+    _LOGGER.info("Beginning annotation imports...")
     # Iterate each annotations to add them to datatorch
     coco_category_ids = label_mapping.keys()
-    for image_id in coco.getImgIds():
+    for image_id in tqdm.tqdm(coco.getImgIds(), unit='image', disable=None):
         (coco_image,) = coco.loadImgs(ids=image_id)
         image_name = coco_image["file_name"]
 
-        file_filter = Where(name=image_name)
+        if image_base_path is None:
+            file_filter = Where(name=image_name)
+        else:
+            file_filter = Where(path=str(pathlib.PurePosixPath(image_base_path.strip('/')).joinpath(image_name)))
         dt_files = project.files(file_filter, limit=2)
 
-        if len(dt_files) > 1:
-            print(f"Multiple files found of {image_name}, skipping")
-            continue
+        with tqdm.tqdm.external_write_mode():
+            if len(dt_files) > 1:
+                _LOGGER.error(f"Multiple files found of {image_name}, skipping")
+                continue
 
-        if len(dt_files) == 0:
-            print(f"No files found of {image_name}, skipping")
-            continue
+            if len(dt_files) == 0:
+                _LOGGER.error(f"No files found of {image_name}, skipping")
+                continue
 
-        dt_file: File = dt_files[0]
-        print(f"[{dt_file.name}] Successfully found file.")
+            dt_file: File = dt_files[0]
+            _LOGGER.info(f"[{dt_file.name}] Successfully found file.")
+
+            if dt_file.status == 'COMPLETED':
+                _LOGGER.error(f"{image_name} is already marked as 'COMPLETED', skipping")
+                continue
 
         coco_annotation_ids = coco.getAnnIds(
             catIds=coco_category_ids, imgIds=coco_image["id"]
@@ -221,13 +233,15 @@ def import_coco(
                             [source.x, source.y, source.width, source.height]
                         )
 
-        print(f"[{dt_file.name}] Importing {len(coco_annotations)} coco annotations.")
+        with tqdm.tqdm.external_write_mode():
+            _LOGGER.debug(f"[{dt_file.name}] Importing {len(coco_annotations)} coco annotations.")
         new_annotations = []
-        for anno in coco_annotations:
+        for anno in tqdm.tqdm(coco_annotations, unit='annotations', disable=None):
             if anno.get("datatorch_id") is not None and ignore_annotations_with_ids:
-                print(
-                    f"[{dt_file.name}] Ignoring annotation as it already has a DataTorch ID ({anno.get('datatorch_id')})."
-                )
+                with tqdm.tqdm.external_write_mode():
+                    _LOGGER.warning(
+                        f"[{dt_file.name}] Ignoring annotation as it already has a DataTorch ID ({anno.get('datatorch_id')})."
+                    )
                 continue
 
             label = label_mapping.get(anno["category_id"])
@@ -244,7 +258,8 @@ def import_coco(
                 if not check_iou or (
                     check_iou and not has_bbox(bbox, dt_bbox, max_iou)
                 ):
-                    print(f"[{dt_file.name}] Adding new bounding box.")
+                    with tqdm.tqdm.external_write_mode():
+                        _LOGGER.debug(f"[{dt_file.name}] Adding new bounding box.")
                     created_bbox = True
                     annotation["sources"].append(
                         {
@@ -274,7 +289,8 @@ def import_coco(
                     if not check_iou or (
                         check_iou and not has_mask(anno_mask, dt_segmentations, max_iou)
                     ):
-                        print(f"[{dt_file.name}] Adding new segmentation.")
+                        with tqdm.tqdm.external_write_mode():
+                            _LOGGER.debug(f"[{dt_file.name}] Adding new segmentation.")
                         path_data = segmentation_to_points(anno["segmentation"])
                         created_segmentation = True
                         annotation["sources"].append(
@@ -291,4 +307,5 @@ def import_coco(
             # Insert new annotations
             api.execute(_CREATE_ANNOTATIONS, params={"annotations": new_annotations})
 
-        print(f"[{dt_file.name}] Added {len(new_annotations)} annnotations.")
+        with tqdm.tqdm.external_write_mode():
+            _LOGGER.info(f"[{dt_file.name}] Added {len(new_annotations)} annnotations.")
