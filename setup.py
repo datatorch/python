@@ -10,7 +10,7 @@ requirements = [
     "Click~=7.0",
     "numpy",
     "gql==3.0.0a4",
-    "websockets",
+    "websockets>=8.1,<9",
     "requests",
     "typing_extensions~=3.7",
     "psutil~=5.7.0",
