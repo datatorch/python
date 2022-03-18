@@ -9,7 +9,7 @@ with open("README.md", "r", encoding="utf-8") as fp:
 requirements = [
     "Click~=7.0",
     "numpy",
-    "gql==3.0.0a4",
+    "gql==3.0.0a6",
     "websockets",
     "websocket-client",
     "requests",
@@ -19,13 +19,14 @@ requirements = [
     "Jinja2~=2.0",
     "PyYAML~=5.0",
     "aiostream~=0.4.0",
+    "markupsafe==2.0.1",
 ]
 
 requirements_agents = []
 
 setup(
     name="datatorch",
-    version="0.4.2",
+    version="0.4.3",
     description="A CLI and library for interacting with DataTorch",
     author="DataTorch",
     author_email="support@datatorch.io",

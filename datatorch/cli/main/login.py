@@ -3,9 +3,10 @@ import click
 from datatorch.core import BASE_URL, user_settings
 from datatorch.api import ApiClient
 from ..spinner import Spinner
+from .logout import logout
 
 
-@click.command(help="Login to DataTorch and stores credentials locally.")
+@click.command(help="Login to DataTorch and store credentials locally.")
 @click.argument("key", nargs=-1)
 @click.option(
     "--host",
@@ -15,7 +16,7 @@ from ..spinner import Spinner
 @click.option(
     "--no-web",
     is_flag=True,
-    help="Disable opening of the webbrowser to access token link.",
+    help="Disable opening of the web browser to access token link.",
 )
 @click.option("--relogin", is_flag=True, help="Force relogin if already logged in.")
 def login(key, host, no_web, relogin):  # type: ignore
@@ -67,10 +68,6 @@ def login(key, host, no_web, relogin):  # type: ignore
                 bold=True,
             )
         )
-        user_settings.api_url = None
-        user_settings.api_key = None
-
-        user_settings.set("userLogin", None)
-        user_settings.set("userName", None)
+        logout
 
         print(ex)
