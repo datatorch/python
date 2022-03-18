@@ -23,7 +23,7 @@ class RunnerCreateError(Exception):
 class RunnerFactory(object):
     @staticmethod
     def create(action, config: dict) -> Runner:
-        """ Makes runners to 'use' strings found in config.yaml files. """
+        """Makes runners to 'use' strings found in config.yaml files."""
         use = config.get("using")
         if use is None:
             raise RunnerCreateError("Action 'use' property not specified.")

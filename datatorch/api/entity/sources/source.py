@@ -39,6 +39,7 @@ _UPDATE_SOURCE = """
   }
 """
 
+
 class Source(BaseEntity):
 
     id: str
@@ -73,14 +74,14 @@ class Source(BaseEntity):
         self.id = r_source.get("id")
 
     def save(self, client=None):
-      super().save(client=client)
+        super().save(client=client)
 
-      assert self.type is not None, "Source must have a type"
-      self.client.execute(
-          _UPDATE_SOURCE,
-          params={
-              "id": self.id,
-              "type": self.type,
-              "data": self.data(),
-          },
-      )
+        assert self.type is not None, "Source must have a type"
+        self.client.execute(
+            _UPDATE_SOURCE,
+            params={
+                "id": self.id,
+                "type": self.type,
+                "data": self.data(),
+            },
+        )

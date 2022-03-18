@@ -74,7 +74,7 @@ AddableEntity = Union[Dataset, Label]
 
 
 class Project(BaseEntity):
-    """ Projects contain datasets, files and annotations. """
+    """Projects contain datasets, files and annotations."""
 
     id: str
     slug: str
@@ -143,7 +143,7 @@ class Project(BaseEntity):
         )
 
     def add(self, entity: AddableEntity):
-        """ Add entity to project """
+        """Add entity to project"""
 
         entity.client = self.client
 

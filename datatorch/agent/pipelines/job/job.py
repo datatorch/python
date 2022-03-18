@@ -35,7 +35,7 @@ class Job(object):
         await self.agent.api.update_job(variables)
 
     async def run(self, variables: Variables):
-        """ Runs each step of the job. """
+        """Runs each step of the job."""
         steps = Step.from_dict_list(self.config.get("steps", []), job=self)
         await self.update("RUNNING")
 

@@ -22,7 +22,7 @@ class Pipeline(object):
 
     @classmethod
     def from_config(cls, config: Union[str, dict], agent: "Agent" = None):
-        """ Creates a pipeline from a config file. """
+        """Creates a pipeline from a config file."""
         if isinstance(config, str):
             cf = yaml.load(config, Loader=yaml.FullLoader)
         else:
@@ -35,6 +35,6 @@ class Pipeline(object):
         self.agent = agent
 
     async def run(self, job_config: dict):
-        """ Runs a job. """
+        """Runs a job."""
         # await Job(job_config, agent=self.agent).run()
         pass

@@ -3,7 +3,7 @@ import sys
 
 
 def restart():
-    """ Restarts the current process running with itself """
+    """Restarts the current process running with itself"""
     args = sys.argv[:]
     args.insert(0, sys.executable)
     if sys.platform == "win32":

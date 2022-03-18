@@ -7,7 +7,7 @@ __all__ = "BoundingBox"
 
 
 class BoundingBox(Source):
-    """ Bounding Box an enclosing retangular box for a image marking """
+    """Bounding Box an enclosing retangular box for a image marking"""
 
     id: str
     type: str = "PaperBox"
@@ -22,7 +22,7 @@ class BoundingBox(Source):
 
     @property
     def top_left(self) -> Point2D:
-        """ Top-left point of the box """
+        """Top-left point of the box"""
         return (self.x, self.y)
 
     @property

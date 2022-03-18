@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class Settings(object):
-    """ Manager for storing settings in a JSON file. """
+    """Manager for storing settings in a JSON file."""
 
     def __init__(self, path: str, file_name="settings.json"):
         self.path = path
@@ -21,14 +21,14 @@ class Settings(object):
         self.settings = _load_json(self.file)
 
     def get(self, key: str, default=None, env: str = None) -> str:
-        """ Gets the settings value from a given string. """
+        """Gets the settings value from a given string."""
         env_value = os.getenv(f"DATATORCH_{env}") if env is not None else None
         value = self.settings.get(key)
 
         return env_value or value or default
 
     def set(self, key: str, value: Union[str, None]) -> None:
-        """ Saves a value to the settings file. """
+        """Saves a value to the settings file."""
         self.settings[key] = value
         _save_json(self.file, self.settings)
 

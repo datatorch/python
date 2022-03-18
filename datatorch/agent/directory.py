@@ -7,7 +7,7 @@ from datatorch.core import Settings, folder, env, user_settings
 class AgentDirectory(object):
     @staticmethod
     def path() -> str:
-        """ Returns the agents directory """
+        """Returns the agents directory"""
         path = folder.get_app_dir()
         return os.getenv("DATATORCH_AGENT_PATH", os.path.join(path, "agent"))
 
@@ -36,12 +36,12 @@ class AgentDirectory(object):
 
     @property
     def logs_dir(self):
-        """ Directory where agent logs are stored. """
+        """Directory where agent logs are stored."""
         return os.path.join(self.dir, "logs")
 
     @property
     def db_dir(self):
-        """ Sqlite database are stored. """
+        """Sqlite database are stored."""
         return os.path.join(self.dir, "db")
 
     @property
@@ -55,7 +55,7 @@ class AgentDirectory(object):
 
     @property
     def actions_dir(self):
-        """ Directory where actions are stored. """
+        """Directory where actions are stored."""
         return os.path.join(self.dir, "actions")
 
     def open(self, file: str, mode: str):
@@ -65,13 +65,13 @@ class AgentDirectory(object):
         return os.path.join(self.actions_dir, *name.lower().split("/"), version)
 
     def run_dir(self, task_id: str):
-        """ Returns the directory for a given task """
+        """Returns the directory for a given task"""
         path = os.path.join(self.runs_dir, task_id)
         mkdir_exists(path)
         return path
 
     def project_dir(self, project_id: str):
-        """ Returns the directory for a given project """
+        """Returns the directory for a given project"""
         path = os.path.join(self.projects_dir, project_id)
         mkdir_exists(path)
         return path

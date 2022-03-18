@@ -12,7 +12,7 @@ def run(path):
     setup_logging()
 
     async def run_jobs(pipeline: Pipeline):
-        """ Run tasks in parallel """
+        """Run tasks in parallel"""
         tasks = []
         for k, v in pipeline.config.get("jobs").items():
             config = {

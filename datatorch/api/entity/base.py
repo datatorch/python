@@ -22,13 +22,13 @@ class BaseEntity(object):
 
     @classmethod
     def add_fragment(cls, query: str, name: str = None) -> str:
-        """ Appends GraphQL fragment to the query """
+        """Appends GraphQL fragment to the query"""
         return query + cls.fragment(name)
 
     @classmethod
     @functools.lru_cache()
     def fragment(cls, name: str = None) -> str:
-        """ Creates fragment based on class annotations """
+        """Creates fragment based on class annotations"""
 
         annotations = get_annotations(cls)
 
@@ -75,7 +75,7 @@ class BaseEntity(object):
         return dic
 
     def to_json(self, indent: int = 2) -> str:
-        """ Format entity as json """
+        """Format entity as json"""
         return json.dumps(self.dict(), indent=indent)
 
     def create(self, client=None):

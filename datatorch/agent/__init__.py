@@ -54,7 +54,7 @@ def setup_logging() -> None:
 
 
 async def _exit_jobs() -> None:
-    """ Exits active running agent jobs """
+    """Exits active running agent jobs"""
     logger.info(f"Exiting {len(tasks)} active jobs.")
 
     for task in tasks:
@@ -77,7 +77,7 @@ async def _close_transport(transport: WebsocketsTransport):
 
 
 async def _exit_tasks() -> None:
-    """ Exits all active asyncio tasks """
+    """Exits all active asyncio tasks"""
     current_task = asyncio.Task.current_task()
     all_tasks = asyncio.Task.all_tasks()
     not_current_tasks = [task for task in all_tasks if task is not current_task]
@@ -87,7 +87,7 @@ async def _exit_tasks() -> None:
 
 
 async def start() -> None:
-    """ Creates and runs an agent. """
+    """Creates and runs an agent."""
     setup_logging()
 
     click.echo(
@@ -131,7 +131,7 @@ async def start() -> None:
 
 
 async def stop() -> None:
-    """ Stop all run tasks. """
+    """Stop all run tasks."""
 
     print(" ")
 

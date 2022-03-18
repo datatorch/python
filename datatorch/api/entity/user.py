@@ -6,7 +6,7 @@ __all__ = "User"
 
 
 class User(BaseEntity):
-    """ Projects contain datasets, files and annotations. """
+    """Projects contain datasets, files and annotations."""
 
     id: ClassVar[str]
     name: ClassVar[str]

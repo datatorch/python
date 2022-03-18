@@ -70,26 +70,26 @@ _VIEWER = User.add_fragment(
 
 
 class ApiClient(Client):
-    """ Adds simple queries to the client wrapper """
+    """Adds simple queries to the client wrapper"""
 
     def settings(self) -> ApiSettings:
-        """ API instance settings """
+        """API instance settings"""
         return cast(
             ApiSettings, self.query_to_class(ApiSettings, _SETTINGS, path="settings")
         )
 
     def viewer(self) -> User:
-        """ Current logged in user """
+        """Current logged in user"""
         return cast(User, self.query_to_class(User, _VIEWER, path="viewer"))
 
     @overload
     def project(self, id: str) -> Project:  # type: ignore
-        """ Retrieve a project by ID """
+        """Retrieve a project by ID"""
         pass
 
     @overload
     def project(self, login: str, slug: str) -> Project:  # type: ignore
-        """ Retrieve a project by login and slug """
+        """Retrieve a project by login and slug"""
         pass
 
     def project(self, loginOrId: str, slug: str = None) -> Project:
@@ -139,7 +139,7 @@ class ApiClient(Client):
     #     return []
 
     def validate_endpoint(self) -> bool:
-        """ Returns true if provided endpoint is correct. """
+        """Returns true if provided endpoint is correct."""
         try:
             version = self.settings().api_version
             logger.info("Endpoint API version: {}".format(version))

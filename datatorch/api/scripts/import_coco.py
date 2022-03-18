@@ -21,6 +21,7 @@ except:
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def points_to_segmentation(points: List[List[List[float]]]) -> List[List[float]]:
     """
     Converts from:
@@ -42,7 +43,7 @@ def segmentation_to_points(segmentation: List[List[float]]) -> List[List[List[fl
 
 
 def bbox_iou(bb1o: BoundingBox, bb2o: BoundingBox):
-    """ Calculate the Intersection over Union (IoU) of two bounding boxes. """
+    """Calculate the Intersection over Union (IoU) of two bounding boxes."""
     bb1 = {
         "x1": bb1o.x,
         "y1": bb1o.y,
@@ -85,7 +86,7 @@ def has_bbox(bbox: BoundingBox, bboxs: List[tuple], max_iou: float) -> bool:
 
 
 def mask_iou(mask1, mask2):
-    """ Calculate the Intersection over Union (IoU) of two np binary masks. """
+    """Calculate the Intersection over Union (IoU) of two np binary masks."""
     union = mask1 * mask2
     union_area = np.count_nonzero(union)
     if union_area == 0:
@@ -184,14 +185,20 @@ def import_coco(
     _LOGGER.info("Beginning annotation imports...")
     # Iterate each annotations to add them to datatorch
     coco_category_ids = label_mapping.keys()
-    for image_id in tqdm.tqdm(coco.getImgIds(), unit='image', disable=None):
+    for image_id in tqdm.tqdm(coco.getImgIds(), unit="image", disable=None):
         (coco_image,) = coco.loadImgs(ids=image_id)
         image_name = coco_image["file_name"]
 
         if image_base_path is None:
             file_filter = Where(name=image_name)
         else:
-            file_filter = Where(path=str(pathlib.PurePosixPath(image_base_path.strip('/')).joinpath(image_name)))
+            file_filter = Where(
+                path=str(
+                    pathlib.PurePosixPath(image_base_path.strip("/")).joinpath(
+                        image_name
+                    )
+                )
+            )
         dt_files = project.files(file_filter, limit=2)
 
         with tqdm.tqdm.external_write_mode():
@@ -206,8 +213,10 @@ def import_coco(
             dt_file: File = dt_files[0]
             _LOGGER.info(f"[{dt_file.name}] Successfully found file.")
 
-            if dt_file.status == 'COMPLETED':
-                _LOGGER.error(f"{image_name} is already marked as 'COMPLETED', skipping")
+            if dt_file.status == "COMPLETED":
+                _LOGGER.error(
+                    f"{image_name} is already marked as 'COMPLETED', skipping"
+                )
                 continue
 
         coco_annotation_ids = coco.getAnnIds(
@@ -234,9 +243,11 @@ def import_coco(
                         )
 
         with tqdm.tqdm.external_write_mode():
-            _LOGGER.debug(f"[{dt_file.name}] Importing {len(coco_annotations)} coco annotations.")
+            _LOGGER.debug(
+                f"[{dt_file.name}] Importing {len(coco_annotations)} coco annotations."
+            )
         new_annotations = []
-        for anno in tqdm.tqdm(coco_annotations, unit='annotations', disable=None):
+        for anno in tqdm.tqdm(coco_annotations, unit="annotations", disable=None):
             if anno.get("datatorch_id") is not None and ignore_annotations_with_ids:
                 with tqdm.tqdm.external_write_mode():
                     _LOGGER.warning(

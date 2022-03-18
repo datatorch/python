@@ -98,7 +98,7 @@ class File(BaseEntity):
     annotations: List[Annotation]
 
     def create(self, client=None) -> None:
-        """ Imports file """
+        """Imports file"""
         super().create(client=client)
 
         assert self.link_id is not None
@@ -139,7 +139,7 @@ class File(BaseEntity):
         super()._update(obj)
 
     def annotator(self):
-        """ Opens file in annotator """
+        """Opens file in annotator"""
         import webbrowser
 
         url = self.client.api_url.replace("/api", f"/annotate/{self.id}")

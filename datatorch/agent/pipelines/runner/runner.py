@@ -30,11 +30,11 @@ class Runner(object):
         raise NotImplementedError("This method must be implemented.")
 
     def action_dir(self):
-        """ Changes the current work directory to the actions directory. """
+        """Changes the current work directory to the actions directory."""
         os.chdir(self.action.dir)
 
     async def monitor_cmd(self, command: str):
-        """ Excutes a command and monitors stdout for variables and logging. """
+        """Excutes a command and monitors stdout for variables and logging."""
         process = await self.run_cmd(command)
 
         async for log in process.stdout:
@@ -48,11 +48,11 @@ class Runner(object):
             )
 
     def get(self, key: str, default=None):
-        """ Gets a string from config and renders template. """
+        """Gets a string from config and renders template."""
         return self.variables.render(self.config.get(key, default))
 
     def check_for_output(self, string: str) -> bool:
-        """ Parse output variable from string if valid. """
+        """Parse output variable from string if valid."""
         # ::varname::value tranlatest to varname = value
         result = string.split("::", 2)
         if len(result) != 3:
@@ -62,7 +62,7 @@ class Runner(object):
         return True
 
     async def run_cmd(self, command: str, wait: bool = True):
-        """ Runs a command using asyncio """
+        """Runs a command using asyncio"""
         process = await asyncio.create_subprocess_shell(
             command,
             shell=True,

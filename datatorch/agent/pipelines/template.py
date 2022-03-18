@@ -36,7 +36,7 @@ global_variables = {
 
 
 def create_variables_mock(job: Union[AgentJobConfig, dict] = {}):
-    """ Merges config with mocked data."""
+    """Merges config with mocked data."""
     run: AgentRunConfig = {
         "id": "run-id",
         "name": "Action Name Mock",

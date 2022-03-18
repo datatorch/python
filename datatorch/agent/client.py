@@ -58,7 +58,7 @@ class AgentApiClient(object):
         self.session = session
 
     def agent_jobs(self):
-        """ Subscriptions to the agent job assignment namespace. """
+        """Subscriptions to the agent job assignment namespace."""
         # fmt: off
         sub = gql("""
             subscription {
@@ -220,7 +220,7 @@ class AgentApiClient(object):
         return self.execute(mutate, params={"id": step_id, "logs": logs})
 
     async def execute(self, query, *args, params: dict = {}, **kwargs) -> dict:
-        """ Wrapper around execute """
+        """Wrapper around execute"""
         removed_none = dict((k, v) for k, v in params.items() if v is not None)
         if type(query) == str:
             query = gql(query)

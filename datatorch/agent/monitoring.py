@@ -21,7 +21,7 @@ def print_stats(metrics):
 class AgentSystemStats(object):
     @staticmethod
     def initial_stats():
-        """ Returns stats that do not change over time. """
+        """Returns stats that do not change over time."""
         # initialize averaging
         psutil.cpu_percent()
         cpu_freq = psutil.cpu_freq()

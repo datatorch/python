@@ -109,17 +109,17 @@ class Step(object):
 
     @property
     def api(self):
-        """ Agent API Client if it exists. """
+        """Agent API Client if it exists."""
         return self.job and self.job.api
 
     def log(self, message: str):
-        """ Records a log message. """
+        """Records a log message."""
         iso_date = datetime.now(timezone.utc).isoformat()[:-9] + "Z"
         self.logs.append(dict(createdAt=iso_date, message=message))  # type: ignore
         self.logger.info(message)
 
     async def upload_logs(self):
-        """ Uploads saved logs to webserver. """
+        """Uploads saved logs to webserver."""
         if self.id and len(self.logs) > 0:
             logs = self.logs
             self.logs = []

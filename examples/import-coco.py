@@ -57,7 +57,7 @@ if __name__ == "__main__":
     print_project(project)
 
     def category_in_project(name: str) -> Label:
-        """ Returns category in project """
+        """Returns category in project"""
         for cat in labels:
             if cat.name.lower() == name.lower():
                 return cat

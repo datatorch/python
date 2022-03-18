@@ -7,7 +7,7 @@ text = ""
 
 
 class Spinner(object):
-    """ Creates a spinning icon in CLI, useful for indicating progress """
+    """Creates a spinning icon in CLI, useful for indicating progress"""
 
     def __init__(self, string: str = "Loading"):
         global done, text

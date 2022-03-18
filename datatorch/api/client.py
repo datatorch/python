@@ -26,7 +26,7 @@ def _get_token_header(agent: bool = False):
 
 
 class Client(object):
-    """ Wrapper for the DataTorch API including GraphQL and uploading """
+    """Wrapper for the DataTorch API including GraphQL and uploading"""
 
     @classmethod
     def create_socket_transport(
@@ -96,7 +96,7 @@ class Client(object):
     def execute_files(
         self, paths: List[str], *args, params: dict = {}, **kwargs
     ) -> dict:
-        """ Combine and excute query of multiple GraphQL files """
+        """Combine and excute query of multiple GraphQL files"""
         query = ""
         for path in paths:
             with open(path) as f:
@@ -104,14 +104,14 @@ class Client(object):
         return self.execute(query, *args, params=params, **kwargs)
 
     def execute_file(self, path: str, *args, params: dict = {}, **kwargs) -> dict:
-        """ Excute query from GraphQL file """
+        """Excute query from GraphQL file"""
         with open(path) as f:
             return self.execute(f.read(), *args, params=params, **kwargs)
 
     def execute(
         self, query: Union[DocumentNode, str], *args, params: dict = {}, **kwargs
     ) -> dict:
-        """ Wrapper around execute """
+        """Wrapper around execute"""
         removed_none = dict((k, v) for k, v in params.items() if v is not None)
         query_doc = gql(query) if isinstance(query, str) else query
         return self.client.execute(

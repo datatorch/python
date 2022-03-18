@@ -7,7 +7,7 @@ def is_class_of(cls: type, class_or_tuple) -> bool:
 
 
 def get_annotations(obj: object):
-    """ Returns the annotations of a class """
+    """Returns the annotations of a class"""
     members = getmembers(obj)
     for _, v in enumerate(members):
         if v[0] == "__annotations__":
