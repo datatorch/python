@@ -6,7 +6,7 @@ from ..spinner import Spinner
 from .logout import logout
 
 
-@click.command(help="Login to DataTorch and store credentials locally.")
+@click.command(help="Login to DataTorch and store credentials locally")
 @click.argument("key", nargs=-1)
 @click.option(
     "--host",
