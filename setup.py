@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fp:
     long_description = fp.read()
 
 requirements = [
-    "Click~=7.0",
+    "Click==8.0.0",
     "numpy",
     "gql==3.0.0a6",
     "websockets",
