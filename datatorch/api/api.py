@@ -143,7 +143,12 @@ class ApiClient(Client):
         endpoint = f"{self.api_url}/file/v1/upload/{storageId}?path={pathToUploadTo}&import=false&datasetId="
         print(endpoint)
         # r = requests.post(endpoint, files={"file": file}, user=self.viewer)
-        r = requests.post(endpoint, files={"file": file}, headers={self.token_header: self._api_token}, stream=True)
+        r = requests.post(
+            endpoint,
+            files={"file": file},
+            headers={self.token_header: self._api_token},
+            stream=True,
+        )
         print(r.text)
 
     # def files(self, where: Where = None, limit: int = 400) -> List[File]:
