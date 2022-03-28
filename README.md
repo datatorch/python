@@ -10,7 +10,7 @@
 <p align="center">
   <img alt="Package Version" src="https://img.shields.io/pypi/v/datatorch">
   <img alt="Python Versions" src="https://img.shields.io/pypi/pyversions/datatorch">
-  [![Package](https://github.com/datatorch/python/actions/workflows/package.yml/badge.svg)](https://github.com/datatorch/python/actions/workflows/package.yml)
+  <img alt="Build Status" src="https://img.shields.io/github/workflow/status/datatorch/python/package">
 </p>
 
 ```bash
