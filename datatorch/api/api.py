@@ -1,7 +1,8 @@
-import logging, requests, os, cgi
+import logging, os, cgi, requests
 from pathlib import Path
 
-from typing import overload, cast
+from typing import IO, overload, cast
+from urllib import request
 from urllib.parse import urlencode
 
 from .client import Client
@@ -134,6 +135,16 @@ class ApiClient(Client):
                 f.write(chunk)
 
         return name, result
+
+    def upload_to_default_filesource(self, project: Project, file: IO, **kwargs):
+        """Takes in a project and file, and uploads the file to DataTorch Storage"""
+        storageId = project.storage_link_default().id
+        pathToUploadTo = ""
+        endpoint = f"{self.api_url}/file/v1/upload/{storageId}?path={pathToUploadTo}&import=false&datasetId="
+        print(endpoint)
+        # r = requests.post(endpoint, files={"file": file}, user=self.viewer)
+        r = requests.post(endpoint, files={"file": file}, headers={self.token_header: self._api_token}, stream=True)
+        print(r.text)
 
     # def files(self, where: Where = None, limit: int = 400) -> List[File]:
     #     return []

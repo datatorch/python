@@ -50,6 +50,18 @@ _STORAGE_LINKS = StorageLink.add_fragment(
     """
 )
 
+_STORAGE_LINK_DEFAULT = StorageLink.add_fragment(
+    """
+    query GetStorageLinkDefault($projectId: ID!) {
+      project: projectById(id: $projectId) {
+        storageLinkDefault {
+          ...StorageLinkFields
+        }
+      }
+    }
+    """
+)
+
 _DATASET_FILES = File.add_fragment(
     """
     query GetProjectFiles(
@@ -138,6 +150,17 @@ class Project(BaseEntity):
                 StorageLink,
                 _STORAGE_LINKS,
                 path="project.storageLinks",
+                params={"projectId": self.id},
+            ),
+        )
+
+    def storage_link_default(self) -> StorageLink:
+        return cast(
+            StorageLink,
+            self.client.query_to_class(
+                StorageLink,
+                _STORAGE_LINK_DEFAULT,
+                path="project.storageLinkDefault",
                 params={"projectId": self.id},
             ),
         )

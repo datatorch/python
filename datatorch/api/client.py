@@ -1,4 +1,4 @@
-from typing import List, Union, cast
+from typing import List, Union, cast, IO
 
 from gql import Client as GqlClient, gql
 from gql.transport.transport import Transport
@@ -9,7 +9,6 @@ from graphql.language.ast import DocumentNode
 from datatorch.utils import normalize_api_url
 from datatorch.core import user_settings
 from typing import Any, TypeVar, Type
-
 
 T = TypeVar("T")
 
