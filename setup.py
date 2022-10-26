@@ -13,8 +13,8 @@ requirements = [
     "websockets",
     "websocket-client",
     "requests",
-    "typing_extensions~=3.7",
-    "psutil~=5.7.0",
+    "typing_extensions>=4.1.0",
+    "psutil~=5.9.3",
     "aiodocker~=0.19.0",
     "Jinja2~=2.0",
     "PyYAML~=5.0",
@@ -26,7 +26,7 @@ requirements_agents = []
 
 setup(
     name="datatorch",
-    version="0.4.4",
+    version="0.4.6",
     description="A CLI and library for interacting with DataTorch.",
     author="DataTorch",
     author_email="support@datatorch.io",
