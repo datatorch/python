@@ -50,8 +50,8 @@ class Client(object):
 
     def __init__(
         self,
-        api_key: str = None,
-        api_url: str = None,
+        api_key: str = "",
+        api_url: str = "",
         sockets: bool = False,
         agent: bool = False,
     ):
