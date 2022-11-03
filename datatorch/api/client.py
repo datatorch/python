@@ -59,7 +59,11 @@ class Client(object):
         self._is_agent = agent
 
         self._api_token = api_key or user_settings.api_url
-        self._api_url = normalize_api_url(api_url or user_settings.api_url)
+        if not api_url is None:
+            self._api_url = normalize_api_url(api_url)
+        if not user_settings.api_url is None:
+            self._api_url = normalize_api_url(user_settings.api_url)
+
         self._graphql_url = f"{self.api_url}/graphql"
 
         self.transport = self.create_transport(
