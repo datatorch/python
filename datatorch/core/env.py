@@ -1,3 +1,4 @@
+# Edit this to set custom variables
 AGENT_ID = "DATATORCH_AGENT_ID"
 API_KEY = "DATATORCH_API_KEY"
 API_URL = "DATATORCH_API_URL"

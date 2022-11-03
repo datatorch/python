@@ -50,8 +50,8 @@ class Client(object):
 
     def __init__(
         self,
-        api_key: str = "",
-        api_url: str = "",
+        api_key: str = None,
+        api_url: str = None,
         sockets: bool = False,
         agent: bool = False,
     ):
@@ -59,6 +59,9 @@ class Client(object):
         self._is_agent = agent
 
         self._api_token = api_key or user_settings.api_url
+        # This is to fix init bugs
+        if api_url is None and user_settings.api_url is None:
+            self._api_url = "https://datatorch.io"
         if not api_url is None:
             self._api_url = normalize_api_url(api_url)
         if not user_settings.api_url is None:
