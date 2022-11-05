@@ -9,8 +9,8 @@ with open("README.md", "r", encoding="utf-8") as fp:
 requirements = [
     "Click==8.0.0",
     "numpy",
-    "gql==3.0.0a6",
-    "websockets",
+    "gql==3.4.0",
+    "websockets==10.4",
     "websocket-client",
     "requests",
     "typing_extensions>=4.1.0",
