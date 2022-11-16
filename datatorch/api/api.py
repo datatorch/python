@@ -1,9 +1,12 @@
-import logging, os, cgi, requests
+import logging, os, cgi, requests, glob
 from pathlib import Path
 
 from typing import IO, overload, cast
 from urllib import request
 from urllib.parse import urlencode
+
+from datatorch.api.entity.dataset import Dataset
+from datatorch.api.entity.storage_link import StorageLink
 
 from .client import Client
 
@@ -136,12 +139,14 @@ class ApiClient(Client):
 
         return name, result
 
-    def upload_to_default_filesource(self, project: Project, file: IO, **kwargs):
-        """Takes in a project and file, and uploads the file to DataTorch Storage"""
+    def upload_to_default_filesource(
+        self, project: Project, file: IO, dataset: Dataset = None, storageFolderName=None, **kwargs
+    ):
+        """Takes in a project, file, and optional dataset, and uploads the file to DataTorch Storage"""
         storageId = project.storage_link_default().id
-        pathToUploadTo = ""
-        endpoint = f"{self.api_url}/file/v1/upload/{storageId}?path={pathToUploadTo}&import=false&datasetId="
-        print(endpoint)
+        datasetId = "" if dataset is None else dataset.id
+        importFiles = 'false' if dataset is None else 'true'
+        endpoint = f"{self.api_url}/file/v1/upload/{storageId}?path={storageFolderName}&import={importFiles}&datasetId={datasetId}"
         # r = requests.post(endpoint, files={"file": file}, user=self.viewer)
         r = requests.post(
             endpoint,
@@ -149,7 +154,44 @@ class ApiClient(Client):
             headers={self.token_header: self._api_token},
             stream=True,
         )
-        print(r.text)
+        print(r.text + " " + endpoint)
+
+    def glob_upload_folder(
+        self,
+        project: Project,
+        uploadingGlobPath: str,
+        storageFolderName: str,
+        folderSplit = 1000,
+        dataset: Dataset = None,
+        recursive=False,
+        **kwargs,
+    ):
+        """Uploads a folder of files to DataTorch Storage, creating a new folder in storage for every 1000 files"""
+        folderIndex = 0
+        useFolderIndexes = False
+        file_list = glob.glob(uploadingGlobPath, recursive=recursive)
+        if file_list.__len__() > 1000:
+            useFolderIndexes = True
+
+        uploadFolderName = (
+            storageFolderName
+            if not useFolderIndexes
+            else storageFolderName + "_" + str(folderIndex)
+        )
+        uploadCount = 0
+        uploadModCount = 0
+
+        for file in file_list:
+            if uploadCount != 0 and uploadCount%folderSplit == 0:
+                folderIndex += 1
+                uploadFolderName = storageFolderName + "_" + str(folderIndex)
+            file = open(file, "rb")
+            self.upload_to_default_filesource(
+                project=project, file=file, storageFolderName=uploadFolderName, dataset=dataset
+            )
+            uploadCount += 1
+
+        print(str(uploadCount) + " files uploaded, into " + str(folderIndex+1) + " created folders")
 
     # def files(self, where: Where = None, limit: int = 400) -> List[File]:
     #     return []

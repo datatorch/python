@@ -8,7 +8,7 @@ _CREATE_DATASET = """
     mutation CreateDataset(
       $projectId: ID!
       $name: String!
-      description: String
+      $description: String
     ) {
       dataset: createDataset(
         input: {
@@ -38,7 +38,7 @@ class Dataset(BaseEntity):
         super().create(client=client)
 
         assert self.project_id is not None
-        results = self.execute(
+        results = self.client.execute(
             _CREATE_DATASET,
             params={
                 "projectId": self.project_id,
