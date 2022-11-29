@@ -160,7 +160,7 @@ class ApiClient(Client):
     def glob_upload_folder(
         self,
         project: Project,
-        uploadingGlobPath: str,
+        uploadingFromGlob: str,
         storageFolderName: str,
         folderSplit = 1000,
         dataset: Dataset = None,
@@ -170,7 +170,7 @@ class ApiClient(Client):
         """Uploads a folder of files to DataTorch Storage, creating a new folder in storage for every 1000 files"""
         folderIndex = 0
         useFolderIndexes = False
-        file_list = glob.glob(uploadingGlobPath, recursive=recursive)
+        file_list = glob.glob(uploadingFromGlob, recursive=recursive)
         if file_list.__len__() > 1000:
             useFolderIndexes = True
 
