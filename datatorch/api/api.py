@@ -140,10 +140,11 @@ class ApiClient(Client):
         return name, result
 
     def upload_to_default_filesource(
-        self, project: Project, file: IO, dataset: Dataset = None, storageFolderName=None, **kwargs
+        self, project: Project, file: IO, storageFolderName=None, dataset: Dataset = None, **kwargs
     ):
         """Takes in a project, file, and optional dataset, and uploads the file to DataTorch Storage"""
         storageId = project.storage_link_default().id
+        storageFolderName = "" if storageFolderName is None else storageFolderName
         datasetId = "" if dataset is None else dataset.id
         importFiles = 'false' if dataset is None else 'true'
         endpoint = f"{self.api_url}/file/v1/upload/{storageId}?path={storageFolderName}&import={importFiles}&datasetId={datasetId}"
