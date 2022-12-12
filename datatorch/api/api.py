@@ -180,7 +180,6 @@ class ApiClient(Client):
             else storageFolderName + "_" + str(folderIndex)
         )
         uploadCount = 0
-        uploadModCount = 0
 
         for file in file_list:
             if uploadCount != 0 and uploadCount%folderSplit == 0:
