@@ -5,6 +5,7 @@ import numpy as np
 import click
 import logging
 import pathlib
+import tqdm
 
 from typing import List
 from .utils.simplify import simplify_points
@@ -314,7 +315,6 @@ def import_coco(
                 new_annotations.append(annotation)
 
         if len(new_annotations) > 0:
-            console.log(new_annotations)
             # Insert new annotations
             api.execute(_CREATE_ANNOTATIONS, params={"annotations": new_annotations})
 
