@@ -122,11 +122,13 @@ def simplify_segmentation(segmentation: List[List[float]], tolerance: float = 1)
     simplified = [polygon for polygon in simplified if len(polygon) >= 6]
     return points_to_segmentation(simplified)
 
+
 _CREATE_ANNOTATIONS = """
     mutation CreateAnnotations($annotations: [CreateAnnotationInput!]!) {
         createAnnotations(annotations: $annotations)
     }
 """
+
 
 def import_coco(
     file_path: str,

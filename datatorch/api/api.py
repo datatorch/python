@@ -140,13 +140,18 @@ class ApiClient(Client):
         return name, result
 
     def upload_to_default_filesource(
-        self, project: Project, file: IO, storageFolderName=None, dataset: Dataset = None, **kwargs
+        self,
+        project: Project,
+        file: IO,
+        storageFolderName=None,
+        dataset: Dataset = None,
+        **kwargs,
     ):
         """Takes in a project, file, and optional dataset, and uploads the file to DataTorch Storage"""
         storageId = project.storage_link_default().id
         storageFolderName = "" if storageFolderName is None else storageFolderName
         datasetId = "" if dataset is None else dataset.id
-        importFiles = 'false' if dataset is None else 'true'
+        importFiles = "false" if dataset is None else "true"
         endpoint = f"{self.api_url}/file/v1/upload/{storageId}?path={storageFolderName}&import={importFiles}&datasetId={datasetId}"
         # r = requests.post(endpoint, files={"file": file}, user=self.viewer)
         r = requests.post(
@@ -162,7 +167,7 @@ class ApiClient(Client):
         project: Project,
         uploadingFromGlob: str,
         storageFolderName: str,
-        folderSplit = 1000,
+        folderSplit=1000,
         dataset: Dataset = None,
         recursive=False,
         **kwargs,
@@ -182,16 +187,24 @@ class ApiClient(Client):
         uploadCount = 0
 
         for file in file_list:
-            if uploadCount != 0 and uploadCount%folderSplit == 0:
+            if uploadCount != 0 and uploadCount % folderSplit == 0:
                 folderIndex += 1
                 uploadFolderName = storageFolderName + "_" + str(folderIndex)
             file = open(file, "rb")
             self.upload_to_default_filesource(
-                project=project, file=file, storageFolderName=uploadFolderName, dataset=dataset
+                project=project,
+                file=file,
+                storageFolderName=uploadFolderName,
+                dataset=dataset,
             )
             uploadCount += 1
 
-        print(str(uploadCount) + " files uploaded, into " + str(folderIndex+1) + " created folders")
+        print(
+            str(uploadCount)
+            + " files uploaded, into "
+            + str(folderIndex + 1)
+            + " created folders"
+        )
 
     # def files(self, where: Where = None, limit: int = 400) -> List[File]:
     #     return []

@@ -3,8 +3,10 @@ import logging
 import platform
 import asyncio
 
+from psutil._common import scpufreq
 from datetime import datetime, timezone
 from datatorch.utils.package import get_version
+from collections import namedtuple
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +26,14 @@ class AgentSystemStats(object):
         """Returns stats that do not change over time."""
         # initialize averaging
         psutil.cpu_percent()
-        cpu_freq = psutil.cpu_freq()
+
+        # For M1 macs psutil doesnt work to get freq
+        try:
+            cpu_freq: scpufreq = psutil.cpu_freq()
+        except:
+            logger.info("CPU Freq could not be obtained and will be logged as 0.")
+            cpu_freq = scpufreq(0, 0, 0)
+
         mem = psutil.virtual_memory()
 
         return {
@@ -45,6 +54,7 @@ class AgentSystemStats(object):
     def stats():
         mem = psutil.virtual_memory()
         la_1, la_5, la_15 = psutil.getloadavg()
+
         stats = {
             "sampledAt": datetime.now(timezone.utc).isoformat()[:-9] + "Z",
             "avgLoad1": la_1,
@@ -65,6 +75,7 @@ class AgentSystemStats(object):
     async def start(self):
         try:
             logger.info("Sending initial system metrics.")
+            logger.info(self.initial_stats())
             await self.agent.api.initial_metrics(self.initial_stats())
 
             logger.info("Starting system monitoring task.")

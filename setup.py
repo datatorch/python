@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import sys
 
-assert sys.version_info >= (3, 6, 0), "DataTorch requires Python 3.6+"
+assert sys.version_info >= (3, 6, 0), "DataTorch requires Python 3.7+"
 
 with open("README.md", "r", encoding="utf-8") as fp:
     long_description = fp.read()
@@ -14,7 +14,7 @@ requirements = [
     "websocket-client",
     "requests",
     "typing_extensions>=4.1.0",
-    "psutil~=5.9.3",
+    "psutil~=5.9.4",
     "aiodocker~=0.19.0",
     "Jinja2~=2.0",
     "PyYAML~=5.0",
@@ -27,7 +27,7 @@ requirements_agents = []
 
 setup(
     name="datatorch",
-    version="0.4.6.6",
+    version="0.4.6.7",
     description="A CLI and library for interacting with DataTorch.",
     author="DataTorch",
     author_email="support@datatorch.io",
@@ -40,7 +40,7 @@ setup(
     long_description_content_type="text/markdown",
     install_requires=requirements,
     extras_require={"agent": requirements_agents},
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     license="MIT license",
     zip_safe=False,
     include_package_data=True,
@@ -50,7 +50,6 @@ setup(
         "Framework :: Pytest",
         "Intended Audience :: Developers",
         "Natural Language :: English",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
