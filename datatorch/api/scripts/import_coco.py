@@ -5,11 +5,8 @@ import numpy as np
 import click
 import logging
 import pathlib
-import tqdm
 
 from typing import List
-
-from datatorch.api.entity.annotation import _CREATE_ANNOTATION
 from .utils.simplify import simplify_points
 
 from .. import ApiClient, BoundingBox, File, Where, Project
@@ -125,6 +122,11 @@ def simplify_segmentation(segmentation: List[List[float]], tolerance: float = 1)
     simplified = [polygon for polygon in simplified if len(polygon) >= 6]
     return points_to_segmentation(simplified)
 
+_CREATE_ANNOTATIONS = """
+    mutation CreateAnnotations($annotations: [CreateAnnotationInput!]!) {
+        createAnnotations(annotations: $annotations)
+    }
+"""
 
 def import_coco(
     file_path: str,
@@ -312,7 +314,7 @@ def import_coco(
         if len(new_annotations) > 0:
             console.log(new_annotations)
             # Insert new annotations
-            api.execute(_CREATE_ANNOTATION, params={"annotations": new_annotations})
+            api.execute(_CREATE_ANNOTATIONS, params={"annotations": new_annotations})
 
         with tqdm.tqdm.external_write_mode():
             _LOGGER.info(f"[{dt_file.name}] Added {len(new_annotations)} annnotations.")
