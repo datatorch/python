@@ -5,8 +5,6 @@ import numpy as np
 import click
 import logging
 import pathlib
-import tqdm
-import itertools
 
 from typing import List
 from .utils.simplify import simplify_points
@@ -124,21 +122,11 @@ def simplify_segmentation(segmentation: List[List[float]], tolerance: float = 1)
     simplified = [polygon for polygon in simplified if len(polygon) >= 6]
     return points_to_segmentation(simplified)
 
-def binary_mask_to_rle(mask):
-    rle = {'counts': [], 'size': list(mask.shape)}
-    counts = rle.get('counts')
-    for i, (value, elements) in enumerate(itertools.groupby(mask.ravel(order='F'))):
-        if i == 0 and value == 1:
-            counts.append(0)
-        counts.append(len(list(elements)))
-    return rle
-
 _CREATE_ANNOTATIONS = """
     mutation CreateAnnotations($annotations: [CreateAnnotationInput!]!) {
         createAnnotations(annotations: $annotations)
     }
 """
-
 
 def import_coco(
     file_path: str,
@@ -324,6 +312,7 @@ def import_coco(
                 new_annotations.append(annotation)
 
         if len(new_annotations) > 0:
+            console.log(new_annotations)
             # Insert new annotations
             api.execute(_CREATE_ANNOTATIONS, params={"annotations": new_annotations})
 
