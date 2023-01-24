@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import sys
 
-assert sys.version_info >= (3, 6, 0), "DataTorch requires Python 3.7+"
+assert sys.version_info >= (3, 7, 0), "DataTorch requires Python 3.7+"
 
 with open("README.md", "r", encoding="utf-8") as fp:
     long_description = fp.read()
@@ -27,7 +27,7 @@ requirements_agents = []
 
 setup(
     name="datatorch",
-    version="0.4.6.7",
+    version="0.4.6.8",
     description="A CLI and library for interacting with DataTorch.",
     author="DataTorch",
     author_email="support@datatorch.io",
