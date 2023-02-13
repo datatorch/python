@@ -38,9 +38,9 @@ class GitCloneBuilder(object):
         if self._branch:
             base += f"--branch {self._branch} "
         # Double quotes for Macs which allow spaces in dir names
-        base += f"\"{self.repo}\" "
+        base += f'"{self.repo}" '
         if self._path:
-            base += f"\"{self._path}\" "
+            base += f'"{self._path}" '
         return base
 
 
@@ -66,7 +66,7 @@ class ActionConfig(object):
             self.name = self.name.lower().replace("datatorch/", "datatorch-actions/")
 
         # I took this out because git:// fails to connect if the port is blocked
-        #self.git = self.git or f"git://github.com/{self.name}.git"
+        # self.git = self.git or f"git://github.com/{self.name}.git"
         self.git = self.git or f"https://github.com/{self.name}.git"
         self.depth: int = 1
 

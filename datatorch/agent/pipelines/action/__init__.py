@@ -30,9 +30,7 @@ async def get_action(config: ActionConfig, step: "Step" = None) -> Action:
             "Action found locally ({}@{}).".format(config.name, config.version)
         )
     else:
-        logger.debug(
-            "Downloading action {}@{}.".format(config.name, config.version)
-        )
+        logger.debug("Downloading action {}@{}.".format(config.name, config.version))
         await config.download()
 
     return Action(config, action_dir, step=step)

@@ -21,8 +21,10 @@ class PythonRunner(Runner):
         # Ok this command parsing stuff is to handle Application Support folder in Macs
         # Because there are spaces in the folder name
         main_command_spaces = os.path.join(self.action.dir, main)
-        main_command_nospaces = main_command_spaces.replace(" ","\ ")
+        main_command_nospaces = main_command_spaces.replace(" ", "\ ")
 
         json_input = json.dumps(self.variables.inputs).replace("'", '\\"')
 
-        await self.monitor_cmd(f"{sys.executable} {main_command_nospaces} '{json_input}'")
+        await self.monitor_cmd(
+            f"{sys.executable} {main_command_nospaces} '{json_input}'"
+        )
