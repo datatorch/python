@@ -23,7 +23,6 @@ def print_project(project):
 
 
 if __name__ == "__main__":
-
     # ----- Settings -----
 
     # DataTorch project ID

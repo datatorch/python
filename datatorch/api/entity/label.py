@@ -7,7 +7,6 @@ __all__ = "Label"
 
 
 class Label(BaseEntity):
-
     id: ClassVar[str]
     name: ClassVar[str]
     color: ClassVar[str]

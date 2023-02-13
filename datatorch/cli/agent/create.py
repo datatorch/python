@@ -32,7 +32,6 @@ def create_agent(name: str) -> dict:
 @click.command()
 @click.pass_context
 def create(ctx):
-
     agent_settings = agent_directory.settings
 
     if agent_settings.agent_id:

@@ -131,7 +131,6 @@ class Client(object):
         return self.to_class(Entity, results, path=path)
 
     def to_class(self, Entity, results: Union[dict, list, None], path: str = ""):
-
         for key in path.split("."):
             results = results.get(key)  # type: ignore
 

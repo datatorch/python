@@ -41,7 +41,6 @@ _UPDATE_SOURCE = """
 
 
 class Source(BaseEntity):
-
     id: str
     type: str
     annotation_id: str

@@ -10,7 +10,6 @@ __all__ = "Segmentations"
 
 
 class Segmentations(Source):
-
     id: str
     type: str = "PaperSegmentations"
     path_data: List[Segment]

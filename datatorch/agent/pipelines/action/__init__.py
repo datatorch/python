@@ -19,7 +19,6 @@ logger = logging.getLogger("datatorch.agent.action")
 
 
 async def get_action(config: ActionConfig, step: "Step" = None) -> Action:
-
     # Get actions directory
     action_dir = agent_directory.action_dir(config.name, config.version)
     folder_exists = os.path.exists(action_dir)

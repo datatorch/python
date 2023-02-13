@@ -47,7 +47,6 @@ class BaseEntity(object):
         return fragment
 
     def __init__(self, obj: dict = {}, client: Client = None, **kwargs) -> None:
-
         # Init all values to None
         keys = get_annotations(self.__class__).keys()
         for key in keys:

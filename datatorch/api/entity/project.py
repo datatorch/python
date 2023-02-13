@@ -171,7 +171,6 @@ class Project(BaseEntity):
         entity.client = self.client
 
         if isinstance(entity, Dataset):
-
             # results = self.client.execute(ADD_DATASET, params={
             #     'projectId': self.id, 'name': entity.name, 'description': entity.description
             # })

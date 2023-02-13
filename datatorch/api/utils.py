@@ -8,7 +8,6 @@ def map_entities(entities: List[object], EntityClass, client: Client = None) -> 
 
 
 class Bulk(object):
-
     __slot__ = ("entities",)
 
     entities: List[BaseEntity]

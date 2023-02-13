@@ -7,7 +7,6 @@ __all__ = "StorageLink"
 
 
 class StorageLink(BaseEntity):
-
     id: ClassVar[str]
     project_id: ClassVar[str]
     name: ClassVar[str]

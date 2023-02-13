@@ -10,7 +10,6 @@ class AgentAPIHandler(logging.Handler):
         self.size = size
 
     def emit(self, record: logging.LogRecord):
-
         self.records.append(record)
 
         if len(self.records) >= self.size:

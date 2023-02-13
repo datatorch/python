@@ -24,7 +24,6 @@ _CREATE_DATASET = """
 
 
 class Dataset(BaseEntity):
-
     id: str
     name: str
     description: str

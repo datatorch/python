@@ -77,7 +77,6 @@ class Step(object):
         await self.api.update_step(variables)
 
     async def run(self, variables: Variables) -> dict:
-
         # Upload logs in the background.
         task = asyncio.create_task(self.log_uploader())
 

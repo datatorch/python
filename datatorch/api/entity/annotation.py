@@ -34,7 +34,6 @@ _CREATE_ANNOTATION = """
 
 
 class Annotation(BaseEntity):
-
     id: str
     name: str
     color: str

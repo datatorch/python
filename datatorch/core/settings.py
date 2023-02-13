@@ -55,7 +55,6 @@ class UserSettings(Settings):
 
 
 def _load_json(path: str) -> dict:
-
     try:
         with open(path) as fr:
             output = fr.read()
