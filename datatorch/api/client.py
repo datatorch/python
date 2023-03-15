@@ -143,13 +143,22 @@ class Client(object):
             return list(map(lambda e: Entity(e, self), results))
 
         return Entity(results, self)
-    
+
     def download_file(
         self,
         id: str,
         name: str = "",
         directory: str = "./",
+        skip: bool = True
+        # For now, skip does nothing
     ):
+        # If it exists and skip is true, do not download
+        name = os.path.join(directory, name)
+        name = os.path.abspath(name)
+
+        if os.path.isfile(name) & skip == True:
+            return name, None
+
         query_string = urlencode({"download": "true", "stream": "true"})
         url = normalize_api_url(self.api_url)
         download_url = f"{url}/file/v1/{id}/{name}?{query_string}"
@@ -164,6 +173,7 @@ class Client(object):
         name = name or value["filename"]
         name = os.path.join(directory, name)
         name = os.path.abspath(name)
+
         os.makedirs(os.path.dirname(name), exist_ok=True)
 
         with open(name, "wb") as f:

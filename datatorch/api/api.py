@@ -109,12 +109,12 @@ class ApiClient(Client):
     #     )
 
     def project(self, idOrSlug: str) -> Project:
-        if idOrSlug.__contains__('/'):
-            tokens = idOrSlug.split('/')
+        if idOrSlug.__contains__("/"):
+            tokens = idOrSlug.split("/")
             params = {"login": tokens[0], "slug": tokens[1]}
             query = _PROJECT_BY_NAME
-        
-        if not idOrSlug.__contains__('/'):
+
+        if not idOrSlug.__contains__("/"):
             params = {"id": idOrSlug}
             query = _PROJECT_BY_ID
 

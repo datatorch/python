@@ -21,7 +21,7 @@ requirements = [
     "aiostream~=0.4.0",
     "markupsafe==2.0.1",
     "requests_toolbelt==0.10.1",
-    "tqdm~=4.65.0"
+    "tqdm~=4.65.0",
 ]
 
 requirements_agents = []
