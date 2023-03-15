@@ -7,7 +7,7 @@ from urllib.parse import urlencode
 
 from datatorch.api.entity.dataset import Dataset
 from datatorch.api.entity.storage_link import StorageLink
-
+from datatorch.utils import normalize_api_url
 from .client import Client
 
 from .entity.file import File
@@ -96,12 +96,26 @@ class ApiClient(Client):
         """Retrieve a project by login and slug"""
         pass
 
-    def project(self, loginOrId: str, slug: str = None) -> Project:
-        if slug:
-            params = {"login": loginOrId, "slug": slug}
+    # def project(self, loginOrId: str, slug: str = None) -> Project:
+    #     if slug:
+    #         params = {"login": loginOrId, "slug": slug}
+    #         query = _PROJECT_BY_NAME
+    #     else:
+    #         params = {"id": loginOrId}
+    #         query = _PROJECT_BY_ID
+
+    #     return cast(
+    #         Project, self.query_to_class(Project, query, path="project", params=params)
+    #     )
+
+    def project(self, idOrSlug: str) -> Project:
+        if idOrSlug.__contains__('/'):
+            tokens = idOrSlug.split('/')
+            params = {"login": tokens[0], "slug": tokens[1]}
             query = _PROJECT_BY_NAME
-        else:
-            params = {"id": loginOrId}
+        
+        if not idOrSlug.__contains__('/'):
+            params = {"id": idOrSlug}
             query = _PROJECT_BY_ID
 
         return cast(
@@ -112,32 +126,6 @@ class ApiClient(Client):
         return cast(
             File, self.query_to_class(File, _FILE, path="file", params={"fileId": id})
         )
-
-    def download_file(
-        self,
-        id: str,
-        name: str = "",
-        directory: str = "./",
-    ):
-        query_string = urlencode({"download": "true", "stream": "true"})
-        download_url = f"{self.api_url}/file/v1/{id}/{name}?{query_string}"
-
-        result = requests.get(
-            download_url, headers={self.token_header: self._api_token}, stream=True
-        )
-
-        content = result.headers["content-disposition"]
-        _, value = cgi.parse_header(content)
-
-        name = name or value["filename"]
-        name = os.path.join(directory, name)
-        name = os.path.abspath(name)
-
-        with open(name, "wb") as f:
-            for chunk in result.iter_content(1024):
-                f.write(chunk)
-
-        return name, result
 
     def upload_to_default_filesource(
         self,

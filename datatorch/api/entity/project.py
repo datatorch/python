@@ -1,3 +1,4 @@
+import json
 from typing import List, Union
 
 from ..where import Where
@@ -8,6 +9,7 @@ from .file import File
 from .storage_link import StorageLink
 
 from typing import cast
+import tqdm
 
 __all__ = "Project"
 
@@ -116,6 +118,11 @@ class Project(BaseEntity):
                 params={"projectId": self.id},
             ),
         )
+    
+    def dataset(self, datasetName: str):
+        projectDatasets = self.datasets()
+        dataset = [obj for obj in projectDatasets if obj.name == datasetName]
+        return dataset[0]
 
     def files(self, where: Where = None, limit=500, page=1) -> List[File]:
         if where is None:
@@ -164,6 +171,52 @@ class Project(BaseEntity):
                 params={"projectId": self.id},
             ),
         )
+    
+    def exportSchemas(self):
+      GetSchemas = """
+        query GetNewestExport($id: ID!) {
+          project: projectById(id: $id){
+            exportSchemas{ 
+              id
+              name
+              newestExport {
+                artifacts {
+                  id
+                  name
+                }
+              }
+            }
+          }
+        }
+      """
+      schemas = self.client.execute(GetSchemas, params={"id": self.id})["project"]["exportSchemas"]
+      return schemas
+    
+    def exportSchema(self, name: str):
+      for schema in self.exportSchemas():
+        if schema["name"] == name:
+          selectedSchema = schema
+      return selectedSchema
+    
+    def download(self, schemaNameOrObject, directory:str = "./"):
+      if type(schemaNameOrObject) == str:
+         schemaNameOrObject = self.exportSchema(schemaNameOrObject)
+      
+      exportFileId: str = schemaNameOrObject['newestExport']['artifacts'][0]['id']
+      exportFileName: str = schemaNameOrObject['newestExport']['artifacts'][0]['name']
+      
+      print('Downloading ' + exportFileName + '...')
+      exportPath, result = self.client.download_file(exportFileId, exportFileName, directory)
+
+      with open(exportPath) as coco_file:
+         coco = json.load(coco_file)
+
+      print('Downloading ' + str(len(coco["images"])) + ' files...')  
+      for image in tqdm.tqdm(coco["images"]):
+          # Collect the filename, and the datatorch ID to download via datatorch, and not directly the source Blob, S3 etc.
+          file_id = image["datatorch_id"]
+          file_name = image["file_name"]
+          self.client.download_file(file_id, name=file_name, directory=directory)
 
     def add(self, entity: AddableEntity):
         """Add entity to project"""

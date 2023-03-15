@@ -1,4 +1,6 @@
 from typing import List, Union, cast, IO
+import requests, glob, os, cgi
+from urllib.parse import urlencode
 
 from gql import Client as GqlClient, gql
 from gql.transport.transport import Transport
@@ -141,3 +143,31 @@ class Client(object):
             return list(map(lambda e: Entity(e, self), results))
 
         return Entity(results, self)
+    
+    def download_file(
+        self,
+        id: str,
+        name: str = "",
+        directory: str = "./",
+    ):
+        query_string = urlencode({"download": "true", "stream": "true"})
+        url = normalize_api_url(self.api_url)
+        download_url = f"{url}/file/v1/{id}/{name}?{query_string}"
+
+        result = requests.get(
+            download_url, headers={self.token_header: self._api_token}, stream=True
+        )
+
+        content = result.headers["content-disposition"]
+        _, value = cgi.parse_header(content)
+
+        name = name or value["filename"]
+        name = os.path.join(directory, name)
+        name = os.path.abspath(name)
+        os.makedirs(os.path.dirname(name), exist_ok=True)
+
+        with open(name, "wb") as f:
+            for chunk in result.iter_content(1024):
+                f.write(chunk)
+
+        return name, result
