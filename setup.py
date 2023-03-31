@@ -28,7 +28,7 @@ requirements_agents = []
 
 setup(
     name="datatorch",
-    version="0.4.6.9",
+    version="0.4.7.0",
     description="A CLI and library for interacting with DataTorch.",
     author="DataTorch",
     author_email="support@datatorch.io",

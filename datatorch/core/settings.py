@@ -53,7 +53,6 @@ class UserSettings(Settings):
     def api_url(self, value: Union[str, None]):
         self.set("apiUrl", value if value is None else normalize_api_url(value))
 
-
 def _load_json(path: str) -> dict:
     try:
         with open(path) as fr:

@@ -200,7 +200,7 @@ class Project(BaseEntity):
                 selectedSchema = schema
         return selectedSchema
 
-    def download(self, schemaNameOrObject, directory: str = "./"):
+    def download(self, schemaNameOrObject = "All", directory: str = "./"):
         if type(schemaNameOrObject) == str:
             schemaNameOrObject = self.exportSchema(schemaNameOrObject)
 

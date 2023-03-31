@@ -127,6 +127,15 @@ class ApiClient(Client):
             File, self.query_to_class(File, _FILE, path="file", params={"fileId": id})
         )
 
+    def download_latest_export(
+        self,
+        project: Project,
+        schemaNameOrObject = "All", 
+        directory: str = "./"
+    ):
+        """Downloads the latest export from a schema of a project"""
+        project.download(schemaNameOrObject,directory)
+
     def upload_to_default_filesource(
         self,
         project: Project,

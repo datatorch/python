@@ -7,6 +7,7 @@ from .main.login import login
 from .main.logout import logout
 from .main.upgrade import package_upgrade
 from .main.version import version
+from .main.init import init
 
 from .agent import agent
 from .pipeline import pipeline
@@ -24,6 +25,7 @@ main.add_command(login)
 main.add_command(logout)
 main.add_command(version)
 main.add_command(package_upgrade)
+main.add_command(init)
 
 main.add_command(pipeline)
 main.add_command(agent)
