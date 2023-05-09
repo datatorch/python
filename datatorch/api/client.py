@@ -63,7 +63,7 @@ class Client(object):
         self._api_token = api_key or user_settings.api_url
         # This is to fix init bugs
         if api_url is None and user_settings.api_url is None:
-            self._api_url = "https://datatorch.io"
+            self._api_url = "https://datatorch.io/api"
         if not api_url is None:
             self._api_url = normalize_api_url(api_url)
         if not user_settings.api_url is None:
