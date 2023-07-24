@@ -12,7 +12,7 @@ requirements = [
     "gql==3.4.0",
     "websockets==10.4",
     "websocket-client",
-    "requests",
+    "requests==2.27.1",
     "typing_extensions>=4.1.0",
     "psutil~=5.9.4",
     "aiodocker~=0.19.0",
@@ -22,7 +22,7 @@ requirements = [
     "markupsafe==2.0.1",
     "requests_toolbelt==0.10.1",
     "tqdm~=4.65.0",
-    "urllib3==1.26.15"
+    "urllib3==1.26.15",
 ]
 
 requirements_agents = []
