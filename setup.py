@@ -12,7 +12,7 @@ requirements = [
     "gql==3.4.0",
     "websockets==10.4",
     "websocket-client",
-    "requests==2.27.1",
+    "requests==2.31.0",
     "typing_extensions>=4.1.0",
     "psutil~=5.9.4",
     "aiodocker~=0.19.0",
