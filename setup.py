@@ -22,13 +22,14 @@ requirements = [
     "markupsafe==2.0.1",
     "requests_toolbelt==0.10.1",
     "tqdm~=4.65.0",
+    "urllib3==1.26.15"
 ]
 
 requirements_agents = []
 
 setup(
     name="datatorch",
-    version="0.4.7.0",
+    version="0.4.7.1",
     description="A CLI and library for interacting with DataTorch.",
     author="DataTorch",
     author_email="support@datatorch.io",
