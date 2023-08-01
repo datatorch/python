@@ -152,12 +152,20 @@ class Client(object):
         skip: bool = True
         # For now, skip does nothing
     ):
-        # If it exists and skip is true, do not download
-        name = os.path.join(directory, name)
-        name = os.path.abspath(name)
+        ## If it exists and skip is true, do not download
+        # name = os.path.join(directory, name)
+        # name = os.path.abspath(name)
+        # This name overwrites the value into name
+        # Causes a problem on line 175 if name is expected to be empty
+        # On first run of download file name is supposed to ''
+        # Loaded as default value from action-datatorch.yaml
+        # But on subsequent runs if file exists, name is not empty
+        # Temporary fix here
+        dl_file = os.path.join(directory, name)
+        dl_file = os.path.abspath(dl_file)
 
-        if os.path.isfile(name) & skip == True:
-            return name, None
+        if os.path.isfile(dl_file) & skip == True:
+            return dl_file, None
 
         query_string = urlencode({"download": "true", "stream": "true"})
         url = normalize_api_url(self.api_url)
