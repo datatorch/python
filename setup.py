@@ -21,6 +21,8 @@ requirements = [
     "aiostream~=0.4.0",
     "markupsafe==2.0.1",
     "requests_toolbelt==0.10.1",
+    "imantics==0.1.12",
+    "shapely==2.0.1",
     "tqdm~=4.65.0",
     "urllib3==1.26.15",
 ]
