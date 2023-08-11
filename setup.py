@@ -12,7 +12,7 @@ requirements = [
     "gql==3.4.0",
     "websockets==10.4",
     "websocket-client",
-    "requests==2.27.1",
+    "requests==2.31.0",
     "typing_extensions>=4.1.0",
     "psutil~=5.9.4",
     "aiodocker~=0.19.0",
@@ -21,6 +21,8 @@ requirements = [
     "aiostream~=0.4.0",
     "markupsafe==2.0.1",
     "requests_toolbelt==0.10.1",
+    "imantics==0.1.12",
+    "shapely==2.0.1",
     "tqdm~=4.65.0",
     "urllib3==1.26.15",
 ]
@@ -29,7 +31,7 @@ requirements_agents = []
 
 setup(
     name="datatorch",
-    version="0.4.7.1",
+    version="0.4.7.2",
     description="A CLI and library for interacting with DataTorch.",
     author="DataTorch",
     author_email="support@datatorch.io",
