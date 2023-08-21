@@ -64,12 +64,13 @@ class Segmentations(Source):
             for polygon in multi:
                 self.path_data.append(list(polygon.exterior.coords[:-1]))
 
+        self.save(ApiClient())
         print(
             f"Updated segmentation for annotation {annotation.id}",
             flush=True,
         )
 
-    def create_new_annotation(self, label_id: str, file_id: str):
+    def create_new_segmentation(self, label_id: str, file_id: str):
         print("Creating new annotation")
         new_annotation = Annotation()
         new_annotation.label_id = label_id
@@ -79,7 +80,24 @@ class Segmentations(Source):
 
         self.annotation_id = annotation_id
         self.create(ApiClient())
-        print("Segmentation created")
+        print("Segmentation created with annotation", annotation_id, flush=True)
+
+    def create_segmentation_from_mask(
+        self,
+        mask: np.array,
+        simplify: int = 0,
+        annotation=None,
+        label_id: Optional[str] = None,
+        file_id: Optional[str] = None,
+    ):
+        if annotation is None and (label_id is None or file_id is None):
+            raise ValueError("Either annotation or label_id and file_id must be set")
+
+        self.from_mask(mask, simplify=simplify)
+        if annotation:
+            self.combine_segmentations(annotation)
+        else:
+            self.create_new_segmentation(label_id, file_id)
 
     def to_mask(self) -> np.array:
-        pass
+        raise NotImplementedError("to_mask not implemented")
