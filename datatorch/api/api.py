@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import IO, overload, cast
 from urllib import request
 from urllib.parse import urlencode
+import magic
 
 from datatorch.api.entity.dataset import Dataset
 from datatorch.api.entity.storage_link import StorageLink
@@ -141,10 +142,16 @@ class ApiClient(Client):
         datasetId = "" if dataset is None else dataset.id
         importFiles = "false" if dataset is None else "true"
         endpoint = f"{self.api_url}/file/v1/upload/{storageId}?path={storageFolderName}&import={importFiles}&datasetId={datasetId}"
-        # r = requests.post(endpoint, files={"file": file}, user=self.viewer)
+
+        # save the current position
+        tell = file.tell()
+        # read 1024 bytes and get the mimetype
+        mimetype = magic.from_buffer(file.read(1024), mime=True)
+        # go back to the saved position
+        file.seek(tell)
         r = requests.post(
             endpoint,
-            files={"file": file},
+            files={"file": (os.path.basename(file.name), file, mimetype)},
             headers={self.token_header: self._api_token},
             stream=True,
         )
