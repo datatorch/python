@@ -13,6 +13,12 @@
   <img alt="Build Status" src="https://img.shields.io/github/actions/workflow/status/datatorch/python/package.yml?branch=master">
 </p>
 
+## Installation
+
+*Note*: Newer versions (>=0.4.8.2) of DataTorch client require `libmagic` for file uploads
+to datasets. Your system may or may not have `libmagic` pre-installed. Please
+make sure you have `libmagic` installed before proceeding.
+
 ```bash
 pip install datatorch
 ```
