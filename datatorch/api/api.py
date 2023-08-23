@@ -142,9 +142,13 @@ class ApiClient(Client):
         datasetId = "" if dataset is None else dataset.id
         importFiles = "false" if dataset is None else "true"
         endpoint = f"{self.api_url}/file/v1/upload/{storageId}?path={storageFolderName}&import={importFiles}&datasetId={datasetId}"
-        tell = file.tell() # save the current position
-        mimetype = magic.from_buffer(file.read(1024), mime=True) # read 1024 bytes and get the mimetype
-        file.seek(tell) # go back to the saved position
+
+        # save the current position
+        tell = file.tell()
+        # read 1024 bytes and get the mimetype
+        mimetype = magic.from_buffer(file.read(1024), mime=True)
+        # go back to the saved position
+        file.seek(tell)
         r = requests.post(
             endpoint,
             files={"file": (os.path.basename(file.name), file, mimetype)},
