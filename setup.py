@@ -8,8 +8,6 @@ with open("README.md", "r", encoding="utf-8") as fp:
 
 requirements = [
     "Click==8.0.0",
-    "numpy",
-    "docker",
     "gql==3.4.0",
     "websockets==10.4",
     "websocket-client",
@@ -26,6 +24,9 @@ requirements = [
     "shapely==2.0.1",
     "tqdm~=4.65.0",
     "urllib3==1.26.15",
+    "numpy",
+    "docker",
+    "python-magic",
 ]
 
 requirements_agents = []
