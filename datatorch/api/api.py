@@ -1,10 +1,12 @@
-import logging, os, cgi, requests, glob
-from pathlib import Path
+import logging, os, requests, glob
 
 from typing import IO, overload, cast
-from urllib import request
-from urllib.parse import urlencode
-import magic
+
+try:
+    import magic
+except ImportError:
+    magic = None
+    import mimetypes
 
 from datatorch.api.entity.dataset import Dataset
 from datatorch.api.entity.storage_link import StorageLink
@@ -143,12 +145,16 @@ class ApiClient(Client):
         importFiles = "false" if dataset is None else "true"
         endpoint = f"{self.api_url}/file/v1/upload/{storageId}?path={storageFolderName}&import={importFiles}&datasetId={datasetId}"
 
-        # save the current position
-        tell = file.tell()
-        # read 1024 bytes and get the mimetype
-        mimetype = magic.from_buffer(file.read(1024), mime=True)
-        # go back to the saved position
-        file.seek(tell)
+        if magic:
+            # save the current position
+            tell = file.tell()
+            # read 1024 bytes and get the mimetype
+            mimetype = magic.from_buffer(file.read(1024), mime=True)
+            # go back to the saved position
+            file.seek(tell)
+        else:
+            mimetype = mimetypes.guess_type(file.name)[0]
+
         r = requests.post(
             endpoint,
             files={"file": (os.path.basename(file.name), file, mimetype)},
