@@ -78,8 +78,13 @@ async def _close_transport(transport: WebsocketsTransport):
 
 async def _exit_tasks() -> None:
     """Exits all active asyncio tasks"""
-    current_task = asyncio.Task.current_task()
-    all_tasks = asyncio.Task.all_tasks()
+    try:
+        current_task = asyncio.current_task()
+        all_tasks = asyncio.all_tasks()
+    except AttributeError as e:
+        current_task = asyncio.Task.current_task()
+        all_tasks = asyncio.Task.all_tasks()
+
     not_current_tasks = [task for task in all_tasks if task is not current_task]
 
     for task in not_current_tasks:
