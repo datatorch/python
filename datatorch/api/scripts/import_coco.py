@@ -130,6 +130,12 @@ _CREATE_ANNOTATIONS = """
     }
 """
 
+_SET_FILE_METADATA = """
+    mutation SetFileMetadata($fileId: ID!, $key: String!, $value: JSON!) {
+        setFileMetadata(fileId: $fileId, key: $key, value: $value)
+    }
+"""
+
 
 def import_coco(
     file_path: str,
@@ -141,6 +147,8 @@ def import_coco(
     simplify_tolerance: float = 0,
     ignore_annotations_with_ids: bool = True,
     api: ApiClient = None,
+    upload_file_metadata: bool = False,
+    upload_anno_metadata: bool = False,
 ):
     if not import_segmentation and not import_bbox:
         _LOGGER.warning("Nothing to import. Both segmentation and bbox are disabled.")
@@ -218,6 +226,16 @@ def import_coco(
                     f"{image_name} is already marked as 'COMPLETED', skipping"
                 )
                 continue
+
+        # Upload file metadata if they want to
+        if upload_file_metadata:
+            file_metadata = coco_image.get("metadata", {})
+            if len(file_metadata) > 0:
+                for key, value in file_metadata.items():
+                    api.execute(
+                        _SET_FILE_METADATA,
+                        params={"fileId": dt_file.id, "key": key, "value": value},
+                    )
 
         coco_annotation_ids = coco.getAnnIds(
             catIds=coco_category_ids, imgIds=coco_image["id"]
@@ -310,6 +328,14 @@ def import_coco(
                                 "data": {"pathData": path_data},
                             }
                         )
+
+            # Metadata stuff
+            # need to upload the create annotations api first
+            # metadata = anno.get("metadata", {})
+            # for metadata_key, metadata_value in metadata.items():
+            #     print(metadata)
+            #     print(metadata_key)
+            #     print(metadata_value)
 
             if created_segmentation or created_bbox:
                 new_annotations.append(annotation)
