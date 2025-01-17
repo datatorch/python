@@ -2,7 +2,7 @@ import sys
 import json
 import subprocess
 import urllib.request
-import pkg_resources
+from importlib.metadata import version
 
 
 def get_latest() -> str:
@@ -12,7 +12,7 @@ def get_latest() -> str:
 
 
 def get_version() -> str:
-    return pkg_resources.get_distribution("datatorch").version
+    return version("datatorch")
 
 
 def upgrade():
