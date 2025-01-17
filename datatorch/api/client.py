@@ -99,10 +99,6 @@ class Client(object):
     def graphql_url(self) -> str:
         return self._graphql_url
 
-    @property
-    def graphql_url(self) -> str:
-        return self.transport.url
-
     def execute_files(
         self, paths: List[str], *args, params: dict = {}, **kwargs
     ) -> dict:
@@ -154,7 +150,7 @@ class Client(object):
         skip: bool = True
         # For now, skip does nothing
     ):
-        ## If it exists and skip is true, do not download
+        # If it exists and skip is true, do not download
         # name = os.path.join(directory, name)
         # name = os.path.abspath(name)
         # This name overwrites the value into name
@@ -178,7 +174,7 @@ class Client(object):
         )
 
         content = result.headers["content-disposition"]
-        #_, value = cgi.parse_header(content)
+        # _, value = cgi.parse_header(content)
         parser = HeaderParser()
         headers = parser.parsestr(f"Content-Disposition: {content}")
         filename_param = headers.get_param("filename")
