@@ -1,7 +1,8 @@
 from setuptools import setup, find_packages
 import sys
 
-assert sys.version_info >= (3, 7, 0), "DataTorch requires Python 3.7+"
+# Ensure the Python version is 3.13 or higher
+assert sys.version_info >= (3, 13, 0), "DataTorch requires Python 3.13+"
 
 with open("README.md", "r", encoding="utf-8") as fp:
     long_description = fp.read()
@@ -21,15 +22,14 @@ requirements = [
     "markupsafe==2.0.1",
     "requests_toolbelt==0.10.1",
     "imantics==0.1.12",
-    "shapely==2.0.1",
+    "shapely==2.0.6",  # Compatible Python 3.13
     "tqdm~=4.65.0",
     "urllib3==1.26.15",
     "numpy",
     "docker",
     "python-magic",
+    "pycocotools",
 ]
-
-requirements_agents = []
 
 setup(
     name="datatorch",
@@ -45,8 +45,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=requirements,
-    extras_require={"agent": requirements_agents},
-    python_requires=">=3.7",
+    python_requires=">=3.13",
     license="MIT license",
     zip_safe=False,
     include_package_data=True,
@@ -56,10 +55,7 @@ setup(
         "Framework :: Pytest",
         "Intended Audience :: Developers",
         "Natural Language :: English",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.13",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],

@@ -1,5 +1,5 @@
 from typing import List, Union, cast, IO
-import requests, glob, os, cgi
+import requests, glob, os #, cgi
 from urllib.parse import urlencode
 
 from gql import Client as GqlClient, gql
@@ -11,6 +11,8 @@ from graphql.language.ast import DocumentNode
 from datatorch.utils import normalize_api_url
 from datatorch.core import user_settings
 from typing import Any, TypeVar, Type
+
+from email.parser import HeaderParser
 
 T = TypeVar("T")
 
@@ -97,10 +99,6 @@ class Client(object):
     def graphql_url(self) -> str:
         return self._graphql_url
 
-    @property
-    def graphql_url(self) -> str:
-        return self.transport.url
-
     def execute_files(
         self, paths: List[str], *args, params: dict = {}, **kwargs
     ) -> dict:
@@ -152,7 +150,7 @@ class Client(object):
         skip: bool = True
         # For now, skip does nothing
     ):
-        ## If it exists and skip is true, do not download
+        # If it exists and skip is true, do not download
         # name = os.path.join(directory, name)
         # name = os.path.abspath(name)
         # This name overwrites the value into name
@@ -176,9 +174,19 @@ class Client(object):
         )
 
         content = result.headers["content-disposition"]
-        _, value = cgi.parse_header(content)
+        # _, value = cgi.parse_header(content)
+        parser = HeaderParser()
+        headers = parser.parsestr(f"Content-Disposition: {content}")
+        filename_param = headers.get_param("filename")
+        # Ensure filename is a string
+        if isinstance(filename_param, tuple):
+            filename = filename_param[0] or ""  # Use the first element of the tuple if present
+        elif isinstance(filename_param, str):
+            filename = filename_param
+        else:
+            filename = ""  # Default to an empty string if None or unexpected type
 
-        name = name or value["filename"]
+        name = name or filename
         name = os.path.join(directory, name)
         name = os.path.abspath(name)
 
