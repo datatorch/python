@@ -1,8 +1,8 @@
 from setuptools import setup, find_packages
 import sys
 
-# Ensure the Python version is 3.13 or higher
-assert sys.version_info >= (3, 13, 0), "DataTorch requires Python 3.13+"
+# Ensure the Python version is 3.12 or higher
+assert sys.version_info >= (3, 12, 0), "DataTorch requires Python 3.12+"
 
 with open("README.md", "r", encoding="utf-8") as fp:
     long_description = fp.read()
@@ -33,7 +33,7 @@ requirements = [
 
 setup(
     name="datatorch",
-    version="0.4.8.4",
+    version="0.4.8.5",
     description="A CLI and library for interacting with DataTorch.",
     author="DataTorch",
     author_email="support@datatorch.io",
@@ -45,7 +45,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=requirements,
-    python_requires=">=3.13",
+    python_requires=">=3.12",
     license="MIT license",
     zip_safe=False,
     include_package_data=True,
@@ -55,7 +55,7 @@ setup(
         "Framework :: Pytest",
         "Intended Audience :: Developers",
         "Natural Language :: English",
-        "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.12",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
