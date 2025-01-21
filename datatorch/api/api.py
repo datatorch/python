@@ -163,27 +163,29 @@ class ApiClient(Client):
         )
         print(r.text + " " + endpoint)
 
-    def upload_to_storage_with_id(
+    def upload_to_filesource(
         self,
-        storage_id: str,
+        project: Project,
         file: IO,
+        storageId: str = None,
         storageFolderName=None,
         dataset: Dataset = None,
         **kwargs,
     ):
-        """Uploads a file to a specific storage ID."""
+        """
+        Uploads a file to the provided `storage_id` if available;
+        otherwise, retrieves the default storage ID (DataTorch Storage) from the project.
+        """
+        # Retrieve default storage_id if not explicitly provided
+        if storageId is None:
+            storageId = project.storage_link_default().id
+
         storageFolderName = "" if storageFolderName is None else storageFolderName
         datasetId = "" if dataset is None else dataset.id
         importFiles = "false" if dataset is None else "true"
 
         # Construct the endpoint
-        endpoint = f"{self.api_url}/file/v1/upload/{storage_id}?path={storageFolderName}&import={importFiles}&datasetId={datasetId}"
-
-        # Debugging request details
-        # print(f"Uploading to endpoint: {endpoint}")
-        # print(f"Headers: {self.token_header}: {self._api_token}")
-        # print(f"File Name: {file.name}")
-        # print(f"Storage ID: {storage_id}, Folder Name: {storageFolderName}")
+        endpoint = f"{self.api_url}/file/v1/upload/{storageId}?path={storageFolderName}&import={importFiles}&datasetId={datasetId}"
 
         # Determine MIME type
         if magic:
@@ -192,7 +194,6 @@ class ApiClient(Client):
             file.seek(tell)
         else:
             mimetype = mimetypes.guess_type(file.name)[0]
-        print(f"MIME Type: {mimetype}")
 
         # Make the POST request
         r = requests.post(
@@ -202,10 +203,7 @@ class ApiClient(Client):
             stream=True,
         )
 
-        # Print response for debugging
-        print(f"Response Status Code: {r.status_code}")
-        print(f"Response Text: {r.text}")
-
+        # Raise an error for failed requests
         r.raise_for_status()
 
     def glob_upload_folder(
@@ -213,6 +211,7 @@ class ApiClient(Client):
         project: Project,
         uploadingFromGlob: str,
         storageFolderName: str,
+        storageId: str = None,
         folderSplit=1000,
         dataset: Dataset = None,
         recursive=False,
@@ -237,9 +236,10 @@ class ApiClient(Client):
                 folderIndex += 1
                 uploadFolderName = storageFolderName + "_" + str(folderIndex)
             file = open(file, "rb")
-            self.upload_to_default_filesource(
+            self.upload_to_filesource(
                 project=project,
                 file=file,
+                storageId=storageId,
                 storageFolderName=uploadFolderName,
                 dataset=dataset,
             )

@@ -1,5 +1,5 @@
 import click
-from .bulk import bulk
+from .folder import folder
 
 
 @click.group(help="Commands for managing uploads.")
@@ -7,4 +7,4 @@ def upload():
     pass
 
 
-upload.add_command(bulk)
+upload.add_command(folder)

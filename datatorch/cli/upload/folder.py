@@ -2,14 +2,14 @@ import os
 import click
 from datatorch.core.settings import UserSettings
 from datatorch.api.api import ApiClient
+from datatorch.api.entity.project import Project
 from ..spinner import Spinner
 
 
-@click.command("bulk-upload")
+@click.command("folder")
 @click.argument("folder_path", type=click.Path(exists=True, file_okay=False))
 @click.argument("project_id", type=str)
-
-def bulk(folder_path, project_id):
+def folder(folder_path, project_id):
     """Bulk upload files to a specified project."""
 
     # Get the list of files to upload
@@ -49,6 +49,36 @@ def bulk(folder_path, project_id):
                    f"project with ID '{project_id}'. {e}")
         return
 
+    # Display available dataset
+    try:
+        datasets = project.datasets()
+        if datasets:
+            click.echo("\nAvailable Dataset:")
+            for idx, dataset in enumerate(datasets, start=1):
+                click.echo(f"{idx}. {dataset.name} (ID: {dataset.id})")
+
+            # Prompt user to select a dataset
+            choice = click.prompt(
+                "Enter the number of the dataset",
+                type=int,
+                default=1,
+            )
+            if 1 <= choice <= len(datasets):
+                selected_dataset = datasets[choice - 1]
+                click.echo(f"Selected Dataset: {selected_dataset.name} (ID: {selected_dataset.id}")
+            else:
+                click.echo(f"Invalid choice. Please select a number between 1 and {len(datasets)}")
+        else:
+            # No datasets found, as if user want to continue with global upload
+            continue_upload = click.confirm("No datasets found for this project"
+                                            "Do you want to continue with global upload?", default=False)
+            if not continue_upload:
+                click.echo("Ending...")
+                return
+    except Exception as e:
+        click.echo(f"Error retrieving data set: {e}")
+        return
+
     # Display available storage links and prompt user selection
     try:
         storage_links = project.storage_links()
@@ -62,24 +92,21 @@ def bulk(folder_path, project_id):
                        f"(ID: {storage_link.id})")
 
         # Prompt user to select a storage link
-        while True:
-            try:
-                choice = int(input("Enter the number of "
-                                   "the storage link to use: "))
-                if 1 <= choice <= len(storage_links):
-                    selected_storage_link = storage_links[choice - 1]
-                    break
-                else:
-                    click.echo(f"Please enter a number "
-                               f"between 1 and {len(storage_links)}.")
-            except ValueError:
-                click.echo("Invalid input. Please enter a valid number.")
+        choice = click.prompt(
+            "Enter the number of the storage to use",
+            type=int,
+            default=1,
+        )
+        if 1 <= choice <= len(storage_links):
+            selected_storage_link = storage_links[choice - 1]
+        else:
+            click.echo(f"Invalid choice. Please select a number between 1 and {len(storage_links)}.")
+            return
 
-        click.echo(f"Selected Storage Link: {selected_storage_link.name} "
+        click.echo(f"Selected Storage: {selected_storage_link.name} "
                    f"(ID: {selected_storage_link.id})")
-
     except Exception as e:
-        click.echo(f"Error retrieving storage links: {e}")
+        click.echo(f"Error retrieving storage: {e}")
         return
 
     # Initialize the spinner
@@ -89,13 +116,14 @@ def bulk(folder_path, project_id):
     try:
         for idx, file_name in enumerate(files, start=1):
             file_path = os.path.join(folder_path, file_name)
-            spinner.set_text(f"Uploading files ({idx}/{total_files})")
+            spinner.set_text(f"Uploading file ({idx}/{total_files})")
             with open(file_path, "rb") as file:
-                client.upload_to_storage_with_id(
-                    storage_id=selected_storage_link.id,
+                client.upload_to_filesource(
+                    project=project,
                     file=file,
+                    storageId=selected_storage_link.id,
                     storageFolderName=None,
-                    dataset=None,
+                    dataset=selected_dataset,
                 )
         spinner.done(f"Uploaded all {total_files} files successfully!")
     except Exception as e:
