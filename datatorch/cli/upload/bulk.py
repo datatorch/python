@@ -2,14 +2,14 @@ import os
 import click
 from datatorch.core.settings import UserSettings
 from datatorch.api.api import ApiClient
-from spinner import Spinner
+from ..spinner import Spinner
 
 
 @click.command("bulk-upload")
 @click.argument("folder_path", type=click.Path(exists=True, file_okay=False))
 @click.argument("project_id", type=str)
 
-def bulk_upload(folder_path, project_id):
+def bulk(folder_path, project_id):
     """Bulk upload files to a specified project."""
 
     # Get the list of files to upload
