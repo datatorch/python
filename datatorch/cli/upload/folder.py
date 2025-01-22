@@ -112,7 +112,7 @@ def folder(folder_path, project_id):
     # Initialize the spinner
     spinner = Spinner(f"Uploading files (0/{total_files})")
 
-    # Upload files to the selected storage link using its ID
+    # Upload files to the selected storage and dataset using their IDs
     try:
         for idx, file_name in enumerate(files, start=1):
             file_path = os.path.join(folder_path, file_name)
