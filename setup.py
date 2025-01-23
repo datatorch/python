@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import sys
 
-# Ensure the Python version is 3.8 or higher
+# Ensure the Python version is 3.9 or higher
 assert sys.version_info >= (3, 9, 0), "DataTorch requires Python 3.9+"
 
 with open("README.md", "r", encoding="utf-8") as fp:
