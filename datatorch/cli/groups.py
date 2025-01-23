@@ -12,6 +12,7 @@ from .agent import agent
 from .pipeline import pipeline
 from .action import action
 from .import_cmds import import_cmd
+from .upload import upload
 
 
 @click.group()
@@ -29,3 +30,5 @@ main.add_command(pipeline)
 main.add_command(agent)
 main.add_command(action)
 main.add_command(import_cmd)
+
+main.add_command(upload)

@@ -163,11 +163,55 @@ class ApiClient(Client):
         )
         print(r.text + " " + endpoint)
 
+    def upload_to_filesource(
+        self,
+        project: Project,
+        file: IO,
+        storageId: str = None,
+        storageFolderName=None,
+        dataset: Dataset = None,
+        **kwargs,
+    ):
+        """
+        Uploads a file to the provided `storage_id` if available;
+        otherwise, retrieves the default storage ID (DataTorch Storage) from the project.
+        """
+        # Retrieve default storage_id if not explicitly provided
+        if storageId is None:
+            storageId = project.storage_link_default().id
+
+        storageFolderName = "" if storageFolderName is None else storageFolderName
+        datasetId = "" if dataset is None else dataset.id
+        importFiles = "false" if dataset is None else "true"
+
+        # Construct the endpoint
+        endpoint = f"{self.api_url}/file/v1/upload/{storageId}?path={storageFolderName}&import={importFiles}&datasetId={datasetId}"
+
+        # Determine MIME type
+        if magic:
+            tell = file.tell()
+            mimetype = magic.from_buffer(file.read(1024), mime=True)
+            file.seek(tell)
+        else:
+            mimetype = mimetypes.guess_type(file.name)[0]
+
+        # Make the POST request
+        r = requests.post(
+            endpoint,
+            files={"file": (os.path.basename(file.name), file, mimetype)},
+            headers={self.token_header: self._api_token},
+            stream=True,
+        )
+
+        # Raise an error for failed requests
+        r.raise_for_status()
+
     def glob_upload_folder(
         self,
         project: Project,
         uploadingFromGlob: str,
         storageFolderName: str,
+        storageId: str = None,
         folderSplit=1000,
         dataset: Dataset = None,
         recursive=False,
@@ -192,9 +236,10 @@ class ApiClient(Client):
                 folderIndex += 1
                 uploadFolderName = storageFolderName + "_" + str(folderIndex)
             file = open(file, "rb")
-            self.upload_to_default_filesource(
+            self.upload_to_filesource(
                 project=project,
                 file=file,
+                storageId=storageId,
                 storageFolderName=uploadFolderName,
                 dataset=dataset,
             )
