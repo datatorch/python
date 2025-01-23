@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import sys
 
 # Ensure the Python version is 3.8 or higher
-assert sys.version_info >= (3, 8, 0), "DataTorch requires Python 3.8+"
+assert sys.version_info >= (3, 9, 0), "DataTorch requires Python 3.9+"
 
 with open("README.md", "r", encoding="utf-8") as fp:
     long_description = fp.read()
@@ -45,7 +45,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=requirements,
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     license="MIT license",
     zip_safe=False,
     include_package_data=True,
@@ -55,7 +55,7 @@ setup(
         "Framework :: Pytest",
         "Intended Audience :: Developers",
         "Natural Language :: English",
-        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
