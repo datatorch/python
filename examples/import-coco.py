@@ -1,6 +1,7 @@
 """
 This script imports COCO formated annotations into DataTorch
 """
+
 import numpy as np
 
 from pycocotools.coco import COCO

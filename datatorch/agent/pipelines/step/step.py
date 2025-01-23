@@ -70,9 +70,9 @@ class Step(object):
             "outputs": outputs,
             "status": status,
             "startedAt": iso_date if status == "RUNNING" else None,
-            "finishedAt": iso_date
-            if status == "SUCCESS" or status == "FAILED"
-            else None,
+            "finishedAt": (
+                iso_date if status == "SUCCESS" or status == "FAILED" else None
+            ),
         }
         await self.api.update_step(variables)
 

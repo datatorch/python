@@ -147,7 +147,7 @@ class Client(object):
         id: str,
         name: str = "",
         directory: str = "./",
-        skip: bool = True
+        skip: bool = True,
         # For now, skip does nothing
     ):
         # If it exists and skip is true, do not download
