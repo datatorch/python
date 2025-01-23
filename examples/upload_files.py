@@ -1,16 +1,19 @@
 import os
 import datatorch as dt
 
-api = dt.api.ApiClient('your-api-key')
-proj = api.project('user-name/project-name')
-dset = proj.dataset('data-set-name')
+api = dt.api.ApiClient("your-api-key")
+proj = api.project("user-name/project-name")
+dset = proj.dataset("data-set-name")
 
-folder_to_upload = 'uploadme'
-upload_to_storage_id = 'your-storage-id'
+folder_to_upload = "uploadme"
+upload_to_storage_id = "your-storage-id"
 
 # Get all the file names in the folder
-files = [f for f in os.listdir(folder_to_upload)
-         if os.path.isfile(os.path.join(folder_to_upload, f))]
+files = [
+    f
+    for f in os.listdir(folder_to_upload)
+    if os.path.isfile(os.path.join(folder_to_upload, f))
+]
 
 # Upload files to the selected storage and dataset using their IDs
 try:

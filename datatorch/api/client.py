@@ -1,5 +1,5 @@
 from typing import List, Union, cast, IO
-import requests, glob, os #, cgi
+import requests, glob, os  # , cgi
 from urllib.parse import urlencode
 
 from gql import Client as GqlClient, gql
@@ -180,7 +180,9 @@ class Client(object):
         filename_param = headers.get_param("filename")
         # Ensure filename is a string
         if isinstance(filename_param, tuple):
-            filename = filename_param[0] or ""  # Use the first element of the tuple if present
+            filename = (
+                filename_param[0] or ""
+            )  # Use the first element of the tuple if present
         elif isinstance(filename_param, str):
             filename = filename_param
         else:

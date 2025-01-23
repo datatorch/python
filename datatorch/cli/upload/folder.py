@@ -13,8 +13,11 @@ def folder(folder_path, project_id):
     """Bulk upload files to a specified project."""
 
     # Get the list of files to upload
-    files = [f for f in os.listdir(folder_path)
-             if os.path.isfile(os.path.join(folder_path, f))]
+    files = [
+        f
+        for f in os.listdir(folder_path)
+        if os.path.isfile(os.path.join(folder_path, f))
+    ]
     total_files = len(files)
 
     if total_files == 0:
@@ -27,8 +30,7 @@ def folder(folder_path, project_id):
     api_url = user_settings.api_url
 
     if not api_key or not api_url:
-        click.echo("You are not logged in. "
-                   "Please log in using the `login` command.")
+        click.echo("You are not logged in. " "Please log in using the `login` command.")
         return
 
     # Initialize the API client
@@ -45,8 +47,7 @@ def folder(folder_path, project_id):
         project = client.project(project_id)
         click.echo(f"Retrieved project: {project.name}")
     except Exception as e:
-        click.echo(f"Error: Unable to retrieve "
-                   f"project with ID '{project_id}'. {e}")
+        click.echo(f"Error: Unable to retrieve " f"project with ID '{project_id}'. {e}")
         return
 
     # Display available dataset
@@ -65,13 +66,20 @@ def folder(folder_path, project_id):
             )
             if 1 <= choice <= len(datasets):
                 selected_dataset = datasets[choice - 1]
-                click.echo(f"Selected Dataset: {selected_dataset.name} (ID: {selected_dataset.id}")
+                click.echo(
+                    f"Selected Dataset: {selected_dataset.name} (ID: {selected_dataset.id}"
+                )
             else:
-                click.echo(f"Invalid choice. Please select a number between 1 and {len(datasets)}")
+                click.echo(
+                    f"Invalid choice. Please select a number between 1 and {len(datasets)}"
+                )
         else:
             # No datasets found, as if user want to continue with global upload
-            continue_upload = click.confirm("No datasets found for this project"
-                                            "Do you want to continue with global upload?", default=False)
+            continue_upload = click.confirm(
+                "No datasets found for this project"
+                "Do you want to continue with global upload?",
+                default=False,
+            )
             if not continue_upload:
                 click.echo("Ending...")
                 return
@@ -88,8 +96,7 @@ def folder(folder_path, project_id):
 
         click.echo("\nAvailable Storages:")
         for idx, storage_link in enumerate(storage_links):
-            click.echo(f"{idx + 1}. {storage_link.name} "
-                       f"(ID: {storage_link.id})")
+            click.echo(f"{idx + 1}. {storage_link.name} " f"(ID: {storage_link.id})")
 
         # Prompt user to select a storage link
         choice = click.prompt(
@@ -100,11 +107,15 @@ def folder(folder_path, project_id):
         if 1 <= choice <= len(storage_links):
             selected_storage_link = storage_links[choice - 1]
         else:
-            click.echo(f"Invalid choice. Please select a number between 1 and {len(storage_links)}.")
+            click.echo(
+                f"Invalid choice. Please select a number between 1 and {len(storage_links)}."
+            )
             return
 
-        click.echo(f"Selected Storage: {selected_storage_link.name} "
-                   f"(ID: {selected_storage_link.id})")
+        click.echo(
+            f"Selected Storage: {selected_storage_link.name} "
+            f"(ID: {selected_storage_link.id})"
+        )
     except Exception as e:
         click.echo(f"Error retrieving storage: {e}")
         return
