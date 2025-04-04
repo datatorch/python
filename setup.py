@@ -24,7 +24,7 @@ requirements = [
     "imantics==0.1.12",
     "shapely==2.0.6",  # Compatible Python 3.13
     "tqdm~=4.65.0",
-    "urllib3==1.26.15",
+    "urllib3==1.26.18",
     "numpy",
     "docker",
     "python-magic",
