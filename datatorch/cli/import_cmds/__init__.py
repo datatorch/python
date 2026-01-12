@@ -3,6 +3,7 @@ import click
 from .coco import coco_cmd
 from .binmask import binmask_cmd
 
+
 @click.group("import", help="Commands for importing annotations.")
 def import_cmd():
     pass
