@@ -139,3 +139,4 @@ dmypy.json
 # Testing
 /coco
 .DS_Store
+/internaltesting

@@ -11,6 +11,11 @@ from typing import List
 from .utils.simplify import simplify_points
 
 from .. import ApiClient, BoundingBox, File, Where, Project
+from ...utils.converters import (
+    points_to_segmentation,
+    segmentation_to_points,
+    simplify_segmentation,
+)
 
 
 try:
@@ -20,26 +25,6 @@ except:
     click.echo("\t pip3 install pycocotools")
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def points_to_segmentation(points: List[List[List[float]]]) -> List[List[float]]:
-    """
-    Converts from:
-        [[[x1,y1], [x2,y2], ...]]
-    to:
-        [[x1,y1,x2,y2...]]
-    """
-    return [np.array(polygon).flatten().tolist() for polygon in points]
-
-
-def segmentation_to_points(segmentation: List[List[float]]) -> List[List[List[float]]]:
-    """
-    Converts from:
-        [[x1,y1,x2,y2...]]
-    to:
-        [[[x1,y1], [x2,y2], ...]]
-    """
-    return [np.reshape(polygon, (-1, 2)).tolist() for polygon in segmentation]
 
 
 def bbox_iou(bb1o: BoundingBox, bb2o: BoundingBox):
@@ -106,22 +91,6 @@ def has_mask(anno_mask: np.array, masks: List[np.array], max_iou: float) -> bool
         if iou > max_iou:
             return True
     return False
-
-
-def simplify_segmentation(segmentation: List[List[float]], tolerance: float = 1):
-    """
-    Simplifies an array of polygons in coco polygon format [[x1,y1,x2,y2,...]]
-    """
-    if tolerance == 0:
-        return segmentation
-
-    points_format = segmentation_to_points(segmentation)
-    simplified = [
-        simplify_points(polygon, tolerance=tolerance, highestQuality=False)
-        for polygon in points_format
-    ]
-    simplified = [polygon for polygon in simplified if len(polygon) >= 6]
-    return points_to_segmentation(simplified)
 
 
 _CREATE_ANNOTATIONS = """

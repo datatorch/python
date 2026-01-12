@@ -120,8 +120,16 @@ class Project(BaseEntity):
         )
 
     def dataset(self, datasetName: str):
+        """Get a dataset by name. Raises ValueError if not found."""
         projectDatasets = self.datasets()
         dataset = [obj for obj in projectDatasets if obj.name == datasetName]
+        if len(dataset) == 0:
+            available = [d.name for d in projectDatasets]
+            raise ValueError(
+                f"Dataset '{datasetName}' not found in project. "
+                f"Available datasets: {available}. "
+                f"Please create the dataset in DataTorch first."
+            )
         return dataset[0]
 
     def files(self, where: Where = None, limit=500, page=1) -> List[File]:
