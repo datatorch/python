@@ -22,7 +22,7 @@ requirements = [
     "markupsafe==2.0.1",
     "requests_toolbelt==0.10.1",
     "imantics==0.1.12",
-    "shapely==2.0.6",  # Compatible Python 3.13
+    "shapely>=2.1.0",  # 2.1.0+ supports Python 3.14
     "tqdm~=4.65.0",
     "urllib3==1.26.15",
     "numpy",

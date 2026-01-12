@@ -12,7 +12,7 @@ aiostream
 markupsafe
 requests_toolbelt
 imantics
-shapely
+shapely>=2.1.0
 tqdm
 urllib3
 numpy
