@@ -18,7 +18,6 @@ class Spinner(object):
         self._thread.start()
 
     def _draw_spinner(self, speed=0.1):
-        global done, text
         while True:
             for cursor in "|/-\\":
                 sys.stdout.write("{} {} ".format(cursor, text))
