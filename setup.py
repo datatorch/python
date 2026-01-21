@@ -1,8 +1,8 @@
 from setuptools import setup, find_packages
 import sys
 
-# Ensure the Python version is 3.9 or higher
-assert sys.version_info >= (3, 9, 0), "DataTorch requires Python 3.9+"
+# Ensure the Python version is 3.10 or higher
+assert sys.version_info >= (3, 10, 0), "DataTorch requires Python 3.10+"
 
 with open("README.md", "r", encoding="utf-8") as fp:
     long_description = fp.read()
@@ -22,7 +22,7 @@ requirements = [
     "markupsafe==2.0.1",
     "requests_toolbelt==0.10.1",
     "imantics==0.1.12",
-    "shapely==2.0.6",  # Compatible Python 3.13
+    "shapely>=2.1.0",  # 2.1.0+ supports Python 3.14
     "tqdm~=4.65.0",
     "urllib3==1.26.15",
     "numpy",
@@ -45,7 +45,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=requirements,
-    python_requires=">=3.9",
+    python_requires=">=3.10",
     license="MIT license",
     zip_safe=False,
     include_package_data=True,
@@ -55,7 +55,7 @@ setup(
         "Framework :: Pytest",
         "Intended Audience :: Developers",
         "Natural Language :: English",
-        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
