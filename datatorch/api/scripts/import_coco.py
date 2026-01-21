@@ -17,7 +17,6 @@ from ...utils.converters import (
     simplify_segmentation,
 )
 
-
 try:
     from pycocotools.coco import COCO
 except:

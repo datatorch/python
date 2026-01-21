@@ -5,7 +5,6 @@ from .typings import Point2D
 from datatorch.api import ApiClient
 from ....entity.annotation import Annotation
 
-
 __all__ = "BoundingBox"
 
 

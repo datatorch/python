@@ -18,62 +18,51 @@ from .entity.user import User
 from .entity.project import Project
 from .entity.settings import Settings as ApiSettings
 
-
 __all__ = "ApiClient"
 
 
 logger = logging.getLogger(__name__)
 
 
-_SETTINGS = ApiSettings.add_fragment(
-    """
+_SETTINGS = ApiSettings.add_fragment("""
     query GetSettings {
       settings {
         ...SettingsFields
       }
     }
-    """
-)
+    """)
 
-_PROJECT_BY_NAME = Project.add_fragment(
-    """
+_PROJECT_BY_NAME = Project.add_fragment("""
     query GetProject($login: String!, $slug: String!) {
       project: project(login: $login, slug: $slug) {
         ...ProjectFields
       }
     }
-    """
-)
+    """)
 
-_PROJECT_BY_ID = Project.add_fragment(
-    """
+_PROJECT_BY_ID = Project.add_fragment("""
     query GetProjectId($id: ID!) {
       project: projectById(id: $id) {
         ...ProjectFields
       }
     }
-    """
-)
+    """)
 
-_FILE = File.add_fragment(
-    """
+_FILE = File.add_fragment("""
     query GetFile($fileId: ID!) {
       file(id: $fileId) {
         ...FileFields
       }
     }
-    """
-)
+    """)
 
-_VIEWER = User.add_fragment(
-    """
+_VIEWER = User.add_fragment("""
     query GetViewer {
       viewer {
         ...UserFields
       }
     }
-    """
-)
+    """)
 
 
 class ApiClient(Client):

@@ -6,7 +6,6 @@ from .base import BaseEntity
 from .label import Label
 from .sources.source import Source
 
-
 __all__ = "Annotation"
 
 

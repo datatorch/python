@@ -1,6 +1,5 @@
 from typing import Tuple, List
 
-
 __all__ = ["Point2D", "Segment"]
 
 

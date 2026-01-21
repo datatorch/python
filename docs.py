@@ -3,7 +3,6 @@ import os
 
 from pydoc_markdown import PydocMarkdown
 
-
 if __name__ == "__main__":
     config = yaml.safe_load(open(".pydocs"))
 

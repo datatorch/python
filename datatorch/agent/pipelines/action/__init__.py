@@ -7,7 +7,6 @@ import typing
 from datatorch.agent.directory import agent_directory
 from .config import ActionConfig, LATEST_VERSION
 
-
 if typing.TYPE_CHECKING:
     from ..step import Step
 

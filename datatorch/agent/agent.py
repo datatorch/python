@@ -13,7 +13,6 @@ from .directory import agent_directory
 from gql.client import AsyncClientSession
 from datatorch.agent.pipelines import Job
 
-
 logger = logging.getLogger(__name__)
 tasks: List[asyncio.Task] = []
 

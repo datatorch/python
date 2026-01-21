@@ -14,8 +14,7 @@ from tqdm import tqdm
 __all__ = "Project"
 
 
-_DATASETS = Dataset.add_fragment(
-    """
+_DATASETS = Dataset.add_fragment("""
     query ProjectDatasets($projectId: ID!) {
       project: projectById(id: $projectId) {
         datasets {
@@ -25,11 +24,9 @@ _DATASETS = Dataset.add_fragment(
         }
       }
     }
-    """
-)
+    """)
 
-_LABELS = Label.add_fragment(
-    """
+_LABELS = Label.add_fragment("""
     query GetProjectLabels($projectId: ID!) {
       project: projectById(id: $projectId) {
         labels {
@@ -37,11 +34,9 @@ _LABELS = Label.add_fragment(
         }
       }
     }
-    """
-)
+    """)
 
-_STORAGE_LINKS = StorageLink.add_fragment(
-    """
+_STORAGE_LINKS = StorageLink.add_fragment("""
     query GetStorageLinks($projectId: ID!) {
       project: projectById(id: $projectId) {
         storageLinks {
@@ -49,11 +44,9 @@ _STORAGE_LINKS = StorageLink.add_fragment(
         }
       }
     }
-    """
-)
+    """)
 
-_STORAGE_LINK_DEFAULT = StorageLink.add_fragment(
-    """
+_STORAGE_LINK_DEFAULT = StorageLink.add_fragment("""
     query GetStorageLinkDefault($projectId: ID!) {
       project: projectById(id: $projectId) {
         storageLinkDefault {
@@ -61,8 +54,7 @@ _STORAGE_LINK_DEFAULT = StorageLink.add_fragment(
         }
       }
     }
-    """
-)
+    """)
 
 _DATASET_FILES = File.add_fragment(
     """

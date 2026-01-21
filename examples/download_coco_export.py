@@ -2,7 +2,6 @@ from datatorch import ApiClient
 
 import json, os
 
-
 export_path = "./"
 # Project ID is found in the project Settings of the Datatorch web portal
 project_id = "project ID"  ## replace

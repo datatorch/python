@@ -1,6 +1,5 @@
 from typing import Any, Callable, Generic, TypeVar, Union
 
-
 T = TypeVar("T")
 R = TypeVar("R")
 

@@ -1,7 +1,6 @@
 from ..base import BaseEntity
 from datatorch.utils import snake_to_camel
 
-
 __all__ = "Source"
 
 

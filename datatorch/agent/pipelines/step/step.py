@@ -8,7 +8,6 @@ from ..template import Variables
 from typing import TYPE_CHECKING, Union
 import asyncio
 
-
 if TYPE_CHECKING:
     from ..job import Job
     from ...client import Log

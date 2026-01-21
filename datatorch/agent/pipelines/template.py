@@ -6,7 +6,6 @@ from jinja2 import Template
 from datatorch.agent.client import AgentJobConfig, AgentRunConfig
 from ..directory import agent_directory
 
-
 if typing.TYPE_CHECKING:
     from .step import Step
     from .action import Action

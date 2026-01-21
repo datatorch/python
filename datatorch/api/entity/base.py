@@ -7,7 +7,6 @@ from ..client import Client
 from datatorch.utils.objects import get_annotations, is_class_of
 from datatorch.utils.string_style import camel_to_snake, snake_to_camel
 
-
 __all__ = "BaseEntity"
 
 

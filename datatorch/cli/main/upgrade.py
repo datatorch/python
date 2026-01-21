@@ -4,7 +4,6 @@ import logging
 from datatorch.utils.package import get_latest, get_version, upgrade
 from ..spinner import Spinner
 
-
 logger = logging.getLogger(__name__)
 
 

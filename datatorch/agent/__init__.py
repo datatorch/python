@@ -18,7 +18,6 @@ from websockets import ConnectionClosedError
 from datatorch.api import Client as DtClient
 from datatorch.utils.package import get_version
 
-
 __all__ = ["Agent", "start", "stop"]
 
 

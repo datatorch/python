@@ -11,7 +11,6 @@ from ....scripts.utils.simplify import simplify_points
 from ....entity.annotation import Annotation
 from datatorch.api import ApiClient
 
-
 __all__ = "Segmentations"
 
 

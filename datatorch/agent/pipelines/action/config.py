@@ -6,7 +6,6 @@ from logging import getLogger
 from typing import Union
 from ...directory import agent_directory
 
-
 logger = getLogger(__name__)
 
 

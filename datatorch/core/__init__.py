@@ -1,6 +1,5 @@
 from datatorch.core.settings import Settings, UserSettings
 
-
 user_settings = UserSettings()
 
 

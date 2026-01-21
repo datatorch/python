@@ -8,7 +8,6 @@ from ..utils import map_entities
 from .base import BaseEntity
 from .annotation import Annotation
 
-
 __all__ = "File"
 
 
@@ -64,25 +63,21 @@ class File(BaseEntity):
         """
 
         if data_file:
-            return Annotation.add_fragment(
-                f"""
+            return Annotation.add_fragment(f"""
                 \nfragment {name} on DatasetFile {{
                   {all_file_props}
                   {data_file_props}
                 }}
-                """
-            )
+                """)
 
-        return Annotation.add_fragment(
-            f"""
+        return Annotation.add_fragment(f"""
             \nfragment {name} on {cls.__name__} {{
                 {all_file_props}
                 ... on DatasetFile {{
                     {data_file_props}
                 }}
             }}\n
-            """
-        )
+            """)
 
     id: str
     name: str
