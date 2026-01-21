@@ -2,7 +2,7 @@ import click
 
 
 @click.command(
-    "binmask", help="Import binary masks from a folder as polygon annotations."
+    "pixmask", help="Import pixel masks from a folder as polygon annotations."
 )
 # Required options (prompted)
 @click.option(
@@ -10,7 +10,7 @@ import click
     "--folder",
     type=click.Path(exists=True, file_okay=False, dir_okay=True),
     prompt=True,
-    help="Path to folder containing binary mask images.",
+    help="Path to folder containing pixel mask images.",
 )
 @click.option(
     "-p",
@@ -62,7 +62,7 @@ import click
     "--invert",
     is_flag=True,
     default=False,
-    help="Invert the binary mask before processing (swap foreground/background).",
+    help="Invert the pixel mask before processing (swap foreground/background).",
 )
 @click.option(
     "--skip",
@@ -70,15 +70,15 @@ import click
     default=False,
     help="Skip files that already have annotations.",
 )
-def binmask_cmd(
+def pixmask_cmd(
     folder, project, label, suffix, base_path, simplify, min_area, invert, skip
 ):
-    """Import binary masks from a folder into DataTorch as polygon annotations.
+    """Import pixel masks from a folder into DataTorch as polygon annotations.
 
     Images must already be uploaded to DataTorch before running this command.
     Use `datatorch upload folder` to upload images first.
 
-    Binary masks should be grayscale images where white (255) represents the object
+    Pixel masks should be grayscale images where white (255) represents the object
     and black (0) represents the background. The mask filenames should match
     the corresponding image files in your DataTorch project.
 
@@ -94,19 +94,19 @@ def binmask_cmd(
     \b
     # First upload images, then import masks
     $ datatorch upload folder ./images project-id
-    $ datatorch import binmask -f ./masks -p project-id -l "person"
+    $ datatorch import pixmask -f ./masks -p project-id -l "person"
 
     \b
     # Import masks where label is in filename
-    $ datatorch import binmask -f ./masks -p username/project
+    $ datatorch import pixmask -f ./masks -p username/project
 
     \b
     # Resume an interrupted import (skip already annotated files)
-    $ datatorch import binmask -f ./masks -p myproject -l "nail" --skip
+    $ datatorch import pixmask -f ./masks -p myproject -l "nail" --skip
     """
-    from datatorch.api.scripts.import_binmask import import_binmask
+    from datatorch.api.scripts.import_pixmask import import_pixmask
 
-    import_binmask(
+    import_pixmask(
         mask_folder=folder,
         project_string=project,
         label_name=label,

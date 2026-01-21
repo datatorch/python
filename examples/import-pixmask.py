@@ -1,12 +1,12 @@
 """
-This script imports binary mask annotations from a Kaggle nail semantic segmentation
+This script imports pixel mask annotations from a Kaggle nail semantic segmentation
 dataset into DataTorch.
 
 Dataset structure (typical for segmentation datasets):
     NailSegmentationDatasetV2/
     ├── train/
     │   ├── images/      <- Original images
-    │   └── masks/       <- Binary mask images (same filenames)
+    │   └── masks/       <- Pixel mask images (same filenames)
     ├── test/
     │   ├── images/
     │   └── masks/
@@ -164,9 +164,9 @@ if __name__ == "__main__":
     print("Step 2: Importing annotations from masks...")
     print("=" * 50)
 
-    from datatorch.api.scripts.import_binmask import import_binmask
+    from datatorch.api.scripts.import_pixmask import import_pixmask
 
-    import_binmask(
+    import_pixmask(
         mask_folder=masks_folder,
         project_string=project_id,
         label_name=label_name,

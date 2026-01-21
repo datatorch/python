@@ -7,15 +7,15 @@ from typing import List
 from datatorch.api.scripts.utils.simplify import simplify_points
 
 
-def binmask2cocorle(binary_mask):
-    """Takes in a binary mask and converts to COCO RLE"""
-    rle = {"counts": [], "size": list(binary_mask.shape)}
+def pixmask2cocorle(pixel_mask):
+    """Takes in a pixel mask and converts to COCO RLE"""
+    rle = {"counts": [], "size": list(pixel_mask.shape)}
     counts = rle.get("counts")
 
     last_elem = 0
     running_length = 0
 
-    for i, elem in enumerate(binary_mask.ravel(order="F")):
+    for i, elem in enumerate(pixel_mask.ravel(order="F")):
         if elem == last_elem:
             pass
         else:
@@ -29,8 +29,8 @@ def binmask2cocorle(binary_mask):
     return rle
 
 
-def binmask2cocopoly(binary_mask):
-    """Convert a binary mask to COCO polygon format [[x1,y1,x2,y2,...]]"""
+def pixmask2cocopoly(pixel_mask):
+    """Convert a pixel mask to COCO polygon format [[x1,y1,x2,y2,...]]"""
     try:
         from cv2 import findContours, RETR_TREE, CHAIN_APPROX_SIMPLE
     except:
@@ -38,7 +38,7 @@ def binmask2cocopoly(binary_mask):
         print("\t pip3 install opencv-python")
         print("\t import cv2")
 
-    contours, _ = findContours(binary_mask, RETR_TREE, CHAIN_APPROX_SIMPLE)
+    contours, _ = findContours(pixel_mask, RETR_TREE, CHAIN_APPROX_SIMPLE)
     segmentation = []
     valid_poly = 0
     for contour in contours:

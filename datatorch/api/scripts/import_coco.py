@@ -71,7 +71,7 @@ def has_bbox(bbox: BoundingBox, bboxs: List[tuple], max_iou: float) -> bool:
 
 
 def mask_iou(mask1, mask2):
-    """Calculate the Intersection over Union (IoU) of two np binary masks."""
+    """Calculate the Intersection over Union (IoU) of two np pixel masks."""
     union = mask1 * mask2
     union_area = np.count_nonzero(union)
     if union_area == 0:

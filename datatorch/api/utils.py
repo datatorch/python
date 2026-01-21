@@ -24,9 +24,3 @@ class Bulk(object):
 
     def create(self):
         pass
-
-
-def convert_mask_to_rle(mask):
-    from datatorch.api.scripts.import_coco import binary_mask_to_rle
-
-    binary_mask_to_rle(mask)

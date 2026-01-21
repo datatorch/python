@@ -10,7 +10,7 @@ from .utils.simplify import simplify_points
 
 from .. import ApiClient, File, Where, Project
 from ...utils.converters import (
-    binmask2cocopoly,
+    pixmask2cocopoly,
     points_to_segmentation,
     segmentation_to_points,
     simplify_segmentation,
@@ -20,7 +20,7 @@ try:
     import cv2
 except ImportError:
     raise ImportError(
-        "OpenCV is required for binary mask import. Install it with:\n"
+        "OpenCV is required for pixel mask import. Install it with:\n"
         "\tpip install opencv-python"
     )
 
@@ -33,10 +33,10 @@ def mask_to_polygons(
     min_area: float = 100.0,
 ) -> List[List[List[float]]]:
     """
-    Convert a binary mask to polygon contours using OpenCV.
+    Convert a pixel mask to polygon contours using OpenCV.
 
     Args:
-        mask: Binary mask image (numpy array)
+        mask: Pixel mask image (numpy array)
         simplify_tolerance: Tolerance for polygon simplification (0 to disable)
         min_area: Minimum polygon area to include
 
@@ -51,7 +51,7 @@ def mask_to_polygons(
 
     # Use the existing converter to get COCO polygon format [[x1,y1,x2,y2,...]]
     try:
-        coco_segmentation = binmask2cocopoly(mask)
+        coco_segmentation = pixmask2cocopoly(mask)
     except ValueError:
         # No valid polygons found
         return []
@@ -165,7 +165,7 @@ _CREATE_ANNOTATIONS = """
 """
 
 
-def import_binmask(
+def import_pixmask(
     mask_folder: str,
     project_string: str,
     label_name: str = None,
@@ -179,13 +179,13 @@ def import_binmask(
     api: ApiClient = None,
 ):
     """
-    Import binary masks from a folder into DataTorch as polygon annotations.
+    Import pixel masks from a folder into DataTorch as polygon annotations.
 
     Images must already be uploaded and imported into DataTorch before running this.
     Use `datatorch upload folder` to upload images first.
 
     Args:
-        mask_folder: Path to folder containing binary mask images
+        mask_folder: Path to folder containing pixel mask images
         project_string: DataTorch project identifier (e.g., "username/project" or UUID)
         label_name: Name of the label to assign to all annotations (required if masks don't have labels in filename)
         image_base_path: Base path for matching files in DataTorch (optional)
@@ -193,7 +193,7 @@ def import_binmask(
         simplify_tolerance: Tolerance for polygon simplification (0 to disable)
         min_area: Minimum polygon area to include as annotation
         file_extensions: List of image extensions to look for
-        invert_mask: If True, invert the binary mask before processing
+        invert_mask: If True, invert the pixel mask before processing
         skip_annotated: If True, skip files that already have annotations
         api: DataTorch API client (optional, will create one if not provided)
     """
@@ -383,10 +383,10 @@ def import_binmask(
                 f"[{mask_basename}] Successfully uploaded annotation with {len(polygons)} polygon(s)"
             )
 
-    _LOGGER.info("Binary mask import complete.")
+    _LOGGER.info("Pixel mask import complete.")
 
 
-def import_binmask_multi_label(
+def import_pixmask_multi_label(
     mask_folder: str,
     project_string: str,
     label_mapping: Dict[int, str],
