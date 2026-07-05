@@ -90,7 +90,7 @@ class AgentSystemStats(object):
         while True:
             self.sample += 1
             stats = self.stats()
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             if self.sample != 1:
                 loop.create_task(self.agent.api.metrics(stats))
             await asyncio.sleep(self.sample_rate)

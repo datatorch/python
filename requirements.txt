@@ -1,4 +1,4 @@
-Click==8.0.0
+Click==8.4.0
 gql
 websockets
 websocket-client

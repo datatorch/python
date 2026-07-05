@@ -8,7 +8,7 @@ with open("README.md", "r", encoding="utf-8") as fp:
     long_description = fp.read()
 
 requirements = [
-    "Click==8.0.0",
+    "Click==8.4.0",
     "gql==3.4.0",
     "websockets==10.4",
     "websocket-client",
@@ -33,7 +33,7 @@ requirements = [
 
 setup(
     name="datatorch",
-    version="0.4.9.1",
+    version="0.4.9.2",
     description="A CLI and library for interacting with DataTorch.",
     author="DataTorch",
     author_email="support@datatorch.io",

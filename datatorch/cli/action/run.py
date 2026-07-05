@@ -69,5 +69,4 @@ def run(folder):
             json.dumps(output, indent=4, sort_keys=True) if output else "No output."
         )
 
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(run_action())
+    asyncio.run(run_action())

@@ -150,5 +150,5 @@ async def stop() -> None:
     logger.info("Closing all other tasks.")
     await _exit_tasks()
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     loop.stop()

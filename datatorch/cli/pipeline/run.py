@@ -27,5 +27,4 @@ def run(path):
 
         await asyncio.wait(tasks)
 
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(run_jobs(Pipeline.from_yaml(path)))
+    asyncio.run(run_jobs(Pipeline.from_yaml(path)))

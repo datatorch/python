@@ -40,7 +40,7 @@ class Agent(object):
 
     def _init_threads(self):
         self.system_stats = AgentSystemStats(self)
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         task = loop.create_task(self.system_stats.start())
         tasks.append(task)
 
@@ -48,7 +48,7 @@ class Agent(object):
         """Waits for jobs from server."""
         logger.info("Waiting for jobs.")
         async for job_request in self.api.agent_jobs():
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             job = job_request.get("job")
             task = loop.create_task(self._run_job(job))
             tasks.append(task)
