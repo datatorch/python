@@ -20,6 +20,7 @@ outputs are supplied and such a reference resolves as unresolvable, i.e.
 raises rather than passing a literal ``${{ }}`` to the action. A yaml that
 uses job dependencies is a server-executed workflow.
 """
+
 import json
 import re
 from typing import Any, Dict, List, Set, Tuple
@@ -29,7 +30,9 @@ from typing import Any, Dict, List, Set, Tuple
 # The name group is ``[^}]+?`` (not ``.+?``) so it can't backtrack across a
 # ``}}`` boundary — a string that both starts and ends with a ref must not be
 # mistaken for one spanning ref.
-STEP_REF = r"\$\{\{\s*steps\.(?P<stepName>[^}]+?)\.outputs?\.(?P<stepKey>[\w.\-]+)\s*\}\}"
+STEP_REF = (
+    r"\$\{\{\s*steps\.(?P<stepName>[^}]+?)\.outputs?\.(?P<stepKey>[\w.\-]+)\s*\}\}"
+)
 INPUT_REF = r"\$\{\{\s*inputs?\.(?P<inputKey>[\w.\-]+)\s*\}\}"
 JOB_REF = r"\$\{\{\s*jobs\.(?P<jobName>[^}]+?)\.outputs?\.(?P<jobKey>[\w.\-]+)\s*\}\}"
 
@@ -123,9 +126,7 @@ def _resolve(
         ]
     if isinstance(value, dict):
         return {
-            k: _resolve(
-                v, outputs_by_name, trigger_input, job_outputs_by_name, misses
-            )
+            k: _resolve(v, outputs_by_name, trigger_input, job_outputs_by_name, misses)
             for k, v in value.items()
         }
     return value

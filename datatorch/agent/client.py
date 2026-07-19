@@ -78,9 +78,7 @@ class AgentApiClient(object):
             }
         """ % STEP_DISPATCH_FIELDS)
         # fmt: on
-        return cast(
-            AsyncGenerator[AgentStepRequest, None], self.session.subscribe(sub)
-        )
+        return cast(AsyncGenerator[AgentStepRequest, None], self.session.subscribe(sub))
 
     def agent_step_cancels(self):
         """Subscribe to stop signals for steps this agent is running.
@@ -156,9 +154,7 @@ class AgentApiClient(object):
             step_input["renderedInput"] = rendered_input
         if error_message is not None:
             step_input["errorMessage"] = error_message
-        result = await self.execute(
-            mutate, params={"id": step_id, "input": step_input}
-        )
+        result = await self.execute(mutate, params={"id": step_id, "input": step_input})
         return bool(result.get("completed"))
 
     def initial_metrics(self, metrics):

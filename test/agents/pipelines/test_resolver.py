@@ -64,9 +64,7 @@ class TestResolveStepInput(unittest.TestCase):
                 "nested": {"deep": {"v": "${{ steps.Fetch.output.ok }}"}},
             }
         )
-        self.assertEqual(
-            value, {"list": [42, "x"], "nested": {"deep": {"v": True}}}
-        )
+        self.assertEqual(value, {"list": [42, "x"], "nested": {"deep": {"v": True}}})
 
     def test_collects_unresolved_and_leaves_untouched(self):
         value, unresolved = resolve(
@@ -117,9 +115,7 @@ class TestResolveStepInput(unittest.TestCase):
             {},
             {"build": {"artifact": "app.tar"}},
         )
-        self.assertEqual(
-            value, {"raw": "app.tar", "msg": "built app.tar"}
-        )
+        self.assertEqual(value, {"raw": "app.tar", "msg": "built app.tar"})
         self.assertEqual(unresolved, [])
 
     def test_job_outputs_alias(self):
@@ -131,8 +127,6 @@ class TestResolveStepInput(unittest.TestCase):
     def test_job_output_unresolvable_in_local_mode(self):
         # Local mode supplies no job outputs (single-job execution), so a
         # jobs.* reference is a strict miss rather than a silent pass-through.
-        value, unresolved = resolve(
-            {"x": "${{ jobs.build.outputs.artifact }}"}
-        )
+        value, unresolved = resolve({"x": "${{ jobs.build.outputs.artifact }}"})
         self.assertEqual(value["x"], "${{ jobs.build.outputs.artifact }}")
         self.assertEqual(unresolved, ["${{ jobs.build.outputs.artifact }}"])

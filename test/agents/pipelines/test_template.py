@@ -34,9 +34,7 @@ class TestVariables(unittest.TestCase):
     def test_string_inputs_render_machine_local_refs(self):
         v = Variables()
         v.add_input("path", "${{ directory.temp }}/x")
-        self.assertEqual(
-            v.inputs["path"], global_variables["directory"]["temp"] + "/x"
-        )
+        self.assertEqual(v.inputs["path"], global_variables["directory"]["temp"] + "/x")
 
     def test_retired_namespaces_raise(self):
         # job/run/pipeline/trigger/event are server-side concepts now; the

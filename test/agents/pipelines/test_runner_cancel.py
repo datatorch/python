@@ -4,6 +4,7 @@ cancelled — the server pushed a stop signal, or the agent disconnected —
 the runner must kill its child process instead of orphaning it, and let the
 CancelledError propagate so the step aborts.
 """
+
 import asyncio
 
 import pytest

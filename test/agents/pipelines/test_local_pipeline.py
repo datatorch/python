@@ -4,6 +4,7 @@ output via the canonical ``${{ steps.<name>.output.<key> }}`` syntax —
 the same dataflow the server orchestrator drives in production, exercised
 through the cmd runner's ``::key::value`` output protocol.
 """
+
 import asyncio
 import os
 import unittest

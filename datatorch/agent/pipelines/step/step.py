@@ -25,9 +25,7 @@ class Step(object):
     """
 
     @classmethod
-    def from_dispatch(
-        cls, dispatch: "AgentStepDispatch", api: "AgentApiClient" = None
-    ):
+    def from_dispatch(cls, dispatch: "AgentStepDispatch", api: "AgentApiClient" = None):
         return cls(
             id=dispatch.get("stepId"),
             action=dispatch.get("action", ""),

@@ -17,9 +17,7 @@ if typing.TYPE_CHECKING:
 # data (trigger payloads, fetched step outputs); splicing them into a shell
 # string is command injection, so shell/cmd runners must read them from
 # $INPUT_<NAME> env vars instead.
-_INPUT_REF_IN_TEMPLATE = re.compile(
-    r"\$\{[{%][^}]*?(?<![.\w])(?:input|variable)(?!\w)"
-)
+_INPUT_REF_IN_TEMPLATE = re.compile(r"\$\{[{%][^}]*?(?<![.\w])(?:input|variable)(?!\w)")
 
 
 class InputInjectionError(Exception):
@@ -146,9 +144,7 @@ class Variables(object):
                 "policy; see docs/Pipelines.md.)"
             )
         context = {
-            k: v
-            for k, v in self.variables.items()
-            if k not in ("input", "variable")
+            k: v for k, v in self.variables.items() if k not in ("input", "variable")
         }
         return self._template(string).render({**global_variables, **context})
 
