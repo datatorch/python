@@ -16,5 +16,8 @@ class CommandRunner(Runner):
             raise ValueError("A command was not provided to run.")
 
     async def execute(self):
-        command = self.config.get("command")
-        await self.monitor_cmd(str(command))
+        # Render machine-local refs only; ${{ input.* }} is forbidden here
+        # (injection policy). Resolved inputs reach the command as
+        # $INPUT_<NAME> environment variables instead.
+        command = self.get_command("command")
+        await self.monitor_cmd(str(command), env=self.input_env())

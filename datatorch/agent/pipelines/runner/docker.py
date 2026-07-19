@@ -1,3 +1,5 @@
+import asyncio
+
 from aiodocker import Docker
 from aiodocker.containers import DockerContainer
 
@@ -11,11 +13,21 @@ class DockerRunner(Runner):
 
     async def execute(self):
         container = await self.run_container()
-        await container.start()
-        async for log in container.log(stdout=True, follow=True):
-            print(log)
-        await container.stop()
-        await self.docker.close()
+        try:
+            await container.start()
+            async for log in container.log(stdout=True, follow=True):
+                print(log)
+            await container.stop()
+        except asyncio.CancelledError:
+            # Step canceled/timed out server-side — stop the container so it
+            # doesn't outlive the step.
+            try:
+                await container.stop()
+            except Exception:
+                pass
+            raise
+        finally:
+            await self.docker.close()
 
     async def run_container(self) -> DockerContainer:
         config = {"Image": self.config.get("image")}

@@ -117,10 +117,6 @@ class Action(object):
                         variable_value = json.loads(variable_value)
                     variables.add_input(k, variable_value)
 
-        if self.step is not None:
-            # Update steps output after casting.
-            await self.step.update(inputs=variables.inputs)
-
         logger.debug(f"Inputs for '{self.full_name}': {json.dumps(variables.inputs)}")
 
         output = self.get_cached(variables)

@@ -1,7 +1,7 @@
 from datatorch.utils.objects import pick
 from datatorch.agent.pipelines.action.config import ActionConfig
 import logging
-from typing import List
+from typing import List, Optional
 from datetime import datetime, timezone
 from ..action import get_action, Action
 from ..template import Variables
@@ -9,27 +9,43 @@ from typing import TYPE_CHECKING, Union
 import asyncio
 
 if TYPE_CHECKING:
-    from ..job import Job
-    from ...client import Log
+    from ...client import AgentApiClient, AgentStepDispatch, Log
 
 
 UPLOAD_LOGS_EVERY_SECONDS = 10
 
 
 class Step(object):
-    @classmethod
-    def from_dict_list(cls, steps: List[dict], job: "Job" = None):
-        return [cls.from_dict(s, job) for s in steps]
+    """
+    A single executable step. Server mode builds it from an
+    AgentStepDispatch (inputs already server-resolved); local mode builds
+    it from the yaml config (inputs resolved by pipelines.resolver).
+    Status reporting (claim/complete) is the caller's job — the step only
+    executes and uploads logs.
+    """
 
     @classmethod
-    def from_dict(cls, step: dict, job: "Job" = None):
+    def from_dispatch(
+        cls, dispatch: "AgentStepDispatch", api: "AgentApiClient" = None
+    ):
+        return cls(
+            id=dispatch.get("stepId"),
+            action=dispatch.get("action", ""),
+            name=dispatch.get("stepName") or "",
+            inputs=dispatch.get("input") or {},
+            run_id=dispatch.get("runId"),
+            api=api,
+        )
+
+    @classmethod
+    def from_dict(cls, step: dict, api: "AgentApiClient" = None):
         return cls(
             id=step.get("id"),
             cacheable=step.get("cache", None),
             action=step.get("action", ""),
             name=step.get("name", ""),
             inputs=step.get("inputs", {}),
-            job=job,
+            api=api,
         )
 
     def __init__(
@@ -39,7 +55,8 @@ class Step(object):
         name: str = "",
         cacheable: Union[bool, None] = None,
         inputs: dict = {},
-        job: "Job" = None,
+        run_id: str = None,
+        api: "AgentApiClient" = None,
     ):
         self._action = ActionConfig(action)
         self.id = id
@@ -47,33 +64,13 @@ class Step(object):
         self.name = name
         self.inputs = inputs
         self.cacheable = cacheable
-        self.job = job
+        self.run_id = run_id
+        self.api = api
+        self.rendered_inputs: Optional[dict] = None
         self.logger = logging.getLogger(f"datatorch.agent.[{self._action.full_name}]")
 
     async def action(self) -> Action:
         return await get_action(self._action, step=self)
-
-    async def update(
-        self, inputs: dict = None, status: str = None, outputs: dict = None
-    ):
-        if self.api is None or self.id is None:
-            return
-
-        if inputs is not None:
-            inputs = pick(inputs.copy(), list(self.inputs.keys()))
-
-        iso_date = datetime.now(timezone.utc).isoformat()[:-9] + "Z"
-        variables = {
-            "id": self.id,
-            "inputs": inputs,
-            "outputs": outputs,
-            "status": status,
-            "startedAt": iso_date if status == "RUNNING" else None,
-            "finishedAt": (
-                iso_date if status == "SUCCESS" or status == "FAILED" else None
-            ),
-        }
-        await self.api.update_step(variables)
 
     async def run(self, variables: Variables) -> dict:
         # Upload logs in the background.
@@ -81,34 +78,31 @@ class Step(object):
 
         variables.set_step(self)
 
-        # Add specified inputs
+        # Seed the step's own inputs into the action-local `input`
+        # namespace (rendering machine-local template refs).
         for k, v in self.inputs.items():
             variables.add_input(k, v)
 
-        # Outputs will be updated by the action as it casts them into the
-        # correct format.
-        await self.update(status="RUNNING")
+        try:
+            action = await self.action()
+            outputs = await action.run(variables)
+        finally:
+            task.cancel()
 
-        action = await self.action()
-        outputs = await action.run(variables)
+        # What actually ran: the inputs after machine-local rendering and
+        # the action's default/required/type-cast pass. Echoed to the
+        # server on completion.
+        self.rendered_inputs = pick(
+            variables.inputs.copy(),
+            list({**action.inputs, **self.inputs}.keys()),
+        )
 
-        for k, v in outputs.items():
-            variables.add_input(k, v)
-
-        task.cancel()
-        await self.update(outputs=outputs, status="SUCCESS")
         await self.upload_logs()
-
         return outputs
 
     async def log_uploader(self):
         await asyncio.sleep(UPLOAD_LOGS_EVERY_SECONDS)
         await self.upload_logs()
-
-    @property
-    def api(self):
-        """Agent API Client if it exists."""
-        return self.job and self.job.api
 
     def log(self, message: str):
         """Records a log message."""
@@ -118,7 +112,7 @@ class Step(object):
 
     async def upload_logs(self):
         """Uploads saved logs to webserver."""
-        if self.id and len(self.logs) > 0:
+        if self.api and self.id and len(self.logs) > 0:
             logs = self.logs
             self.logs = []
             await self.api.upload_step_logs(self.id, logs)

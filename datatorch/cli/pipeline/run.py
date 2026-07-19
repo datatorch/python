@@ -1,8 +1,7 @@
-from datatorch.agent.pipelines.template import create_variables_mock
 import click
 import asyncio
 
-from datatorch.agent.pipelines import Pipeline, Job, Variables
+from datatorch.agent.pipelines import Pipeline, Job
 from datatorch.agent import setup_logging
 
 
@@ -12,19 +11,12 @@ def run(path):
     setup_logging()
 
     async def run_jobs(pipeline: Pipeline):
-        """Run tasks in parallel"""
+        """Run jobs in parallel (steps within a job run sequentially)."""
         tasks = []
-        for k, v in pipeline.config.get("jobs").items():
-            config = {
-                run: {
-                    "config": pipeline.config,
-                },
-                "steps": v.get("steps"),
-            }
-            variables = create_variables_mock(config)
-            v["name"] = k
-            tasks.append(Job(v).run(variables))
+        for name, config in pipeline.config.get("jobs").items():
+            config["name"] = name
+            tasks.append(Job(config).run())
 
-        await asyncio.wait(tasks)
+        await asyncio.gather(*tasks, return_exceptions=True)
 
     asyncio.run(run_jobs(Pipeline.from_yaml(path)))

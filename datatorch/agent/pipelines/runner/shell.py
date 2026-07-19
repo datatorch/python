@@ -14,7 +14,10 @@ class ShellRunner(Runner):
             raise ValueError("A script was not provided.")
 
     async def execute(self):
-        script = self.get("script").strip("/")
+        # `script` is a path; render machine-local refs only (no
+        # ${{ input.* }} — injection policy). Inputs reach the script as
+        # $INPUT_<NAME> environment variables.
+        script = self.get_command("script").strip("/")
         script_command = os.path.join(self.action.dir, script)
         await self.run_cmd("chmod +x {}".format(script_command.split(" ", 1)[0]))
-        await self.monitor_cmd(script_command)
+        await self.monitor_cmd(script_command, env=self.input_env())

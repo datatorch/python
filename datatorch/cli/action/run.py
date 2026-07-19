@@ -7,9 +7,8 @@ import logging
 
 from datatorch.agent import logger
 from datatorch.agent.pipelines.action import Action
-from datatorch.agent.pipelines.template import Variables, create_variables_mock
+from datatorch.agent.pipelines.template import Variables
 from datatorch.agent.pipelines.action.config import ActionConfig
-from datatorch.agent.client import AgentJobConfig, AgentRunConfig
 
 
 def _prompt_for_inputs(action: Action, variables: Variables):
@@ -55,7 +54,7 @@ def run(folder):
 
     action = _create_local_action(folder)
 
-    variables = create_variables_mock()
+    variables = Variables()
     variables.set_action(action)
 
     _prompt_for_inputs(action, variables)

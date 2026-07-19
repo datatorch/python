@@ -2,10 +2,14 @@
   "$schema": "http://json-schema.org/draft-07/schema",
   "$id": "http://datatorch.io/schema/action.v1.json",
   "title": "DataTorch Action Schema",
-  "description": "Schema for creating DataTorch actions",
+  "description": "Schema for authoring DataTorch actions (action-datatorch.yaml). This schema is authoring guidance for editors: it is stricter than the agent runtime, which ignores unknown keys.",
   "additionalProperties": false,
-  "required": ["name", "author", "description", "runs"],
+  "required": ["name", "runs"],
   "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional reference to this schema for editor tooling."
+    },
     "name": {
       "type": "string",
       "description": "The name of your action. DataTorch displays the name when the action is ran.",
@@ -17,7 +21,11 @@
     },
     "description": {
       "type": "string",
-      "maxLength": 120
+      "maxLength": 500
+    },
+    "cache": {
+      "type": "boolean",
+      "description": "Enable caching of results keyed on the action's inputs. A pipeline step's cache setting overrides this."
     },
     "inputs": {
       "description": "Input parameters allow you to specify data that the action expects to use during runtime.",
@@ -28,8 +36,8 @@
           "properties": {
             "type": {
               "type": "string",
-              "description": "Expected type of the input to be.",
-              "enum": ["string", "float", "integer", "boolean"],
+              "description": "Expected type of the input.",
+              "enum": ["string", "float", "integer", "boolean", "array", "list"],
               "default": "string"
             },
             "description": {
@@ -45,11 +53,21 @@
               "description": "A boolean to indicate whether the action requires the input parameter. Set to true when the parameter is required."
             },
             "default": {
-              "type": ["string", "boolean", "number", "null", "integer"],
-              "description": "The default value is used when an input parameter isn't specified in a workflow file."
+              "description": "The default value is used when an input parameter isn't specified in a workflow file.",
+              "type": ["string", "boolean", "number", "null", "integer", "array"]
+            },
+            "multiline": {
+              "type": "boolean",
+              "description": "String inputs only: render as a multi-line text area in forms."
+            },
+            "options": {
+              "type": "array",
+              "description": "String inputs only: restrict the value to this list (rendered as a select in forms; membership enforced server-side).",
+              "items": { "type": "string" },
+              "minItems": 1,
+              "uniqueItems": true
             }
           },
-          "required": ["type", "description"],
           "additionalProperties": false
         }
       },
@@ -64,16 +82,42 @@
           "properties": {
             "type": {
               "type": "string",
-              "description": "Expected type of the input to be.",
+              "description": "Expected type of the output.",
               "enum": ["string", "number", "boolean"],
               "default": "string"
             },
             "description": {
-              "description": "A string description of the input parameter.",
+              "description": "A string description of the output parameter.",
               "type": "string"
+            },
+            "multiline": {
+              "type": "boolean",
+              "description": "String outputs only: render as a multi-line text area in human task forms."
+            },
+            "options": {
+              "type": "array",
+              "description": "String outputs only: restrict the value to this list (rendered as a select in human task forms; membership enforced at submission).",
+              "items": { "type": "string" },
+              "minItems": 1,
+              "uniqueItems": true
             }
           },
-          "required": ["type", "description"],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "env": {
+      "description": "Environment variables the action reads from the agent's environment (e.g. API keys). Declare names and descriptions only — NEVER values. Values are provided by the agent's environment; declaring them here documents the requirement and feeds the pipeline requirements manifest.",
+      "type": "object",
+      "patternProperties": {
+        "^[A-Z_][A-Z0-9_]*$": {
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "Why/when the action needs this variable (e.g. 'Needed when provider is anthropic')."
+            }
+          },
           "additionalProperties": false
         }
       },
@@ -86,11 +130,11 @@
         "using": {
           "description": "The application to use to execute the code specified in main.",
           "type": "string",
-          "enum": ["cmd", "script", "node", "python", "docker"]
+          "enum": ["cmd", "script", "node", "python", "docker", "human"]
         },
         "command": {
           "type": "string",
-          "description": "Required for 'cmd': Command to execute."
+          "description": "Required for 'cmd': Command to execute. Read step inputs from $INPUT_<NAME> environment variables — interpolating ${{ input.* }} into a command raises InputInjectionError."
         },
         "main": {
           "type": "string",
@@ -133,6 +177,21 @@
             "main": { "not": {} }
           },
           "required": ["command"]
+        },
+        {
+          "properties": {
+            "using": { "const": "docker" },
+            "main": { "not": {} }
+          },
+          "required": ["image"]
+        },
+        {
+          "properties": {
+            "using": { "const": "human" },
+            "image": { "not": {} },
+            "command": { "not": {} },
+            "main": { "not": {} }
+          }
         }
       ]
     }
@@ -145,12 +204,18 @@
       "inputs": {
         "string": {
           "type": "string",
+          "description": "Text to print.",
           "default": "Hello world"
+        }
+      },
+      "env": {
+        "EXAMPLE_API_KEY": {
+          "description": "Example of declaring a required environment variable. Never put values here."
         }
       },
       "runs": {
         "using": "cmd",
-        "command": "echo ${{ input.string }}"
+        "command": "echo \"$INPUT_STRING\""
       }
     }
   ]

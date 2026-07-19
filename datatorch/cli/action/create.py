@@ -37,7 +37,9 @@ def create(name, description, json):
             }
         },
         "outputs": {},
-        "runs": {"using": "cmd", "command": "echo ${{ input.example }}"},
+        # Inputs reach shell commands as $INPUT_<NAME> environment variables;
+        # interpolating ${{ input.* }} into a command raises InputInjectionError.
+        "runs": {"using": "cmd", "command": 'echo "$INPUT_EXAMPLE"'},
     }
     if json:
         with open("action-datatorch.json", "w") as outfile:

@@ -1,61 +1,53 @@
 import logging
-import os
-import yaml
-import typing
 
-from ...directory import agent_directory
 from ..step import Step
 from ..template import Variables
-
-if typing.TYPE_CHECKING:
-    from ...agent import Agent
-
+from ..resolver import UnresolvedReferenceError, resolve_step_input
 
 logger = logging.getLogger("datatorch.agent.job")
 
 
 class Job(object):
-    def __init__(self, config: dict, agent: "Agent" = None):
+    """
+    LOCAL-MODE step sequencer (``datatorch pipeline run <yaml>``).
+
+    Against the server, jobs are sequenced by the server-side orchestrator
+    and this class is not involved — the agent executes one dispatched
+    step at a time. Local mode replicates the server's behavior so the
+    same yaml works in both places: steps run sequentially, each step's
+    ``${{ steps.<name>.output.<key> }}`` / ``${{ input.<key> }}``
+    references are resolved (strictly) from earlier outputs before it
+    runs, and the first failure skips the rest.
+    """
+
+    def __init__(self, config: dict, trigger_input: dict = None):
         self.config = config
-        self.agent = agent
+        self.name = config.get("name")
+        self.trigger_input = trigger_input or {}
 
-        self.id = self.config.get("id")
-        # Id wont be passed in when we are running a pipeline from the CLI tool.
-        self.dir = agent_directory.run_dir(self.id) if self.id else "./"
+    async def run(self):
+        """Runs each step of the job, resolving references in between."""
+        outputs_by_name = {}
 
-        if self.id:
-            path = os.path.join(self.dir, "job.yaml")
-            with open(path, "w") as yaml_config:
-                yaml.dump(self.config, yaml_config, default_flow_style=False)
-
-    async def update(self, status: str) -> None:
-        if self.agent is None or self.id is None:
-            return None
-        variables = {"id": self.id, "status": status}
-        await self.agent.api.update_job(variables)
-
-    async def run(self, variables: Variables):
-        """Runs each step of the job."""
-        steps = Step.from_dict_list(self.config.get("steps", []), job=self)
-        await self.update("RUNNING")
-
-        for step in steps:
+        for step_config in self.config.get("steps", []):
+            name = step_config.get("name")
             try:
-                await step.run(variables)
+                resolved, unresolved = resolve_step_input(
+                    step_config.get("inputs", {}),
+                    outputs_by_name,
+                    self.trigger_input,
+                )
+                if unresolved:
+                    raise UnresolvedReferenceError(unresolved)
+
+                step = Step.from_dict({**step_config, "inputs": resolved})
+                outputs = await step.run(Variables())
+                if name:
+                    outputs_by_name[name] = outputs or {}
             except Exception as e:
-                logger.error(f"Job {self.config.get('name')} {self.id} failed: {e}")
-                step.log(f"Step failed: {e}.")
-                await step.upload_logs()
-                await step.update(status="FAILED")
-                break
+                logger.error(f"Job {self.name} failed on step '{name}': {e}")
+                logger.error("Skipping remaining steps.")
+                raise
 
-        else:
-            await self.update("SUCCESS")
-            logger.info("Successfully completed job.")
-            return
-
-        await self.update("FAILED")
-
-    @property
-    def api(self):
-        return self.agent and self.agent.api
+        logger.info(f"Successfully completed job '{self.name}'.")
+        return outputs_by_name

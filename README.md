@@ -15,7 +15,7 @@
 
 ## Installation
 
-*Note*: Newer versions (>=0.4.8.2) of DataTorch client use `libmagic` for more 
+_Note_: Newer versions (>=0.4.8.2) of DataTorch client use `libmagic` for more
 accurate mimetype guessing. This falls back to guessing via extension. Consider
 installing `libmagic` if you have issues with file types uploaded to DataTorch.
 
@@ -36,3 +36,13 @@ pip3 install -r requirements.txt
 
 Open your VSCode settings, by going `Code -> Preferences -> Settings`. Search
 for "python formatting provider" and select "black" from the dropdown menu.
+
+#### Testing
+
+python3 -m build
+
+python3 -m venv env
+
+rm -rf env
+
+source env/bin/activate && pip3 install dist/datatorch-0.6.1-py3-none-any.whl && pip3 install pycocotools

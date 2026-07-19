@@ -1,5 +1,4 @@
-from datatorch.api.api import ApiClient
-from typing import AsyncGenerator, List, cast
+from typing import AsyncGenerator, List, Optional, cast
 from gql import gql
 from .directory import agent_directory
 from gql.client import AsyncClientSession
@@ -12,94 +11,155 @@ class Log(TypedDict):
     message: str
 
 
-class AgentPipelineConfig(TypedDict):
-    id: str
-    projectId: str
-    creatorId: str
-    lastRunNumber: int
+class AgentStepDispatch(TypedDict):
+    """A ready step pushed to this agent (agent protocol v2).
 
+    ``input`` arrives server-resolved: ``steps.*`` and ``input.*``
+    references are already substituted with concrete values.
+    """
 
-class AgentStepsConfig(TypedDict):
-    id: str
-    name: str
+    stepId: str
+    agentId: str
     action: str
-    index: int
-
-
-class AgentTriggerConfig(TypedDict):
-    id: str
-    type: str
-    event: dict
-
-
-class AgentRunConfig(TypedDict):
-    id: str
-    name: str
-    text: str
-    config: dict
+    stepName: Optional[str]
+    stepIndex: int
+    input: dict
+    jobId: str
+    jobName: str
+    runId: str
     runNumber: int
-    pipeline: AgentPipelineConfig
-    trigger: AgentTriggerConfig
+    pipelineId: str
+    projectId: str
 
 
-class AgentJobConfig(TypedDict):
-    id: str
-    name: str
-    run: AgentRunConfig
-    steps: List[AgentStepsConfig]
+class AgentStepRequest(TypedDict):
+    step: AgentStepDispatch
 
 
-class AgentRequestConfig(TypedDict):
-    job: AgentJobConfig
+class AgentStepCancel(TypedDict):
+    """A stop signal for a step this agent is currently running."""
+
+    stepId: str
+    agentId: str
+
+
+class AgentStepCancelRequest(TypedDict):
+    cancel: AgentStepCancel
+
+
+STEP_DISPATCH_FIELDS = """
+    stepId
+    agentId
+    action
+    stepName
+    stepIndex
+    input
+    jobId
+    jobName
+    runId
+    runNumber
+    pipelineId
+    projectId
+"""
 
 
 class AgentApiClient(object):
     def __init__(self, session: AsyncClientSession):
         self.session = session
 
-    def agent_jobs(self):
-        """Subscriptions to the agent job assignment namespace."""
+    def agent_steps(self):
+        """Subscribe to ready steps dispatched to this agent."""
         # fmt: off
         sub = gql("""
             subscription {
-                job: agentJobs {
-                    id
-                    name
-                    run {
-                        id
-                        name
-                        text
-                        config
-                        runNumber
-                        pipeline {
-                            id
-                            projectId
-                            creatorId
-                            lastRunNumber
-                        }
-                        trigger {
-                            id
-                            trigger {
-                                id
-                                type
-                                config
-                            }
-                            event
-                        }
-                    }
-                    steps {
-                        id
-                        name
-                        index
-                        action
-                    }
+                step: agentSteps {
+                    %s
+                }
+            }
+        """ % STEP_DISPATCH_FIELDS)
+        # fmt: on
+        return cast(
+            AsyncGenerator[AgentStepRequest, None], self.session.subscribe(sub)
+        )
+
+    def agent_step_cancels(self):
+        """Subscribe to stop signals for steps this agent is running.
+
+        Best effort: the server has already moved the step terminal, so a
+        missed signal only means the step runs to harmless completion.
+        """
+        # fmt: off
+        sub = gql("""
+            subscription {
+                cancel: agentStepCancels {
+                    stepId
+                    agentId
                 }
             }
         """)
         # fmt: on
         return cast(
-            AsyncGenerator[AgentRequestConfig, None], self.session.subscribe(sub)
+            AsyncGenerator[AgentStepCancelRequest, None],
+            self.session.subscribe(sub),
         )
+
+    async def pending_steps(self) -> List[AgentStepDispatch]:
+        """Steps dispatched to this agent but not yet claimed.
+
+        Called on (re)connect: pushes missed while offline are recovered
+        here.
+        """
+        # fmt: off
+        query = """
+            query PendingSteps {
+                steps: agentPendingSteps {
+                    %s
+                }
+            }
+        """ % STEP_DISPATCH_FIELDS
+        # fmt: on
+        result = await self.execute(query)
+        return cast(List[AgentStepDispatch], result.get("steps", []))
+
+    async def claim_step(self, step_id: str) -> bool:
+        """Atomically claim a dispatched step. False = already claimed."""
+        # fmt: off
+        mutate = """
+            mutation ClaimStep($id: ID!) {
+                claimed: claimPipelineStep(id: $id)
+            }
+        """
+        # fmt: on
+        result = await self.execute(mutate, params={"id": step_id})
+        return bool(result.get("claimed"))
+
+    async def complete_step(
+        self,
+        step_id: str,
+        success: bool,
+        output: Optional[dict] = None,
+        rendered_input: Optional[dict] = None,
+        error_message: Optional[str] = None,
+    ) -> bool:
+        """Report the result of a claimed step."""
+        # fmt: off
+        mutate = """
+            mutation CompleteStep($id: ID!, $input: CompletePipelineStepInput!) {
+                completed: completePipelineStep(id: $id, input: $input)
+            }
+        """
+        # fmt: on
+        step_input = {"success": success}
+        if output is not None:
+            step_input["output"] = output
+        if rendered_input is not None:
+            step_input["renderedInput"] = rendered_input
+        if error_message is not None:
+            step_input["errorMessage"] = error_message
+        result = await self.execute(
+            mutate, params={"id": step_id, "input": step_input}
+        )
+        return bool(result.get("completed"))
 
     def initial_metrics(self, metrics):
         # fmt: off
@@ -170,45 +230,6 @@ class AgentApiClient(object):
         params = {"agentId": agent_directory.settings.agent_id, **metrics}
         return self.execute(mutate, params=params)
 
-    def update_step(self, values: dict):
-        # fmt: off
-        mutate = """
-            mutation UpdateStepRun(
-                $id: ID!
-                $inputs: JSON
-                $outputs: JSON
-                $status: PipelineStepStatus
-                $startedAt: DateTime
-                $finishedAt: DateTime
-            ) {
-                updatePipelineStep(
-                    id: $id
-                    input: {
-                        status: $status
-                        output: $outputs
-                        input: $inputs
-                        startedAt: $startedAt
-                        finishedAt: $finishedAt
-                    }
-                )
-            }
-        """
-        # fmt: on
-        return self.execute(mutate, params=values)
-
-    async def update_job(self, values: dict):
-        # fmt: off
-        mutate = """
-            mutation UpdateJob($id: ID!, $status: PipelineJobStatus) {
-                updatePipelineJobRun(
-                    id: $id,
-                    input: { status: $status }
-                )
-            }
-        """
-        # fmt: on
-        return await self.execute(mutate, params=values)
-
     def upload_step_logs(self, step_id: str, logs: List[Log]):
         # fmt: off
         mutate = """
@@ -227,7 +248,3 @@ class AgentApiClient(object):
         return await self.session.execute(
             query, *args, variable_values=removed_none, **kwargs
         )
-
-
-def create_client():
-    ApiClient
