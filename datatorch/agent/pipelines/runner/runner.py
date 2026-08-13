@@ -14,6 +14,12 @@ class ProcessCodeError(Exception):
     pass
 
 
+# Max size of one stdout line from an action subprocess. Output values
+# arrive as one `::var::<json>` line, so this bounds the largest single
+# output value (e.g. an http-request body), not ordinary log lines.
+STDOUT_LINE_LIMIT = 16 * 1024 * 1024
+
+
 class Runner(object):
     def __init__(self, config: dict, action: "Action"):
         self.config = config
@@ -110,6 +116,11 @@ class Runner(object):
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,
             env={**os.environ, **(env or {})},
+            # Outputs are reported as single `::var::<json>` stdout lines
+            # (see check_for_output), so a line can carry an entire fetched
+            # page body — asyncio's 64KB default readline limit kills the
+            # stream with LimitOverrunError on anything larger.
+            limit=STDOUT_LINE_LIMIT,
         )
         if wait:
             await process.wait()

@@ -56,6 +56,14 @@ _FILE = File.add_fragment("""
     }
     """)
 
+_DATASET = Dataset.add_fragment("""
+    query GetDataset($id: ID!) {
+      dataset: datasetById(id: $id) {
+        ...DatasetFields
+      }
+    }
+    """)
+
 _VIEWER = User.add_fragment("""
     query GetViewer {
       viewer {
@@ -117,6 +125,13 @@ class ApiClient(Client):
     def file(self, id: str) -> File:
         return cast(
             File, self.query_to_class(File, _FILE, path="file", params={"fileId": id})
+        )
+
+    def dataset(self, id: str) -> Dataset:
+        """Retrieve a dataset (or branch) by ID"""
+        return cast(
+            Dataset,
+            self.query_to_class(Dataset, _DATASET, path="dataset", params={"id": id}),
         )
 
     def upload_to_default_filesource(

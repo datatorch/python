@@ -162,7 +162,8 @@ class Client(object):
         dl_file = os.path.join(directory, name)
         dl_file = os.path.abspath(dl_file)
 
-        if os.path.isfile(dl_file) & skip == True:
+        # `isfile(x) & skip == True` only worked by bitwise-bool accident
+        if skip and os.path.isfile(dl_file):
             return dl_file, None
 
         query_string = urlencode({"download": "true", "stream": "true"})
@@ -172,8 +173,10 @@ class Client(object):
         result = requests.get(
             download_url, headers={self.token_header: self._api_token}, stream=True
         )
+        # Never write an error body to disk as a "downloaded file"
+        result.raise_for_status()
 
-        content = result.headers["content-disposition"]
+        content = result.headers.get("content-disposition", "")
         # _, value = cgi.parse_header(content)
         parser = HeaderParser()
         headers = parser.parsestr(f"Content-Disposition: {content}")

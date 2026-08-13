@@ -5,6 +5,7 @@ from datatorch.utils.package import get_version
 # from .main.agent import agent
 from .main.login import login
 from .main.logout import logout
+from .main.pull import pull
 from .main.upgrade import package_upgrade
 from .main.version import version
 
@@ -23,6 +24,7 @@ def main():
 
 main.add_command(login)
 main.add_command(logout)
+main.add_command(pull)
 main.add_command(version)
 main.add_command(package_upgrade)
 

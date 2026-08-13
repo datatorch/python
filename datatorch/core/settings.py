@@ -22,7 +22,10 @@ class Settings(object):
 
     def get(self, key: str, default=None, env: str = None) -> str:
         """Gets the settings value from a given string."""
-        env_value = os.getenv(f"DATATORCH_{env}") if env is not None else None
+        # Callers pass the FULL variable name (e.g. env.API_KEY ==
+        # "DATATORCH_API_KEY"); the old f"DATATORCH_{env}" prefix produced
+        # "DATATORCH_DATATORCH_API_KEY", so these env vars never worked.
+        env_value = os.getenv(env) if env is not None else None
         value = self.settings.get(key)
 
         return env_value or value or default
