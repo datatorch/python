@@ -231,9 +231,7 @@ def _select_datasets(project: dict, dataset_name: Optional[str]) -> list:
     if len(insensitive) == 1:
         return insensitive
     names = ", ".join(sorted(d.get("name", "?") for d in nodes)) or "(none)"
-    raise PullError(
-        f"Dataset '{dataset_name}' not found. Available datasets: {names}"
-    )
+    raise PullError(f"Dataset '{dataset_name}' not found. Available datasets: {names}")
 
 
 def _resolve_version(api: _PullSession, dataset: dict, version_name: str) -> dict:
@@ -292,9 +290,7 @@ def _list_version_files(api: _PullSession, version_id: str) -> list:
             {"id": version_id, "page": page, "perPage": PAGE_SIZE},
         )
         rows = [
-            r
-            for r in (_none_safe(data.get("datasetVersion")).get("files") or [])
-            if r
+            r for r in (_none_safe(data.get("datasetVersion")).get("files") or []) if r
         ]
         for row in rows:
             files.append(
@@ -411,9 +407,7 @@ def _download_one(
                             "Run 'datatorch login' (or set DATATORCH_API_KEY) "
                             "and retry."
                         )
-                    raise PullError(
-                        api._auth_hint(f"HTTP {r.status_code} on download")
-                    )
+                    raise PullError(api._auth_hint(f"HTTP {r.status_code} on download"))
                 if r.status_code == 416:
                     # Our .part is already >= the object; discard and re-fetch.
                     _safe_remove(part)

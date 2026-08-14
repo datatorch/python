@@ -78,7 +78,9 @@ def pull(path, dataset, version_name, out, workers, force, annotations_format, h
     def on_start(dataset_name: str, file_count: int):
         if progress["bar"] is not None:
             progress["bar"].close()
-        click.echo(f"Dataset {click.style(dataset_name, bold=True)}: {file_count} file(s)")
+        click.echo(
+            f"Dataset {click.style(dataset_name, bold=True)}: {file_count} file(s)"
+        )
         progress["bar"] = tqdm(total=file_count, unit="file") if file_count else None
 
     def on_file_done(outcome: str):

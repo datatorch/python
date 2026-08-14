@@ -1,0 +1,23 @@
+# Local mirror of the CI lint gates (.github/workflows build):
+#   Black --check  ->  black hook (auto-fixes on commit instead of failing)
+#   flake8 blocking pass (E9,F63,F7,F82)  ->  flake8 hook
+#
+# One-time setup per clone:
+#   brew install pre-commit   (or: pip install pre-commit)
+#   pre-commit install
+#
+# After that every `git commit` formats staged Python with Black and runs
+# the flake8 error gate; a commit can't leave the repo in a state CI would
+# reject. `pre-commit run --all-files` checks the whole tree on demand.
+repos:
+  - repo: https://github.com/psf/black
+    rev: 26.1.0
+    hooks:
+      - id: black
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.1.1
+    hooks:
+      - id: flake8
+        # CI's blocking selectors only — its second, style-wide flake8 pass
+        # runs --exit-zero (advisory), so it is not enforced here either.
+        args: ['--count', '--select=E9,F63,F7,F82', '--show-source']
