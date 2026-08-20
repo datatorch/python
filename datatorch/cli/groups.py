@@ -9,7 +9,7 @@ from .main.pull import pull
 from .main.upgrade import package_upgrade
 from .main.version import version
 
-from .agent import agent
+from .agent import agent, runner
 from .pipeline import pipeline
 from .action import action
 from .import_cmds import import_cmd
@@ -29,6 +29,7 @@ main.add_command(version)
 main.add_command(package_upgrade)
 
 main.add_command(pipeline)
+main.add_command(runner)
 main.add_command(agent)
 main.add_command(action)
 main.add_command(import_cmd)

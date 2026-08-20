@@ -33,7 +33,7 @@ requirements = [
 
 setup(
     name="datatorch",
-    version="0.6.4",
+    version="0.7.0",
     description="A CLI and library for interacting with DataTorch.",
     author="DataTorch",
     author_email="support@datatorch.io",

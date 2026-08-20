@@ -15,7 +15,7 @@ def add_signal_handlers(loop: AbstractEventLoop):
         pass  # Ignore if not implemented. Means this program is running in windows.
 
 
-@click.command(help="Run an agent")
+@click.command(help="Start the runner (executes pipeline jobs on this machine)")
 def start():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)

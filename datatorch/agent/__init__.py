@@ -139,12 +139,12 @@ async def stop() -> None:
 
     print(" ")
 
-    logger.warning("Gracefully exiting agent.")
+    logger.warning("Gracefully exiting runner.")
 
-    logger.info("Closing agent jobs.")
+    logger.info("Closing runner jobs.")
     await _exit_jobs()
 
-    logger.info("Closing agent jobs.")
+    logger.info("Closing runner jobs.")
     await _exit_jobs()
 
     logger.info("Closing all other tasks.")

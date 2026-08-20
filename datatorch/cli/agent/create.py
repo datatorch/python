@@ -35,8 +35,10 @@ def create(ctx):
     agent_settings = agent_directory.settings
 
     if agent_settings.agent_id:
-        click.echo("An agent is already installed.")
-        confirmed = click.confirm("Would you like to create a new agent?", default=True)
+        click.echo("A runner is already installed.")
+        confirmed = click.confirm(
+            "Would you like to create a new runner?", default=True
+        )
         if not confirmed:
             return
 
@@ -48,8 +50,8 @@ def create(ctx):
     if not user_settings.api_key:
         ctx.invoke(login, host=user_settings.api_url)
 
-    name = click.prompt("Enter agents name", default=platform.node(), show_default=True)
-    spinner = Spinner("Creating agent")
+    name = click.prompt("Enter runner name", default=platform.node(), show_default=True)
+    spinner = Spinner("Creating runner")
 
     try:
         agent = create_agent(name)["createAgent"]
@@ -57,8 +59,8 @@ def create(ctx):
         agent_settings.agent_token = agent["token"]
         agent_settings.api_url = user_settings.api_url
     except Exception as ex:
-        spinner.done(click.style("Failed to new create agent.", fg="red"))
+        spinner.done(click.style("Failed to create runner.", fg="red"))
         click.echo(ex)
         return
 
-    spinner.done("Successfully created agent.")
+    spinner.done("Successfully created runner.")
