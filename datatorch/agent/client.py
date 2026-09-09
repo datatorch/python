@@ -4,6 +4,9 @@ from .directory import agent_directory
 from gql.client import AsyncClientSession
 
 from typing_extensions import TypedDict
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Log(TypedDict):
@@ -235,6 +238,17 @@ class AgentApiClient(object):
         """
         # fmt: on
         return self.execute(mutate, params={"id": step_id, "logs": logs})
+
+    async def force_reconnect(self) -> None:
+        """Closes the websocket so the steps subscription raises and the
+        outer loop in `agent.start()` reconnects with backoff."""
+        transport = getattr(self.session, "transport", None)
+        if transport is None or getattr(transport, "websocket", None) is None:
+            return
+        try:
+            await transport.close()
+        except Exception as e:
+            logger.debug(f"Transport close raised while forcing reconnect: {e}")
 
     async def execute(self, query, *args, params: dict = {}, **kwargs) -> dict:
         """Wrapper around execute"""

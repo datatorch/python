@@ -133,10 +133,10 @@ def import_coco(
         api = ApiClient()
 
     _LOGGER.debug("Loading Project Information.")
-    if "/" in project_string:
-        project: Project = api.project(*project_string.split("/", 1))
-    else:
-        project: Project = api.project(project_string)
+    # api.project() accepts a single "login/slug" or UUID string and does
+    # its own splitting; the previous branch splatted the split into two
+    # positional args and crashed on every namespace/slug import.
+    project: Project = api.project(project_string)
 
     labels = project.labels()
     _LOGGER.debug("Project ID: %s", project.id)

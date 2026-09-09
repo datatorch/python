@@ -45,4 +45,4 @@ python3 -m venv env
 
 rm -rf env
 
-source env/bin/activate && pip3 install dist/datatorch-0.6.1-py3-none-any.whl && pip3 install pycocotools
+source env/bin/activate && pip3 install dist/datatorch-0.6.3-py3-none-any.whl && pip3 install pycocotools

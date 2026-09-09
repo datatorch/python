@@ -67,10 +67,17 @@ class AgentSystemStats(object):
         print_stats(stats)
         return stats
 
+    # Consecutive failed reports before the connection is considered dead.
+    # The steps subscription can sit silently on a half-open socket (e.g.
+    # after sleep); the report failing is the signal that reaches us.
+    MAX_REPORT_FAILURES = 3
+    REPORT_TIMEOUT = 30
+
     def __init__(self, agent, sample_rate=60):
         self.agent = agent
         self.sample_rate = sample_rate
         self.sample = 0
+        self.report_failures = 0
 
     async def start(self):
         try:
@@ -90,7 +97,25 @@ class AgentSystemStats(object):
         while True:
             self.sample += 1
             stats = self.stats()
-            loop = asyncio.get_running_loop()
             if self.sample != 1:
-                loop.create_task(self.agent.api.metrics(stats))
+                await self._report(stats)
             await asyncio.sleep(self.sample_rate)
+
+    async def _report(self, stats):
+        """Sends one metric report; repeated failures force a reconnect."""
+        try:
+            await asyncio.wait_for(
+                self.agent.api.metrics(stats), timeout=self.REPORT_TIMEOUT
+            )
+            self.report_failures = 0
+        except asyncio.CancelledError:
+            raise
+        except Exception as e:
+            self.report_failures += 1
+            logger.warning(
+                f"Metric report failed ({self.report_failures}/{self.MAX_REPORT_FAILURES}): {e}"
+            )
+            if self.report_failures >= self.MAX_REPORT_FAILURES:
+                logger.error("Connection looks dead; forcing a reconnect.")
+                self.report_failures = 0
+                await self.agent.api.force_reconnect()

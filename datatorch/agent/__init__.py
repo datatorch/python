@@ -12,8 +12,7 @@ from .agent import Agent, tasks
 from gql import Client as GqlClient
 from gql.transport.exceptions import TransportClosed, TransportServerError
 from gql.transport.websockets import WebsocketsTransport
-from websockets.exceptions import InvalidMessage, InvalidURI
-from websockets import ConnectionClosedError
+from websockets.exceptions import ConnectionClosed, InvalidMessage, InvalidURI
 
 from datatorch.api import Client as DtClient
 from datatorch.utils.package import get_version
@@ -110,12 +109,17 @@ async def start() -> None:
                 await Agent.run(session)
 
         except (
-            ConnectionClosedError,
-            ConnectionRefusedError,
+            # ConnectionClosed covers both the error and the "OK" close
+            # (a server-side restart closes cleanly); OSError covers the
+            # socket-level failures seen right after a laptop wakes
+            # (DNS gaierror, ConnectionReset, ConnectionRefused, timeouts).
+            ConnectionClosed,
+            OSError,
             IncompleteReadError,
             TransportServerError,
             TransportClosed,
             InvalidMessage,
+            asyncio.TimeoutError,
         ) as e:
             await _exit_jobs()
             await _close_transport(transport)
