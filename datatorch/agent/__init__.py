@@ -10,7 +10,7 @@ from .directory import agent_directory
 from .agent import Agent, tasks
 
 from gql import Client as GqlClient
-from gql.transport.exceptions import TransportClosed, TransportServerError
+from gql.transport.exceptions import TransportError, TransportQueryError
 from gql.transport.websockets import WebsocketsTransport
 from websockets.exceptions import ConnectionClosed, InvalidMessage, InvalidURI
 
@@ -89,6 +89,22 @@ async def _exit_tasks() -> None:
         task.cancel()
 
 
+async def _restart_after_failure(transport, backoff_wait: float) -> float:
+    """Tears down jobs, transport and tasks, then sleeps with backoff.
+
+    Returns the next backoff wait."""
+    await _exit_jobs()
+    await _close_transport(transport)
+    await _exit_tasks()
+
+    backoff_wait = min(BACKOFF_MAX, backoff_wait * BACKOFF_FACTOR)
+    logger.debug(
+        f"Sleeping for {round(backoff_wait)} seconds and then attempting restart."
+    )
+    await asyncio.sleep(backoff_wait)
+    return backoff_wait
+
+
 async def start() -> None:
     """Creates and runs an agent."""
     setup_logging()
@@ -108,32 +124,36 @@ async def start() -> None:
                 backoff_wait = BACKOFF_INIT_WAIT
                 await Agent.run(session)
 
+        except (asyncio.CancelledError, InvalidURI):
+            break
+
         except (
             # ConnectionClosed covers both the error and the "OK" close
             # (a server-side restart closes cleanly); OSError covers the
             # socket-level failures seen right after a laptop wakes
             # (DNS gaierror, ConnectionReset, ConnectionRefused, timeouts).
+            # TransportQueryError is what gql raises when the socket drops
+            # while a query is in flight ("Query completed without any
+            # answer received from the server"); it is NOT a TransportError
+            # subclass in the installed gql, so it is listed on its own.
             ConnectionClosed,
             OSError,
             IncompleteReadError,
-            TransportServerError,
-            TransportClosed,
+            TransportError,
+            TransportQueryError,
             InvalidMessage,
             asyncio.TimeoutError,
         ) as e:
-            await _exit_jobs()
-            await _close_transport(transport)
-            await _exit_tasks()
-
             logger.error(e)
-            backoff_wait = min(BACKOFF_MAX, backoff_wait * BACKOFF_FACTOR)
-            logger.debug(
-                f"Sleeping for {round(backoff_wait)} seconds and then attempting restart."
-            )
-            await asyncio.sleep(backoff_wait)
+            backoff_wait = await _restart_after_failure(transport, backoff_wait)
 
-        except (asyncio.CancelledError, InvalidURI):
-            break
+        except Exception:
+            # Last resort: the loop must never die. On 2026-09-12 an
+            # uncaught exception here left the process alive for weeks
+            # with no agent loop, so the runner showed OFFLINE while its
+            # window looked fine.
+            logger.exception("Unexpected error in the agent loop; restarting.")
+            backoff_wait = await _restart_after_failure(transport, backoff_wait)
 
     logger.info("Exiting job processing task.")
 
