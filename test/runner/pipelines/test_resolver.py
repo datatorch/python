@@ -1,6 +1,6 @@
 import unittest
 
-from datatorch.agent.pipelines.resolver import (
+from datatorch.runner.pipelines.resolver import (
     UnresolvedReferenceError,
     resolve_step_input,
 )

@@ -5,10 +5,10 @@ import os
 import asyncio
 import logging
 
-from datatorch.agent import logger
-from datatorch.agent.pipelines.action import Action
-from datatorch.agent.pipelines.template import Variables
-from datatorch.agent.pipelines.action.config import ActionConfig
+from datatorch.runner import logger
+from datatorch.runner.pipelines.action import Action
+from datatorch.runner.pipelines.template import Variables
+from datatorch.runner.pipelines.action.config import ActionConfig
 
 
 def _prompt_for_inputs(action: Action, variables: Variables):

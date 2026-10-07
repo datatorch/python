@@ -1,10 +1,9 @@
 import asyncio, os, shutil
-from datatorch import agent
 from datatorch.utils.files import mkdir_exists
 from logging import getLogger
 
 from typing import Union
-from ...directory import agent_directory
+from ...directory import runner_directory
 
 logger = getLogger(__name__)
 
@@ -70,7 +69,7 @@ class ActionConfig(object):
         self.depth: int = 1
 
     async def download(self):
-        path = agent_directory.action_dir(self.name, self.version)
+        path = runner_directory.action_dir(self.name, self.version)
         if os.path.isdir(path):
             shutil.rmtree(path)
 

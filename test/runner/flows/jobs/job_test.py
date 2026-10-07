@@ -1,7 +1,7 @@
 import pytest
 import unittest
 
-from datatorch.agent.pipelines.job import Job
+from datatorch.runner.pipelines.job import Job
 
 
 class JobParsingTest(unittest.TestCase):

@@ -1,5 +1,5 @@
-from datatorch.agent.pipelines.action.cache import ActionHashable, ActionHashTable
-from datatorch.agent.pipelines.template import Variables
+from datatorch.runner.pipelines.action.cache import ActionHashable, ActionHashTable
+from datatorch.runner.pipelines.template import Variables
 from datatorch.utils.objects import pick
 
 from typing import Any, Dict, Union
@@ -16,7 +16,7 @@ if typing.TYPE_CHECKING:
     from ..step import Step
 
 
-logger = logging.getLogger("datatorch.agent.action")
+logger = logging.getLogger("datatorch.runner.action")
 
 _actions_cache = ActionHashTable()
 

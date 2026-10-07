@@ -1,4 +1,4 @@
-from datatorch.agent.client import AgentApiClient
+from datatorch.runner.client import AgentApiClient
 import logging
 
 

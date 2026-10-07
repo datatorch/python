@@ -1,5 +1,5 @@
 from datatorch.utils.objects import pick
-from datatorch.agent.pipelines.action.config import ActionConfig
+from datatorch.runner.pipelines.action.config import ActionConfig
 import logging
 from typing import List, Optional
 from datetime import datetime, timezone
@@ -65,7 +65,7 @@ class Step(object):
         self.run_id = run_id
         self.api = api
         self.rendered_inputs: Optional[dict] = None
-        self.logger = logging.getLogger(f"datatorch.agent.[{self._action.full_name}]")
+        self.logger = logging.getLogger(f"datatorch.runner.[{self._action.full_name}]")
 
     async def action(self) -> Action:
         return await get_action(self._action, step=self)

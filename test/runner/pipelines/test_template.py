@@ -1,6 +1,6 @@
 import unittest
 
-from datatorch.agent.pipelines.template import (
+from datatorch.runner.pipelines.template import (
     InputInjectionError,
     Variables,
     global_variables,

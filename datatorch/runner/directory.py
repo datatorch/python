@@ -4,15 +4,33 @@ from datatorch.utils.files import mkdir_exists
 from datatorch.core import Settings, folder, env, user_settings
 
 
-class AgentDirectory(object):
+class RunnerDirectory(object):
     @staticmethod
     def path() -> str:
-        """Returns the agents directory"""
-        path = folder.get_app_dir()
-        return os.getenv("DATATORCH_AGENT_PATH", os.path.join(path, "agent"))
+        """The runner's working directory (actions cache, runs, logs, settings).
+
+        `DATATORCH_RUNNER_PATH` wins, then the pre-rename `DATATORCH_AGENT_PATH`,
+        then `<app dir>/runner`. An install that still has `<app dir>/agent`
+        from before the rename is moved to `runner` once, so a runner keeps
+        its identity, token and cached actions across the upgrade.
+        """
+        explicit = os.getenv("DATATORCH_RUNNER_PATH") or os.getenv(
+            "DATATORCH_AGENT_PATH"
+        )
+        if explicit:
+            return explicit
+        app = folder.get_app_dir()
+        new = os.path.join(app, "runner")
+        old = os.path.join(app, "agent")
+        if not os.path.exists(new) and os.path.isdir(old):
+            try:
+                os.rename(old, new)
+            except OSError:
+                return old
+        return new
 
     def __init__(self):
-        self.settings = AgentSettings()
+        self.settings = RunnerSettings()
 
         mkdir_exists(self.dir)
         mkdir_exists(self.db_dir)
@@ -81,25 +99,37 @@ class AgentDirectory(object):
         return os.path.join(self.dir, "temp")
 
 
-class AgentSettings(Settings):
+class RunnerSettings(Settings):
+    """The runner's own settings file. Keys are `runnerId` / `runnerToken`;
+    the pre-rename `agentId` / `agentToken` are still read, so an upgraded
+    runner keeps working until it is re-registered."""
+
     def __init__(self):
-        super().__init__(AgentDirectory.path())
+        super().__init__(RunnerDirectory.path())
 
     @property
-    def agent_id(self):
-        return self.get("agentId", env=env.AGENT_ID)
+    def runner_id(self):
+        return (
+            os.getenv(env.RUNNER_ID)
+            or self.get("runnerId", env=env.AGENT_ID)
+            or self.get("agentId")
+        )
 
-    @agent_id.setter
-    def agent_id(self, value):
-        self.set("agentId", value)
+    @runner_id.setter
+    def runner_id(self, value):
+        self.set("runnerId", value)
 
     @property
-    def agent_token(self):
-        return self.get("agentToken")
+    def runner_token(self):
+        return self.get("runnerToken") or self.get("agentToken")
 
-    @agent_token.setter
-    def agent_token(self, value):
-        self.set("agentToken", value)
+    @runner_token.setter
+    def runner_token(self, value):
+        self.set("runnerToken", value)
+
+    # Pre-rename names, kept for callers outside this package.
+    agent_id = runner_id
+    agent_token = runner_token
 
     @property
     def api_url(self):
@@ -110,4 +140,9 @@ class AgentSettings(Settings):
         self.set("apiUrl", value)
 
 
-agent_directory = AgentDirectory()
+runner_directory = RunnerDirectory()
+
+# Pre-rename names, kept for callers outside this package.
+AgentDirectory = RunnerDirectory
+AgentSettings = RunnerSettings
+agent_directory = runner_directory

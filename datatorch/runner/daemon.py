@@ -7,18 +7,18 @@ from .client import AgentApiClient, AgentStepDispatch
 from .pipelines.template import Variables
 from .log_handler import AgentAPIHandler
 from .monitoring import AgentSystemStats
-from .directory import agent_directory
+from .directory import runner_directory
 
 from gql.client import AsyncClientSession
-from datatorch.agent.pipelines.step import Step
+from datatorch.runner.pipelines.step import Step
 
 logger = logging.getLogger(__name__)
 tasks: List[asyncio.Task] = []
 
 
-class Agent(object):
+class RunnerDaemon(object):
     """
-    Agent protocol v2: the server sequences steps. The agent receives one
+    Runner protocol v2: the server sequences steps. The runner receives one
     ready step at a time — its inputs already resolved server-side —
     claims it, executes it, and reports the result. Job-level state and
     cross-step dataflow live entirely on the server.
@@ -31,7 +31,7 @@ class Agent(object):
 
     def __init__(self, session: AsyncClientSession):
         self.api = AgentApiClient(session)
-        self.directory = agent_directory
+        self.directory = runner_directory
         # Running step tasks, keyed by stepId, so a server cancel/timeout
         # signal can abort the right one. Entries are cleaned up when the
         # step finishes.
@@ -43,10 +43,10 @@ class Agent(object):
         self._init_threads()
 
     def _init_logger(self):
-        self.logger = logging.getLogger("datatorch.agent")
+        self.logger = logging.getLogger("datatorch.runner")
         self.logger_api_handler = AgentAPIHandler(self.api)
         self.logger.addHandler(self.logger_api_handler)
-        self.logger.debug("Agent logger has been initalized.")
+        self.logger.debug("Runner logger has been initialized.")
 
     def _init_threads(self):
         self.system_stats = AgentSystemStats(self)
@@ -145,3 +145,7 @@ class Agent(object):
             logger.info(f"Step finished (name: {step_name}, id: {step_id})")
         finally:
             self._step_tasks.pop(step_id, None)
+
+
+# Pre-rename name, kept for callers outside this package.
+Agent = RunnerDaemon

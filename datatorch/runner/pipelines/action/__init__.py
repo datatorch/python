@@ -4,7 +4,7 @@ import os
 import logging
 import typing
 
-from datatorch.agent.directory import agent_directory
+from datatorch.runner.directory import runner_directory
 from .config import ActionConfig, LATEST_VERSION
 
 if typing.TYPE_CHECKING:
@@ -14,12 +14,12 @@ if typing.TYPE_CHECKING:
 __all__ = ["Action", "get_action"]
 
 
-logger = logging.getLogger("datatorch.agent.action")
+logger = logging.getLogger("datatorch.runner.action")
 
 
 async def get_action(config: ActionConfig, step: "Step" = None) -> Action:
     # Get actions directory
-    action_dir = agent_directory.action_dir(config.name, config.version)
+    action_dir = runner_directory.action_dir(config.name, config.version)
     folder_exists = os.path.exists(action_dir)
     force_download = config.version == LATEST_VERSION
 

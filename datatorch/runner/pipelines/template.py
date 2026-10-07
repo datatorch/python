@@ -4,7 +4,7 @@ import re
 import typing
 from typing import Dict
 from jinja2 import Template
-from ..directory import agent_directory
+from ..directory import runner_directory
 
 if typing.TYPE_CHECKING:
     from .step import Step
@@ -43,16 +43,23 @@ def _env_key(key: str) -> str:
     return "INPUT_" + re.sub(r"[^A-Z0-9]", "_", key.upper())
 
 
+_runner_namespace = {
+    "id": runner_directory.settings.runner_id,
+    "directory": runner_directory.dir,
+}
+
 global_variables = {
-    "agent": {
-        "id": agent_directory.settings.agent_id,
-        "directory": agent_directory.dir,
-    },
+    # `${{ runner.* }}` is the spelling since October 2026; `agent.*` is
+    # the same namespace under its pre-rename name, kept for existing
+    # action yaml.
+    "runner": _runner_namespace,
+    "agent": _runner_namespace,
     "directory": {
-        "agent": agent_directory.dir,
-        "actions": agent_directory.actions_dir,
-        "logs": agent_directory.logs_dir,
-        "temp": agent_directory.temp_dir,
+        "runner": runner_directory.dir,
+        "agent": runner_directory.dir,
+        "actions": runner_directory.actions_dir,
+        "logs": runner_directory.logs_dir,
+        "temp": runner_directory.temp_dir,
     },
     "machine": {
         "name": platform.node(),

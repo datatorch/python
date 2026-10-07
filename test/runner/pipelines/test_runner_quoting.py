@@ -10,8 +10,8 @@ import asyncio
 import os
 import tempfile
 
-from datatorch.agent.pipelines.runner.python import PythonRunner
-from datatorch.agent.pipelines.runner.shell import ShellRunner
+from datatorch.runner.pipelines.runner.python import PythonRunner
+from datatorch.runner.pipelines.runner.shell import ShellRunner
 
 
 class _FakeVariables:

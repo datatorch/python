@@ -1,6 +1,6 @@
 from typing import AsyncGenerator, List, Optional, cast
 from gql import gql
-from .directory import agent_directory
+from .directory import runner_directory
 from gql.client import AsyncClientSession
 
 from typing_extensions import TypedDict
@@ -195,7 +195,7 @@ class AgentApiClient(object):
             }
         """
         # fmt: on
-        params = {"id": agent_directory.settings.agent_id, **metrics}
+        params = {"id": runner_directory.settings.runner_id, **metrics}
         return self.execute(gql(mutate), params=params)
 
     def metrics(self, metrics):
@@ -226,7 +226,7 @@ class AgentApiClient(object):
             }
         """
         # fmt: on
-        params = {"runnerId": agent_directory.settings.agent_id, **metrics}
+        params = {"runnerId": runner_directory.settings.runner_id, **metrics}
         return self.execute(mutate, params=params)
 
     def upload_step_logs(self, step_id: str, logs: List[Log]):

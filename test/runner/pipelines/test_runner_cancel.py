@@ -9,7 +9,7 @@ import asyncio
 
 import pytest
 
-from datatorch.agent.pipelines.runner.runner import Runner
+from datatorch.runner.pipelines.runner.runner import Runner
 
 
 class _FakeAction:

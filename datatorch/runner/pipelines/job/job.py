@@ -4,7 +4,7 @@ from ..step import Step
 from ..template import Variables
 from ..resolver import UnresolvedReferenceError, resolve_step_input
 
-logger = logging.getLogger("datatorch.agent.job")
+logger = logging.getLogger("datatorch.runner.job")
 
 
 class Job(object):

@@ -1,8 +1,8 @@
 import click
 import asyncio
 
-from datatorch.agent.pipelines import Pipeline, Job
-from datatorch.agent import setup_logging
+from datatorch.runner.pipelines import Pipeline, Job
+from datatorch.runner import setup_logging
 
 
 @click.command(help="Runs a pipeline yaml file on local machine.")

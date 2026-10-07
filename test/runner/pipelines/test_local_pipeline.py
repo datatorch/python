@@ -11,15 +11,15 @@ import unittest
 
 import yaml
 
-from datatorch.agent.directory import agent_directory
-from datatorch.agent.pipelines.job import Job
-from datatorch.agent.pipelines.resolver import UnresolvedReferenceError
+from datatorch.runner.directory import runner_directory
+from datatorch.runner.pipelines.job import Job
+from datatorch.runner.pipelines.resolver import UnresolvedReferenceError
 
 
 def install_action(name: str, version: str, config: dict):
     """Pre-place an action in the (test-isolated) local action cache so
     no git download is attempted."""
-    action_dir = agent_directory.action_dir(name, version)
+    action_dir = runner_directory.action_dir(name, version)
     os.makedirs(action_dir, exist_ok=True)
     with open(os.path.join(action_dir, "action-datatorch.yaml"), "w") as f:
         yaml.dump(config, f)

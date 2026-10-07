@@ -1,6 +1,6 @@
 import json
 from typing import Any
-from datatorch.agent.pipelines.action.config import ActionConfig
+from datatorch.runner.pipelines.action.config import ActionConfig
 from datatorch.utils.hash_table import HashTable
 
 

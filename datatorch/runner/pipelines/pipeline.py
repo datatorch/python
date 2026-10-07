@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from ..agent import Agent
 
 
-logger = logging.getLogger("datatorch.agent.pipeline")
+logger = logging.getLogger("datatorch.runner.pipeline")
 
 
 class Pipeline(object):

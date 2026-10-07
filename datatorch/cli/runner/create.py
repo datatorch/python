@@ -1,7 +1,7 @@
 import click
 import platform
 
-from datatorch.agent.directory import agent_directory
+from datatorch.runner.directory import runner_directory
 from datatorch.api import ApiClient
 from datatorch.utils.package import get_version
 from datatorch.core import user_settings, BASE_URL_API
@@ -32,9 +32,9 @@ def create_agent(name: str) -> dict:
 @click.command()
 @click.pass_context
 def create(ctx):
-    agent_settings = agent_directory.settings
+    agent_settings = runner_directory.settings
 
-    if agent_settings.agent_id:
+    if agent_settings.runner_id:
         click.echo("A runner is already installed.")
         confirmed = click.confirm(
             "Would you like to create a new runner?", default=True
@@ -55,8 +55,8 @@ def create(ctx):
 
     try:
         agent = create_agent(name)["createRunner"]
-        agent_settings.agent_id = agent["runner"]["id"]
-        agent_settings.agent_token = agent["token"]
+        agent_settings.runner_id = agent["runner"]["id"]
+        agent_settings.runner_token = agent["token"]
         agent_settings.api_url = user_settings.api_url
     except Exception as ex:
         spinner.done(click.style("Failed to create runner.", fg="red"))
