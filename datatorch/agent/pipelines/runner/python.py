@@ -1,7 +1,7 @@
 import os
 import sys
 import json
-import base64
+import shlex
 
 from .runner import Runner
 
@@ -18,13 +18,15 @@ class PythonRunner(Runner):
 
     async def execute(self):
         main = self.get("main").strip("/")
-        # Ok this command parsing stuff is to handle Application Support folder in Macs
-        # Because there are spaces in the folder name
-        main_command_spaces = os.path.join(self.action.dir, main)
-        main_command_nospaces = main_command_spaces.replace(" ", "\ ")
+        main_path = os.path.join(self.action.dir, main)
 
-        json_input = json.dumps(self.variables.inputs).replace("'", '\\"')
+        # Inputs reach the action verbatim as one JSON argv argument.
+        # shlex.quote covers every shell metacharacter, apostrophes
+        # included, and the space in macOS "Application Support" paths.
+        json_input = json.dumps(self.variables.inputs)
 
         await self.monitor_cmd(
-            f"{sys.executable} {main_command_nospaces} '{json_input}'"
+            " ".join(
+                shlex.quote(part) for part in (sys.executable, main_path, json_input)
+            )
         )

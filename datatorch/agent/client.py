@@ -15,14 +15,14 @@ class Log(TypedDict):
 
 
 class AgentStepDispatch(TypedDict):
-    """A ready step pushed to this agent (agent protocol v2).
+    """A ready step pushed to this runner (runner protocol v2).
 
     ``input`` arrives server-resolved: ``steps.*`` and ``input.*``
     references are already substituted with concrete values.
     """
 
     stepId: str
-    agentId: str
+    runnerId: str
     action: str
     stepName: Optional[str]
     stepIndex: int
@@ -40,10 +40,10 @@ class AgentStepRequest(TypedDict):
 
 
 class AgentStepCancel(TypedDict):
-    """A stop signal for a step this agent is currently running."""
+    """A stop signal for a step this runner is currently running."""
 
     stepId: str
-    agentId: str
+    runnerId: str
 
 
 class AgentStepCancelRequest(TypedDict):
@@ -52,7 +52,7 @@ class AgentStepCancelRequest(TypedDict):
 
 STEP_DISPATCH_FIELDS = """
     stepId
-    agentId
+    runnerId
     action
     stepName
     stepIndex
@@ -71,11 +71,11 @@ class AgentApiClient(object):
         self.session = session
 
     def agent_steps(self):
-        """Subscribe to ready steps dispatched to this agent."""
+        """Subscribe to ready steps dispatched to this runner."""
         # fmt: off
         sub = gql("""
             subscription {
-                step: agentSteps {
+                step: runnerSteps {
                     %s
                 }
             }
@@ -84,7 +84,7 @@ class AgentApiClient(object):
         return cast(AsyncGenerator[AgentStepRequest, None], self.session.subscribe(sub))
 
     def agent_step_cancels(self):
-        """Subscribe to stop signals for steps this agent is running.
+        """Subscribe to stop signals for steps this runner is running.
 
         Best effort: the server has already moved the step terminal, so a
         missed signal only means the step runs to harmless completion.
@@ -92,9 +92,9 @@ class AgentApiClient(object):
         # fmt: off
         sub = gql("""
             subscription {
-                cancel: agentStepCancels {
+                cancel: runnerStepCancels {
                     stepId
-                    agentId
+                    runnerId
                 }
             }
         """)
@@ -105,7 +105,7 @@ class AgentApiClient(object):
         )
 
     async def pending_steps(self) -> List[AgentStepDispatch]:
-        """Steps dispatched to this agent but not yet claimed.
+        """Steps dispatched to this runner but not yet claimed.
 
         Called on (re)connect: pushes missed while offline are recovered
         here.
@@ -113,7 +113,7 @@ class AgentApiClient(object):
         # fmt: off
         query = """
             query PendingSteps {
-                steps: agentPendingSteps {
+                steps: runnerPendingSteps {
                     %s
                 }
             }
@@ -163,7 +163,7 @@ class AgentApiClient(object):
     def initial_metrics(self, metrics):
         # fmt: off
         mutate = """
-            mutation updateAgent(
+            mutation updateRunner(
                 $id: ID!
                 $version: String
                 $os: String
@@ -177,7 +177,7 @@ class AgentApiClient(object):
                 $cpuCoresPhysical: Int
                 $cpuCoresLogical: Int
             ) {
-                updateAgent(id: $id, input: {
+                updateRunner(id: $id, input: {
                     version: $version
                     os: $os
                     osRelease: $osRelease
@@ -201,8 +201,8 @@ class AgentApiClient(object):
     def metrics(self, metrics):
         # fmt: off
         mutate = """
-            mutation updateAgent(
-                $agentId: ID!
+            mutation createRunnerMetric(
+                $runnerId: ID!
                 $sampledAt: DateTime!
                 $avgLoad1: Float
                 $avgLoad5: Float
@@ -211,8 +211,8 @@ class AgentApiClient(object):
                 $diskUsage: Float
                 $memoryUsage: Float
             ) {
-                createAgentMetric(input: {
-                    agentId: $agentId
+                createRunnerMetric(input: {
+                    runnerId: $runnerId
                     sampledAt: $sampledAt
                     avgLoad1: $avgLoad1
                     avgLoad5: $avgLoad5
@@ -226,7 +226,7 @@ class AgentApiClient(object):
             }
         """
         # fmt: on
-        params = {"agentId": agent_directory.settings.agent_id, **metrics}
+        params = {"runnerId": agent_directory.settings.agent_id, **metrics}
         return self.execute(mutate, params=params)
 
     def upload_step_logs(self, step_id: str, logs: List[Log]):

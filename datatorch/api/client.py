@@ -20,7 +20,7 @@ T = TypeVar("T")
 __all__ = "Client"
 
 
-AGENT_TOKEN_HEADER = "datatorch-agent-token"
+AGENT_TOKEN_HEADER = "datatorch-runner-token"
 API_KEY_HEADER = "datatorch-api-key"
 
 

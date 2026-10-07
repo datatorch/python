@@ -14,9 +14,9 @@ def create_agent(name: str) -> dict:
     # fmt: off
     results = api.execute(
         """
-        mutation CreateAgent($name: String!, $version: String!) {
-            createAgent(name: $name, version: $version) {
-                agent {
+        mutation CreateRunner($name: String!, $version: String!) {
+            createRunner(name: $name, version: $version) {
+                runner {
                     id
                 }
                 token
@@ -54,8 +54,8 @@ def create(ctx):
     spinner = Spinner("Creating runner")
 
     try:
-        agent = create_agent(name)["createAgent"]
-        agent_settings.agent_id = agent["agent"]["id"]
+        agent = create_agent(name)["createRunner"]
+        agent_settings.agent_id = agent["runner"]["id"]
         agent_settings.agent_token = agent["token"]
         agent_settings.api_url = user_settings.api_url
     except Exception as ex:
