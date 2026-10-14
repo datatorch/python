@@ -84,3 +84,11 @@ class ActionConfig(object):
     @property
     def full_name(self):
         return f"{self.name}@{self.version}"
+
+    # Reserved owner for a folder kept on the runner itself:
+    # `local/<name>@<tag>` → `<runner dir>/actions/local/<name>/<tag>`.
+    LOCAL_OWNER = "local"
+
+    @property
+    def is_local(self) -> bool:
+        return self.name.lower().startswith(self.LOCAL_OWNER + "/")

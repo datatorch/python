@@ -160,6 +160,36 @@ class AgentApiClient(object):
         result = await self.execute(mutate, params={"id": step_id, "input": step_input})
         return bool(result.get("completed"))
 
+    def runner_commands(self):
+        """Subscribe to requests the server makes of this runner: read or
+        write one of its own `actions/local/<name>/<tag>` folders (October
+        2026). Answered with `complete_runner_command`."""
+        # fmt: off
+        sub = gql("""
+            subscription {
+                command: runnerCommands {
+                    id
+                    runnerId
+                    kind
+                    payload
+                }
+            }
+        """)
+        # fmt: on
+        return self.session.subscribe(sub)
+
+    def complete_runner_command(self, command_id: str, result=None, error: str = None):
+        # fmt: off
+        mutate = """
+            mutation completeRunnerCommand($id: ID!, $result: JSON, $error: String) {
+                completeRunnerCommand(id: $id, result: $result, error: $error)
+            }
+        """
+        # fmt: on
+        return self.execute(
+            gql(mutate), params={"id": command_id, "result": result, "error": error}
+        )
+
     def initial_metrics(self, metrics):
         # fmt: off
         mutate = """
@@ -196,6 +226,25 @@ class AgentApiClient(object):
         """
         # fmt: on
         params = {"id": runner_directory.settings.runner_id, **metrics}
+        return self.execute(gql(mutate), params=params)
+
+    def report_local_actions(self, actions):
+        """Tells the server which `actions/local/<name>/<tag>` folders this
+        runner holds (their action yaml text). The whole list each time: a
+        folder no longer listed is gone from the server too."""
+        # fmt: off
+        mutate = """
+            mutation reportRunnerLocalActions(
+                $id: ID!
+                $localActions: [RunnerLocalActionInput!]!
+            ) {
+                updateRunner(id: $id, input: { localActions: $localActions }) {
+                    id
+                }
+            }
+        """
+        # fmt: on
+        params = {"id": runner_directory.settings.runner_id, "localActions": actions}
         return self.execute(gql(mutate), params=params)
 
     def metrics(self, metrics):

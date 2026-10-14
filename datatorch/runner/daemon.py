@@ -72,11 +72,70 @@ class RunnerDaemon(object):
         logger.info("Waiting for steps.")
         cancel_task = loop.create_task(self._cancel_loop())
         tasks.append(cancel_task)
+        command_task = loop.create_task(self._command_loop())
+        tasks.append(command_task)
         try:
             async for request in self.api.agent_steps():
                 self._start_step(request.get("step"))
         finally:
             cancel_task.cancel()
+            command_task.cancel()
+
+    async def _command_loop(self):
+        """Answers the server's requests about this runner's own action
+        folders (read or write `actions/local/<name>/<tag>`). Nothing
+        outside those folders is ever read or written: the directory
+        refuses any other path. A failure is the answer's error, never a
+        crash of the loop."""
+        try:
+            async for request in self.api.runner_commands():
+                command = request.get("command") or {}
+                loop = asyncio.get_running_loop()
+                loop.create_task(self._answer_command(command))
+        except asyncio.CancelledError:
+            raise
+        except Exception as ex:
+            # A server from before runner commands has no such subscription;
+            # steps still flow, only editing from DataTorch is off.
+            logger.warning(f"Runner commands are not available: {ex}")
+
+    async def _answer_command(self, command: dict):
+        command_id = command.get("id")
+        kind = command.get("kind")
+        payload = command.get("payload") or {}
+        result, error = None, None
+        try:
+            name, tag = payload.get("name"), payload.get("tag")
+            if kind == "READ_LOCAL_ACTION":
+                result = {"files": runner_directory.local_action_files(name, tag)}
+            elif kind == "WRITE_LOCAL_ACTION":
+                files = runner_directory.write_local_action_files(
+                    name, tag, payload.get("files") or [], payload.get("delete") or []
+                )
+                result = {"files": files}
+                logger.info(f"Wrote actions/local/{name}/{tag} on request.")
+                # Report the folder's yaml now, so the picker lists it at once.
+                try:
+                    await self.api.report_local_actions(
+                        runner_directory.local_actions()
+                    )
+                except Exception as ex:
+                    logger.warning(
+                        f"Could not report local actions after a write: {ex}"
+                    )
+            else:
+                error = f"Unknown runner command '{kind}'."
+        except (ValueError, FileNotFoundError, OSError) as ex:
+            error = str(ex)
+        except Exception as ex:  # the loop must survive anything
+            logger.exception("Runner command failed.")
+            error = f"{type(ex).__name__}: {ex}"
+        try:
+            await self.api.complete_runner_command(
+                command_id, result=result, error=error
+            )
+        except Exception as ex:
+            logger.warning(f"Could not answer runner command {command_id}: {ex}")
 
     async def _cancel_loop(self):
         """Aborts a running step's task when the server signals a stop."""

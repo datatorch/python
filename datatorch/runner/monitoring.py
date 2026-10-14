@@ -2,10 +2,13 @@ import psutil
 import logging
 import platform
 import asyncio
+import hashlib
+import json
 
 from psutil._common import scpufreq
 from datetime import datetime, timezone
 from datatorch.utils.package import get_version
+from datatorch.runner.directory import runner_directory
 from collections import namedtuple
 
 logger = logging.getLogger(__name__)
@@ -78,12 +81,14 @@ class AgentSystemStats(object):
         self.sample_rate = sample_rate
         self.sample = 0
         self.report_failures = 0
+        self.local_actions_digest = None
 
     async def start(self):
         try:
             logger.info("Sending initial system metrics.")
             logger.info(self.initial_stats())
             await self.agent.api.initial_metrics(self.initial_stats())
+            await self._report_local_actions()
 
             logger.info("Starting system monitoring task.")
             await self._task_monitoring()
@@ -99,7 +104,36 @@ class AgentSystemStats(object):
             stats = self.stats()
             if self.sample != 1:
                 await self._report(stats)
+                # A folder dropped into actions/local shows up in the
+                # editor within a minute, no restart needed.
+                await self._report_local_actions()
             await asyncio.sleep(self.sample_rate)
+
+    async def _report_local_actions(self):
+        """Sends the actions/local folders when they changed since last sent.
+        A failure is logged and retried on the next sample; it never counts
+        toward the reconnect threshold (the metric report does that)."""
+        try:
+            actions = runner_directory.local_actions()
+        except Exception as ex:  # a broken folder must not stop the runner
+            logger.warning(f"Could not read local actions: {ex}")
+            return
+        digest = hashlib.sha256(
+            json.dumps(actions, sort_keys=True).encode("utf-8")
+        ).hexdigest()
+        if digest == self.local_actions_digest:
+            return
+        try:
+            await asyncio.wait_for(
+                self.agent.api.report_local_actions(actions),
+                timeout=self.REPORT_TIMEOUT,
+            )
+            self.local_actions_digest = digest
+            logger.info(
+                f"Reported {len(actions)} local action(s) from {runner_directory.local_actions_dir}."
+            )
+        except Exception as ex:
+            logger.warning(f"Could not report local actions: {ex}")
 
     async def _report(self, stats):
         """Sends one metric report; repeated failures force a reconnect."""

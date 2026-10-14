@@ -27,6 +27,16 @@ async def get_action(config: ActionConfig, step: "Step" = None) -> Action:
         logger.debug(
             "Action found locally ({}@{}).".format(config.name, config.version)
         )
+    elif config.is_local:
+        # `local/<name>@<tag>` lives only in this runner's folder; there is
+        # nothing to download, so say where it was expected instead of
+        # failing a git clone of github.com/local/<name>.
+        raise FileNotFoundError(
+            f"Local action {config.full_name} is not on this runner: expected "
+            f"an action-datatorch.yaml in {action_dir}. Create one with "
+            f"`datatorch action create --local {config.name.split('/', 1)[1]} "
+            f"--tag {config.version}`, or pin the job to the runner that has it."
+        )
     else:
         logger.debug("Downloading action {}@{}.".format(config.name, config.version))
         await config.download()
