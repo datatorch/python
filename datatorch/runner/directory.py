@@ -80,6 +80,12 @@ class RunnerDirectory(object):
         """Directory where actions are stored."""
         return os.path.join(self.dir, "actions")
 
+    @property
+    def envs_dir(self):
+        """Per-action Python environments (`runs.using: python` actions that
+        ship a requirements.txt): `envs/<action name>/<version>`."""
+        return os.path.join(self.dir, "envs")
+
     def open(self, file: str, mode: str):
         return open(os.path.join(self.dir, file), mode)
 

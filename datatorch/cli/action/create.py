@@ -9,11 +9,17 @@ MODEL_SCRIPT = """import datatorch
 
 image_path = datatorch.get_input("imagePath")
 
-# Load your model and run it on image_path here. Anything your model
-# needs must be installed in the Python this runner runs with.
-result = "ok"
+# Load your model and run it on image_path here. Return what it found as
+# a list of shapes in pixel coordinates; each one needs a label name and
+# a bbox [x, y, width, height], a polygon [[x, y], ...] or points
+# [[x, y], ...]. DataTorch puts them on the file when the run completes.
+# Anything your model needs must be installed in the Python this runner
+# runs with.
+annotations = [
+    {"label": "example", "bbox": [10, 10, 100, 80], "score": 0.9},
+]
 
-datatorch.set_output("result", result)
+datatorch.set_output("annotations", annotations)
 """
 
 
@@ -94,11 +100,20 @@ def create(name, description, json, local_name, tag):
                     "description": "Path of the image on disk",
                 }
             },
-            "outputs": {"result": {"type": "string"}},
+            "outputs": {
+                "annotations": {
+                    "description": "Shapes found in the image; DataTorch puts them on the file"
+                }
+            },
             "runs": {"using": "python", "main": "run.py"},
         }
         with open(os.path.join(target, "run.py"), "w") as script:
             script.write(MODEL_SCRIPT)
+        with open(os.path.join(target, "requirements.txt"), "w") as reqs:
+            reqs.write(
+                "# One package per line, as for pip. The runner installs them\n"
+                "# into this action's own environment on first run.\n"
+            )
     else:
         config = {
             "$schema": "http://datatorch.io/schema/action.v1.json",

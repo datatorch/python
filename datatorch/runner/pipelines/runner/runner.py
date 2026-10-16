@@ -88,6 +88,25 @@ class Runner(object):
         $INPUT_<NAME> via `input_env`)."""
         return self.variables.render_command(self.config.get(key, default))
 
+    def runner_env(self) -> dict:
+        """What an action needs to reach the server this runner is on:
+        the API url and the runner's own token (as DATATORCH_API_URL and
+        DATATORCH_RUNNER_TOKEN). The SDK's client picks them up, so an
+        action talks to the same server as the runner, as the runner,
+        instead of the machine's stored login. Anything already set in
+        the environment wins (DATATORCH_API_KEY included, since the SDK
+        prefers a key over the runner token)."""
+        from datatorch.core import env as env_names
+        from datatorch.runner.directory import runner_directory
+
+        values = {}
+        settings = runner_directory.settings
+        if settings.api_url and not os.environ.get(env_names.API_URL):
+            values[env_names.API_URL] = settings.api_url
+        if settings.runner_token and not os.environ.get(env_names.RUNNER_TOKEN):
+            values[env_names.RUNNER_TOKEN] = settings.runner_token
+        return values
+
     def input_env(self) -> dict:
         """Resolved step inputs as $INPUT_<NAME> env vars for the command."""
         return self.variables.env_inputs()
@@ -115,7 +134,7 @@ class Runner(object):
             shell=True,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,
-            env={**os.environ, **(env or {})},
+            env={**os.environ, **self.runner_env(), **(env or {})},
             # Outputs are reported as single `::var::<json>` stdout lines
             # (see check_for_output), so a line can carry an entire fetched
             # page body — asyncio's 64KB default readline limit kills the

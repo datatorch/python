@@ -9,7 +9,7 @@ from gql.transport.requests import RequestsHTTPTransport
 from graphql.language.ast import DocumentNode
 
 from datatorch.utils import normalize_api_url
-from datatorch.core import user_settings
+from datatorch.core import user_settings, env
 from typing import Any, TypeVar, Type
 
 from email.parser import HeaderParser
@@ -60,16 +60,27 @@ class Client(object):
         agent: bool = False,
     ):
         self._use_sockets = sockets
-        self._is_agent = agent
 
-        self._api_token = api_key or user_settings.api_url
-        # This is to fix init bugs
-        if api_url is None and user_settings.api_url is None:
-            self._api_url = "https://datatorch.io/api"
-        if not api_url is None:
-            self._api_url = normalize_api_url(api_url)
-        if not user_settings.api_url is None:
-            self._api_url = normalize_api_url(user_settings.api_url)
+        # Where to talk to: the argument, else DATATORCH_API_URL (which a
+        # runner sets for the actions it runs, so they reach the server
+        # the runner is connected to), else the stored login, else prod.
+        # Before October 2026 the stored login overrode the argument.
+        url = api_url or user_settings.api_url or "https://datatorch.io/api"
+        self._api_url = normalize_api_url(url)
+
+        # Who: an explicit key, else DATATORCH_API_KEY, else the runner's
+        # own token when running inside a runner (DATATORCH_RUNNER_TOKEN,
+        # acting as the runner), else the stored login.
+        token = api_key or os.getenv(env.API_KEY)
+        if token is None and not agent:
+            runner_token = os.getenv(env.RUNNER_TOKEN)
+            if runner_token:
+                token = runner_token
+                agent = True
+        if token is None:
+            token = user_settings.api_key
+        self._is_agent = agent
+        self._api_token = token
 
         self._graphql_url = f"{self.api_url}/graphql"
 
@@ -79,7 +90,7 @@ class Client(object):
         self.client = GqlClient(
             transport=self.transport, fetch_schema_from_transport=True
         )
-        self.set_api_token(api_key or user_settings.api_key)
+        self.set_api_token(token)
 
     @property
     def token_header(self):
@@ -176,7 +187,13 @@ class Client(object):
         # Never write an error body to disk as a "downloaded file"
         result.raise_for_status()
 
-        content = result.headers.get("content-disposition", "")
+        # The API answers with the name and may redirect to storage, whose
+        # response can lack the header: read the first response that has it.
+        content = ""
+        for response in [result, *result.history]:
+            content = response.headers.get("content-disposition", "") or ""
+            if "filename" in content:
+                break
         # _, value = cgi.parse_header(content)
         parser = HeaderParser()
         headers = parser.parsestr(f"Content-Disposition: {content}")
@@ -191,7 +208,8 @@ class Client(object):
         else:
             filename = ""  # Default to an empty string if None or unexpected type
 
-        name = name or filename
+        # Never a bare directory: with no name anywhere, the id is the name.
+        name = name or filename or id
         name = os.path.join(directory, name)
         name = os.path.abspath(name)
 
