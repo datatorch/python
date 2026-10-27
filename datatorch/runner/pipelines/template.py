@@ -86,6 +86,8 @@ class Variables(object):
 
     - ``agent``, ``directory``, ``machine``, ``python`` — machine facts
     - ``step``, ``action`` — the step being executed
+    - ``run`` — the run the step belongs to (id, number, projectId,
+      pipelineId, jobId); empty values in local mode
     - ``input`` / ``variable`` — the step's own (already-resolved) inputs,
       for use inside the action's own templates (``runs.command`` etc.).
       ``variable`` is a legacy alias of ``input``; both are scoped to the
@@ -99,6 +101,19 @@ class Variables(object):
 
     def set_step(self, step: "Step"):
         self.set("step", {"id": step.id, "name": step.name})
+        # Where the step sits in the record (server mode; empty when run
+        # locally). `${{ run.projectId }}` in an action's own templates, and
+        # DATATORCH_PROJECT_ID / DATATORCH_RUN_ID in its environment.
+        self.set(
+            "run",
+            {
+                "id": getattr(step, "run_id", None),
+                "number": getattr(step, "run_number", None),
+                "projectId": getattr(step, "project_id", None),
+                "pipelineId": getattr(step, "pipeline_id", None),
+                "jobId": getattr(step, "job_id", None),
+            },
+        )
 
     def set_action(self, action: "Action"):
         self.set(

@@ -91,7 +91,9 @@ class Runner(object):
     def runner_env(self) -> dict:
         """What an action needs to reach the server this runner is on:
         the API url and the runner's own token (as DATATORCH_API_URL and
-        DATATORCH_RUNNER_TOKEN). The SDK's client picks them up, so an
+        DATATORCH_RUNNER_TOKEN), and where the step sits in the record
+        (DATATORCH_PROJECT_ID, DATATORCH_RUN_ID, DATATORCH_PIPELINE_ID,
+        DATATORCH_STEP_ID). The SDK's client picks them up, so an
         action talks to the same server as the runner, as the runner,
         instead of the machine's stored login. Anything already set in
         the environment wins (DATATORCH_API_KEY included, since the SDK
@@ -105,6 +107,21 @@ class Runner(object):
             values[env_names.API_URL] = settings.api_url
         if settings.runner_token and not os.environ.get(env_names.RUNNER_TOKEN):
             values[env_names.RUNNER_TOKEN] = settings.runner_token
+        # The step's place in the record (0.8.1), so an action can work
+        # for "this project" without a project input. Always set by the
+        # runner, never inherited: a value left in the environment by an
+        # outer process must not describe another run.
+        sections = getattr(getattr(self, "variables", None), "variables", None) or {}
+        run = sections.get("run") or {}
+        step = sections.get("step") or {}
+        for name, value in (
+            (env_names.PROJECT_ID, run.get("projectId")),
+            (env_names.RUN_ID, run.get("id")),
+            (env_names.PIPELINE_ID, run.get("pipelineId")),
+            (env_names.STEP_ID, step.get("id")),
+        ):
+            if value:
+                values[name] = str(value)
         return values
 
     def input_env(self) -> dict:

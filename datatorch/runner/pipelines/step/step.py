@@ -32,6 +32,10 @@ class Step(object):
             name=dispatch.get("stepName") or "",
             inputs=dispatch.get("input") or {},
             run_id=dispatch.get("runId"),
+            run_number=dispatch.get("runNumber"),
+            project_id=dispatch.get("projectId"),
+            pipeline_id=dispatch.get("pipelineId"),
+            job_id=dispatch.get("jobId"),
             api=api,
         )
 
@@ -54,6 +58,10 @@ class Step(object):
         cacheable: Union[bool, None] = None,
         inputs: dict = {},
         run_id: str = None,
+        run_number: int = None,
+        project_id: str = None,
+        pipeline_id: str = None,
+        job_id: str = None,
         api: "AgentApiClient" = None,
     ):
         self._action = ActionConfig(action)
@@ -63,6 +71,10 @@ class Step(object):
         self.inputs = inputs
         self.cacheable = cacheable
         self.run_id = run_id
+        self.run_number = run_number
+        self.project_id = project_id
+        self.pipeline_id = pipeline_id
+        self.job_id = job_id
         self.api = api
         self.rendered_inputs: Optional[dict] = None
         self.logger = logging.getLogger(f"datatorch.runner.[{self._action.full_name}]")
