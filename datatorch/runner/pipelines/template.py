@@ -2,8 +2,10 @@ import json
 import platform
 import re
 import typing
-from typing import Dict
-from jinja2 import Template
+import uuid
+from typing import Dict, List, Tuple
+from jinja2 import Environment, Template, meta
+from jinja2.exceptions import TemplateSyntaxError
 from ..directory import runner_directory
 
 if typing.TYPE_CHECKING:
@@ -18,6 +20,17 @@ if typing.TYPE_CHECKING:
 # string is command injection, so shell/cmd runners must read them from
 # $INPUT_<NAME> env vars instead.
 _INPUT_REF_IN_TEMPLATE = re.compile(r"\$\{[{%][^}]*?(?<![.\w])(?:input|variable)(?!\w)")
+
+# One `${{ ... }}` expression, as written. Used to find the expressions in
+# a string before rendering so that the ones the runner does not own can
+# be kept exactly as they are (see `Variables.render`).
+_EXPRESSION = re.compile(r"\$\{\{.*?\}\}", re.DOTALL)
+
+_environment = Environment(
+    block_start_string="${%",
+    variable_start_string="${{",
+    comment_start_string="${#",
+)
 
 
 class InputInjectionError(Exception):
@@ -72,6 +85,17 @@ global_variables = {
     },
 }
 
+# The namespaces the runner renders (`run` since 0.8.1: the step's place
+# in the record). `${{ ... }}` text rooted anywhere else (`steps.*`,
+# `inputs.*`, `jobs.*`, `secrets.*`, unknown names) is not a reference
+# the runner can resolve: the server resolves its own namespaces before
+# dispatch, and whatever still reads like one in a step input is DATA (a
+# log line, a fetched body, an older error message) that must reach the
+# action untouched.
+RUNNER_NAMESPACES = frozenset(
+    {*global_variables.keys(), "input", "variable", "step", "action", "run"}
+)
+
 
 class Variables(object):
     """
@@ -92,6 +116,12 @@ class Variables(object):
       for use inside the action's own templates (``runs.command`` etc.).
       ``variable`` is a legacy alias of ``input``; both are scoped to the
       one step. The old job-wide accumulating namespace is gone.
+
+    Everything else is inert. A ``${{ ... }}`` whose root names are not all
+    in ``RUNNER_NAMESPACES`` (or that does not parse) is left exactly as
+    written, never raising and never rewritten: the runner does not author
+    that text, so it must not interpret it. Only string inputs are rendered;
+    objects and arrays pass through as they arrive.
     """
 
     def __init__(self):
@@ -140,8 +170,54 @@ class Variables(object):
         self.variables[section] = {**self.variables[section], **variables}
 
     def render(self, string: str):
-        tp = self._template(string)
-        return tp.render({**global_variables, **self.variables})
+        """Render the runner's own namespaces in ``string``; keep every
+        other ``${{ ... }}`` exactly as written (see the class docstring).
+        """
+        if string is None or "${" not in string:
+            return string
+        protected, kept = self._protect_foreign_expressions(string)
+        try:
+            rendered = self._template(protected).render(
+                {**global_variables, **self.variables}
+            )
+        except TemplateSyntaxError:
+            # Not a template the runner can read (an unclosed `${{`, a
+            # stray `${%` in data): it is text, hand it back as it came.
+            return string
+        for token, text in kept:
+            rendered = rendered.replace(token, text)
+        return rendered
+
+    @classmethod
+    def _protect_foreign_expressions(
+        cls, string: str
+    ) -> Tuple[str, List[Tuple[str, str]]]:
+        """Swap each ``${{ ... }}`` the runner does not own for an opaque
+        token so Jinja never sees it; the caller restores them after
+        rendering. Returns the protected string and the (token, original
+        text) pairs."""
+        nonce = uuid.uuid4().hex
+        kept: List[Tuple[str, str]] = []
+
+        def swap(match: "re.Match[str]") -> str:
+            text = match.group(0)
+            if cls._owns(text):
+                return text
+            token = f"\x00{nonce}:{len(kept)}\x00"
+            kept.append((token, text))
+            return token
+
+        return _EXPRESSION.sub(swap, string), kept
+
+    @staticmethod
+    def _owns(expression: str) -> bool:
+        """True when ``expression`` (one ``${{ ... }}``) parses and every
+        name it reads is one of the runner's namespaces."""
+        try:
+            ast = _environment.parse(expression)
+        except TemplateSyntaxError:
+            return False
+        return meta.find_undeclared_variables(ast) <= RUNNER_NAMESPACES
 
     def render_command(self, string: str):
         """Render a shell command/script template.
@@ -177,12 +253,7 @@ class Variables(object):
 
     @staticmethod
     def _template(string: str) -> Template:
-        return Template(
-            string,
-            block_start_string="${%",
-            variable_start_string="${{",
-            comment_start_string="${#",
-        )
+        return _environment.from_string(string)
 
     @property
     def inputs(self) -> dict:
