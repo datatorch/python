@@ -2,13 +2,13 @@
 `${{ run.* }}` in the action's templates and DATATORCH_PROJECT_ID /
 DATATORCH_RUN_ID / DATATORCH_PIPELINE_ID / DATATORCH_STEP_ID in the
 process environment of whatever the action runs."""
+
 import os
 
 from datatorch.core import env as env_names
 from datatorch.runner.pipelines.step.step import Step
 from datatorch.runner.pipelines.template import Variables
 from datatorch.runner.pipelines.runner.runner import Runner
-
 
 DISPATCH = {
     "stepId": "step-1",
@@ -44,7 +44,12 @@ def test_run_namespace_empty_in_local_mode():
 
 
 def test_runner_env_carries_identity(monkeypatch):
-    for name in (env_names.PROJECT_ID, env_names.RUN_ID, env_names.PIPELINE_ID, env_names.STEP_ID):
+    for name in (
+        env_names.PROJECT_ID,
+        env_names.RUN_ID,
+        env_names.PIPELINE_ID,
+        env_names.STEP_ID,
+    ):
         monkeypatch.setenv(name, "stale")  # never inherited from the outer process
     step = Step.from_dispatch(DISPATCH)
     variables = Variables()
