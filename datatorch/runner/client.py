@@ -2,11 +2,50 @@ from typing import AsyncGenerator, List, Optional, cast
 from gql import gql
 from .directory import runner_directory
 from gql.client import AsyncClientSession
+from gql.transport.exceptions import TransportError, TransportQueryError
+from websockets.exceptions import ConnectionClosed
 
 from typing_extensions import TypedDict
+from asyncio import IncompleteReadError
+import asyncio
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+class RunnerDisconnected(ConnectionError):
+    """The runner has no live websocket session right now.
+
+    `AgentApiClient.execute` raises it at once instead of sending into a
+    dead transport. Callers whose message must get through (a finished
+    step's result) wait on `AgentApiClient.wait_connected` and try again;
+    callers that can afford to lose a message (a log batch, a metric) let
+    it fail and send the next one.
+    """
+
+
+def is_transient(error: BaseException) -> bool:
+    """Whether an API call failed because of the connection, so the same
+    call may succeed once the runner is connected again.
+
+    A `TransportQueryError` carrying GraphQL errors is the server's answer
+    (the mutation was refused) and is not transient; the same class with
+    no errors is gql's "query completed without any answer", which is the
+    socket dropping mid-call.
+    """
+    if isinstance(error, TransportQueryError):
+        return not error.errors
+    return isinstance(
+        error,
+        (
+            RunnerDisconnected,
+            TransportError,
+            ConnectionClosed,
+            OSError,
+            IncompleteReadError,
+            asyncio.TimeoutError,
+        ),
+    )
 
 
 class Log(TypedDict):
@@ -67,8 +106,41 @@ STEP_DISPATCH_FIELDS = """
 
 
 class AgentApiClient(object):
-    def __init__(self, session: AsyncClientSession):
+    """The runner's side of the runner wire protocol.
+
+    One client lives as long as the daemon; the gql session behind it
+    changes with every reconnect (`attach`/`detach`). While detached every
+    call fails at once with `RunnerDisconnected`, so a step that finishes
+    during an outage neither hangs on a dead socket nor reports into it.
+    """
+
+    def __init__(self, session: Optional[AsyncClientSession] = None):
         self.session = session
+        self._connected = asyncio.Event()
+        if session is not None:
+            self._connected.set()
+
+    @property
+    def connected(self) -> bool:
+        return self._connected.is_set()
+
+    def attach(self, session: AsyncClientSession) -> None:
+        """A (re)connected session: calls go through again."""
+        self.session = session
+        self._connected.set()
+
+    def detach(self) -> None:
+        """The connection is gone: refuse calls until the next `attach`."""
+        self.session = None
+        self._connected.clear()
+
+    async def wait_connected(self, timeout: Optional[float] = None) -> bool:
+        """Waits until a session is attached. False when `timeout` ran out."""
+        try:
+            await asyncio.wait_for(self._connected.wait(), timeout)
+            return True
+        except asyncio.TimeoutError:
+            return False
 
     def agent_steps(self):
         """Subscribe to ready steps dispatched to this runner."""
@@ -300,10 +372,14 @@ class AgentApiClient(object):
             logger.debug(f"Transport close raised while forcing reconnect: {e}")
 
     async def execute(self, query, *args, params: dict = {}, **kwargs) -> dict:
-        """Wrapper around execute"""
+        """Wrapper around execute. Raises `RunnerDisconnected` while no
+        session is attached (see the class docstring)."""
+        session = self.session
+        if session is None or not self._connected.is_set():
+            raise RunnerDisconnected("The runner is not connected to DataTorch.")
         removed_none = dict((k, v) for k, v in params.items() if v is not None)
         if type(query) == str:
             query = gql(query)
-        return await self.session.execute(
+        return await session.execute(
             query, *args, variable_values=removed_none, **kwargs
         )

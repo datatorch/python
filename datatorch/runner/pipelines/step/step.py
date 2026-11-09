@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from ...client import AgentApiClient, AgentStepDispatch, Log
 
 
-UPLOAD_LOGS_EVERY_SECONDS = 10
+UPLOAD_LOGS_EVERY_SECONDS = 3
 
 
 class Step(object):
@@ -107,12 +107,29 @@ class Step(object):
             list({**action.inputs, **self.inputs}.keys()),
         )
 
-        await self.upload_logs()
+        # Best effort: the action's result is what matters, and a lost
+        # connection must not turn a finished step into a failed one. A
+        # batch that does not go out stays queued (`upload_logs` puts it
+        # back) and the daemon ships it with the completion.
+        try:
+            await self.upload_logs()
+        except Exception as e:
+            self.logger.debug(f"Final log upload deferred: {e}")
         return outputs
 
     async def log_uploader(self):
-        await asyncio.sleep(UPLOAD_LOGS_EVERY_SECONDS)
-        await self.upload_logs()
+        """Ships the step's log while it runs, so a watcher (the run page,
+        a chat turn's live loop) sees the lines as they are printed, not
+        once at the end. Cancelled when the action returns; `run` uploads
+        whatever is left after that."""
+        while True:
+            await asyncio.sleep(UPLOAD_LOGS_EVERY_SECONDS)
+            try:
+                await self.upload_logs()
+            except asyncio.CancelledError:
+                raise
+            except Exception as e:  # keep streaming after a failed upload
+                self.logger.debug(f"Log upload failed, will retry: {e}")
 
     def log(self, message: str):
         """Records a log message."""
@@ -121,8 +138,14 @@ class Step(object):
         self.logger.info(message)
 
     async def upload_logs(self):
-        """Uploads saved logs to webserver."""
+        """Uploads saved logs to webserver. A batch that fails to send (or
+        is cut off by the uploader task being cancelled) goes back in
+        front of the queue, so the final upload carries it."""
         if self.api and self.id and len(self.logs) > 0:
             logs = self.logs
             self.logs = []
-            await self.api.upload_step_logs(self.id, logs)
+            try:
+                await self.api.upload_step_logs(self.id, logs)
+            except BaseException:
+                self.logs = logs + self.logs
+                raise
