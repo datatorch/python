@@ -3,6 +3,30 @@
 Notable changes to the `datatorch` python package (CLI, SDK and the runner
 daemon). Versions are the tags on this repository and the releases on PyPI.
 
+## 0.8.4 (2026-11-12)
+
+### Fixed
+
+- Runner: a step that is stopped (its timeout ran out, the run was
+  canceled, or the runner is shutting down) now stops everything it
+  started, not only the shell that wraps its command. Before, the runner
+  killed that one shell and whatever ran under it carried on with nobody
+  watching: on 2026-11-11 the org-root `dataset-scout` seed step hit its
+  240 minute timeout and its `claude` process kept working against the
+  server for another 40 minutes. Each step now runs in its own session
+  and process group. On a stop the runner notes every process under the
+  step (one that moved to a session of its own is still found, by
+  parentage), sends them SIGTERM so a program that manages children of
+  its own can stop them, and kills whatever is still running 5 seconds
+  later (`TERMINATE_GRACE_SECONDS`). Windows is unchanged: the direct
+  child is terminated as before.
+
+### Changed
+
+- Runner: because a step has its own session, Ctrl-C in the terminal the
+  runner was started from reaches the runner alone. The runner then stops
+  its running steps itself, through the path above.
+
 ## 0.8.3 (2026-11-09)
 
 ### Fixed

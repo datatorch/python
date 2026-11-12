@@ -1,7 +1,11 @@
 import os
 import json
+import time
+import signal
 import typing
 import asyncio
+
+import psutil
 
 from typing import Any, Awaitable, Dict
 from ..template import Variables
@@ -18,6 +22,51 @@ class ProcessCodeError(Exception):
 # arrive as one `::var::<json>` line, so this bounds the largest single
 # output value (e.g. an http-request body), not ordinary log lines.
 STDOUT_LINE_LIMIT = 16 * 1024 * 1024
+
+# How long a stopped step's processes get to exit by themselves (SIGTERM)
+# before they are killed. The server has already closed the step by then,
+# so nothing waits on this except the processes' own cleanup.
+TERMINATE_GRACE_SECONDS = 5.0
+
+# Windows has no process groups in this sense and no SIGKILL.
+_POSIX = os.name == "posix"
+_SIGKILL = getattr(signal, "SIGKILL", signal.SIGTERM)
+
+
+def _descendants(pid: int) -> list:
+    """Every process under `pid` right now, as psutil handles (which
+    refuse to signal a pid that has since been reused)."""
+    try:
+        return psutil.Process(pid).children(recursive=True)
+    except psutil.Error:
+        return []
+
+
+def _alive(proc) -> bool:
+    try:
+        return proc.is_running() and proc.status() != psutil.STATUS_ZOMBIE
+    except psutil.Error:
+        return False
+
+
+def _signal_tree(process, tree: list, sig: int) -> None:
+    """Send `sig` to the step's process group and to every noted
+    descendant, wherever it now lives. A process already gone is fine."""
+    if process.returncode is None:
+        try:
+            if _POSIX:
+                # run_cmd gives each step its own session, so its group id
+                # is the shell's pid and never the runner's own group.
+                os.killpg(process.pid, sig)
+            else:
+                process.send_signal(sig)
+        except (ProcessLookupError, PermissionError, OSError):
+            pass
+    for proc in tree:
+        try:
+            proc.send_signal(sig)
+        except (psutil.Error, OSError):
+            pass
 
 
 class Runner(object):
@@ -44,8 +93,8 @@ class Runner(object):
 
         Streams stdout live (rather than waiting then draining) so that if
         the step is canceled or times out server-side — the asyncio task
-        running it receives ``CancelledError`` — the child process is killed
-        promptly instead of being orphaned.
+        running it receives ``CancelledError`` — the child process and
+        everything it started are stopped instead of being orphaned.
         """
         process = await self.run_cmd(command, wait=False, env=env)
 
@@ -69,11 +118,36 @@ class Runner(object):
             )
 
     async def _terminate(self, process):
-        """Kill a still-running child process (best effort)."""
+        """Stop a still-running step: the whole process tree, not only the
+        shell that wraps the command (best effort).
+
+        `run_cmd` starts the command through a shell, so `process` is that
+        shell. Killing it alone left everything under it running: on
+        2026-11-11 a timed-out seed step's `claude` process worked on for
+        40 minutes after the server had closed the step. So: note every
+        descendant first (a process that moved to its own group is found by
+        parentage, and once its parent dies that link is gone), ask the
+        tree to stop with SIGTERM so a process that manages children of its
+        own can stop them, then kill whatever is left after
+        `TERMINATE_GRACE_SECONDS`.
+        """
         if process.returncode is not None:
             return
+
+        tree = _descendants(process.pid)
+        _signal_tree(process, tree, signal.SIGTERM)
+
+        deadline = time.monotonic() + TERMINATE_GRACE_SECONDS
+        while time.monotonic() < deadline:
+            if process.returncode is not None and not any(
+                _alive(proc) for proc in tree
+            ):
+                break
+            await asyncio.sleep(0.1)
+        else:
+            _signal_tree(process, tree, _SIGKILL)
+
         try:
-            process.kill()
             await process.wait()
         except ProcessLookupError:
             pass
@@ -157,6 +231,10 @@ class Runner(object):
             # page body — asyncio's 64KB default readline limit kills the
             # stream with LimitOverrunError on anything larger.
             limit=STDOUT_LINE_LIMIT,
+            # Its own session and process group, so a stop can signal the
+            # step's whole tree at once without touching the runner (see
+            # _terminate). Ignored on Windows.
+            start_new_session=True,
         )
         if wait:
             await process.wait()
